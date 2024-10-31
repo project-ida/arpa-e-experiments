@@ -65,10 +65,6 @@ def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, col
     axes[-1].set_xlabel('Time')
     axes[-1].tick_params(axis='x', rotation=30)
 
-    # Check if experiment_descriptor is defined in globals()
-    title = f"{globals().get('experiment_descriptor', 'Data from')} {combined_df.index[0].date()}"
-    fig.suptitle(title)
-
     # Adjust layout to prevent overlap
     fig.tight_layout()
     
