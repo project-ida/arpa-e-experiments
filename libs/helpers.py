@@ -65,6 +65,10 @@ def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, col
     axes[-1].set_xlabel('Time')
     axes[-1].tick_params(axis='x', rotation=30)
 
+    # Safely get the descriptor from attrs, with a default if it doesn't exist
+    descriptor = combined_df.attrs.get("descriptor", "Descriptor")
+    fig.suptitle(f"{descriptor} {combined_df.index[0].date()}")
+
     # Adjust layout to prevent overlap
     fig.tight_layout()
     
