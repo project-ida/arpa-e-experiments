@@ -3,10 +3,47 @@ from matplotlib.gridspec import GridSpec
 import matplotlib.animation as animation
 import pandas as pd
 
+def process_data(dataframes, meta_data):
+    """
+    Processes multiple time-indexed DataFrames by aligning them to a common time index,
+    handling duplicate timestamps, and applying metadata to the resulting DataFrame.
 
-def process_data(*dataframes):
-    # Example usage
-    # combined_df = process_data(temperature_df, pressure_df)
+    Parameters:
+    ----------
+    dataframes : list of pd.DataFrame
+        A list of DataFrames to be processed. Each DataFrame is expected to have a time-based
+        index, which will be rounded to the nearest second and averaged for any duplicate
+        timestamps after rounding.
+
+    meta_data : dict
+        A dictionary containing metadata to attach to the final DataFrame. Each key-value pair
+        in `meta_data` will be added to the `attrs` attribute of the returned DataFrame, allowing
+        easy access to metadata (e.g., source information, experiment details).
+
+    Returns:
+    -------
+    pd.DataFrame
+        A single DataFrame with a common time index across all input DataFrames. The data
+        from each input DataFrame is concatenated along columns, with missing values interpolated
+        linearly. The `attrs` attribute of the returned DataFrame contains the metadata provided
+        by `meta_data`.
+
+    Notes:
+    -----
+    - The function aligns the DataFrames to a shared time range based on the maximum starting
+      timestamp and minimum ending timestamp across all DataFrames.
+    - Duplicate timestamps within each DataFrame are averaged after rounding to the nearest second.
+    - Any remaining NaN values at the edges of the combined DataFrame are dropped after interpolation.
+    
+    Example:
+    -------
+    >>> temperature_df = pd.DataFrame({...}, index=pd.to_datetime([...]))
+    >>> pressure_df = pd.DataFrame({...}, index=pd.to_datetime([...]))
+    >>> meta_data = {"source": "sensor_1", "location": "lab"}
+    >>> combined_df = process_data([temperature_df, pressure_df], meta_data)
+    >>> print(combined_df.attrs["source"])
+    'sensor_1'
+    """
     
     # Step 1: Round the time index and average duplicates within each DataFrame
     processed_dfs = []
@@ -31,6 +68,9 @@ def process_data(*dataframes):
     
     # Step 5: Interpolate missing values and drop any remaining NaNs that might occur at the start of end of the time range
     combined_df = combined_df.interpolate(method='linear').dropna()
+
+    # Step 6: Attach metadata to the DataFrame
+    combined_df.attrs.update(meta_data)
     
     return combined_df
 
