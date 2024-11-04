@@ -83,7 +83,7 @@ def process_data(dataframes, meta_data=None):
     return combined_df
 
 
-def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, colors=None, figsize=(8, 8)):
+def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, colors=None, figsize=(8, 8), marker=None):
     """
     Plots multiple time series columns from a DataFrame as individual subplots.
 
@@ -117,6 +117,10 @@ def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, col
 
     figsize : tuple, optional
         Figure size for the plot, default is (12, 8).
+        
+    marker : str (ISO8601) or pandas.Timestamp, optional
+        Specific timestamp to mark on the plot. A vertical line will appear in the 
+        time series plots
 
     Returns:
     --------
@@ -131,7 +135,7 @@ def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, col
     --------
     fig, axes = plot_panels(combined_df, ['Thermocouple1Ch1', 'pressure_bar', 'loading'], 
                             start="2024-09-23 19:37:42", stop="2024-09-24 13:37:42", 
-                            save_path="plot.png", colors=['blue', 'green', 'red'])
+                            save_path="plot.png", colors=['blue', 'green', 'red'], marker="2024-09-23 20:00")
     axes[0].set_ylabel("Custom Label")  # Modify labels as needed after plotting.
 
     Notes:
@@ -167,6 +171,13 @@ def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, col
     # Set the x-axis label and rotate ticks for the last subplot
     axes[-1].set_xlabel('Time')
     axes[-1].tick_params(axis='x', rotation=30)
+
+    # Plots a maker as vertical lines on the panels or a point on the scatter
+    if marker:
+        marker_datetime = pd.to_datetime(marker)
+        closest_index = combined_df.index.asof(marker_datetime)
+
+        vertical_lines = [ax.axvline(x=closest_index, color='black', linestyle='--') for ax in axes]
 
     # Safely get the descriptor from attrs and add title only if descriptor is not empty
     descriptor = combined_df.attrs.get("descriptor", "")
