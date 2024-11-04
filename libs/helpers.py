@@ -182,27 +182,87 @@ def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, col
 
 
 def plot_panels_with_scatter(combined_df, columns, scatter_x, scatter_y, start=None, stop=None, 
-                      experiment_descriptor=None, colors=None, downsample=1, figsize=(12, 8), 
+                             colors=None, downsample=1, figsize=(12, 8), 
                              save_path=None, marker=None, animate=False, frames=10):
     """
-    Plots time series data in a left column of subplots and a scatter plot in the right column.
-    
+    Plots a series of time series data as individual subplots in a left column and a scatter plot 
+    of two variables in a right column. Optionally, a specific point can be marked on the plot 
+    or an animation can be created to highlight points over time.
+
     Parameters:
-    - combined_df: DataFrame containing the data.
-    - columns: List of column names for time series plots (left side).
-    - scatter_x, scatter_y: Column names for x and y axes of the scatter plot (right side).
-    - start, stop: Time range as strings (optional).
-    - experiment_descriptor: String to add as a title (optional).
-    - colors: List of colors for each time series subplot (optional).
-    - downsample: Integer to downsample the data (every nth point).
-    - figsize: Tuple for figure size.
-    - save_path: Location of where the image should be saved 
-    - marker: Time (ISO8601 string) where you want to highlight specific data points
-    - animate: Boolean that tells matplotlib whether it should animate the markers
-    - frames: Integer "n" that tells matplotlib to make a frame ever n points
-    
+    -----------
+    combined_df : pandas.DataFrame
+        DataFrame containing time-indexed data for both time series and scatter plot columns.
+        Attributes may include a 'descriptor', which will be used as a title if not empty.
+
+    columns : list of str
+        List of column names from `combined_df` to be plotted as time series in the left column.
+
+    scatter_x : str
+        Column name for the x-axis variable in the scatter plot.
+
+    scatter_y : str
+        Column name for the y-axis variable in the scatter plot.
+
+    start : str or pandas.Timestamp, optional
+        Start time for the data to be plotted. If None, the plotting begins from the 
+        start of the DataFrame's index.
+
+    stop : str or pandas.Timestamp, optional
+        End time for the data to be plotted. If None, the plotting continues to the 
+        end of the DataFrame's index.
+
+    colors : list of str, optional
+        List of colors for each time series subplot. If fewer colors than columns are provided, 
+        remaining subplots use blue by default. If None, all subplots use blue.
+
+    downsample : int, optional
+        Factor by which to downsample the data, plotting every `downsample`-th point. Default is 1 (no downsampling).
+
+    figsize : tuple, optional
+        Figure size for the plot, default is (12, 8).
+
+    save_path : str, optional
+        File path to save the plot as an image. If None, the plot will not be saved.
+
+    marker : str (ISO8601) or pandas.Timestamp, optional
+        Specific timestamp to mark on the plot. A vertical line will appear in the time series 
+        plots, and a point will be highlighted in the scatter plot.
+
+    animate : bool, optional
+        Whether to animate the marker moving across time series and scatter plot data. Default is False.
+
+    frames : int, optional
+        Frame interval for the animation, setting how many points to skip between frames.
+        Default is 10.
+
     Returns:
-    - fig, axes: Matplotlib figure and axes.
+    --------
+    fig : matplotlib.figure.Figure
+        The figure object for the generated plot.
+
+    time_axes : list of matplotlib.axes.Axes
+        List of axes for the time series subplots.
+
+    ax_scatter : matplotlib.axes.Axes
+        Axes object for the scatter plot.
+
+    Example:
+    --------
+    fig, time_axes, ax_scatter = plot_panels_with_scatter(
+        combined_df, ['Temp', 'Pressure'], scatter_x='humidity', scatter_y='vibration',
+        start="2024-09-23 19:37:42", stop="2024-09-24 13:37:42", colors=['blue', 'green'], 
+        downsample=2, save_path="plot.png", marker="2024-09-24 00:00:00",
+        animate=True, frames=20
+    )
+
+    Notes:
+    ------
+    - The time series plots are displayed in a column on the left, while a scatter plot of two 
+      specified variables is displayed in a column on the right.
+    - The animation (if enabled) highlights points in both time series and scatter plot as they 
+      progress over time. Requires 'ffmpeg' for saving the animation.
+    - Use the DataFrame's `descriptor` attribute for a title, which will only display if not empty.
     """
 
     # Downsample the data
