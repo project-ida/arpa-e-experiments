@@ -3,7 +3,7 @@ from matplotlib.gridspec import GridSpec
 import matplotlib.animation as animation
 import pandas as pd
 
-def process_data(dataframes, meta_data):
+def process_data(dataframes, meta_data=None):
     """
     Processes multiple time-indexed DataFrames by aligning them to a common time index,
     handling duplicate timestamps, and applying metadata to the resulting DataFrame.
@@ -15,10 +15,13 @@ def process_data(dataframes, meta_data):
         index, which will be rounded to the nearest second and averaged for any duplicate
         timestamps after rounding.
 
-    meta_data : dict
+    meta_data : dict, optional
         A dictionary containing metadata to attach to the final DataFrame. Each key-value pair
         in `meta_data` will be added to the `attrs` attribute of the returned DataFrame, allowing
         easy access to metadata (e.g., source information, experiment details).
+        
+        If no meta_data is provided (default is None), a reminder message will print, suggesting
+        how users can add descriptive metadata.
 
     Returns:
     -------
@@ -26,7 +29,7 @@ def process_data(dataframes, meta_data):
         A single DataFrame with a common time index across all input DataFrames. The data
         from each input DataFrame is concatenated along columns, with missing values interpolated
         linearly. The `attrs` attribute of the returned DataFrame contains the metadata provided
-        by `meta_data`.
+        by `meta_data` if supplied.
 
     Notes:
     -----
@@ -39,18 +42,18 @@ def process_data(dataframes, meta_data):
     -------
     >>> temperature_df = pd.DataFrame({...}, index=pd.to_datetime([...]))
     >>> pressure_df = pd.DataFrame({...}, index=pd.to_datetime([...]))
-    >>> meta_data = {"source": "sensor_1", "location": "lab"}
+    >>> meta_data = {"descriptor": "Etched titanium foil"}
     >>> combined_df = process_data([temperature_df, pressure_df], meta_data)
-    >>> print(combined_df.attrs["source"])
-    'sensor_1'
+    >>> print(combined_df.attrs["descriptor"])
+    'Etched titanium foil'
     """
-    
+
     # Step 1: Round the time index and average duplicates within each DataFrame
     processed_dfs = []
     for df in dataframes:
         df = df.copy()  # Avoid modifying the original DataFrame
         df.index = df.index.floor('s') # Round the time to the nearest second
-        df = df.groupby(df.index).mean() # Average any temperature values that occur at the same time now that we've rounded the time stamp to the nearest second
+        df = df.groupby(df.index).mean() # Average any values at the same time after rounding
         processed_dfs.append(df)
     
     # Step 2: Determine the global overlapping time range
@@ -66,11 +69,16 @@ def process_data(dataframes, meta_data):
     # Step 4: Concatenate along columns to merge by time index
     combined_df = pd.concat(processed_dfs, axis=1)
     
-    # Step 5: Interpolate missing values and drop any remaining NaNs that might occur at the start of end of the time range
+    # Step 5: Interpolate missing values and drop any remaining NaNs at the time range edges
     combined_df = combined_df.interpolate(method='linear').dropna()
 
-    # Step 6: Attach metadata to the DataFrame
-    combined_df.attrs.update(meta_data)
+    # Step 6: Attach metadata to the DataFrame if provided
+    if meta_data is not None:
+        combined_df.attrs.update(meta_data)
+    else:
+        # Print a reminder message for the user
+        print("No metadata provided. Consider adding metadata for context. Example:")
+        print('meta_data = {"descriptor": "Etched titanium foil"}  # Useful for plot titles')
     
     return combined_df
 
