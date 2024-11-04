@@ -3,6 +3,60 @@ from matplotlib.gridspec import GridSpec
 import matplotlib.animation as animation
 import pandas as pd
 
+def print_info(dataframe):
+    """
+    Prints summary information about a DataFrame containing time-indexed measurements.
+
+    This function outputs key information, including the start and end times of the data,
+    total number of data points, average time between measurements, and a count of NaN
+    values for each column.
+
+    Parameters:
+    -----------
+    dataframe : pandas.DataFrame
+        A DataFrame with a time-based index representing the measurement timestamps.
+        The columns should represent various measured variables.
+
+    Outputs:
+    --------
+    - Start time of measurements.
+    - End time of measurements.
+    - Total number of data points.
+    - Average time interval (in seconds) between data points.
+    - Count of NaN values per column.
+
+    Example:
+    --------
+    print_info(dataframe)
+    
+    Notes:
+    ------
+    - Assumes that `dataframe` has a time-based index in chronological order.
+    - Calculates the time interval by dividing the total time span by the number of points.
+    - Useful for quickly inspecting data completeness and identifying potential data gaps.
+    """
+    
+    # When does data collection begin and end
+    print(f"Measurements start at: {dataframe.index[0]}")
+    print(f"Measurements end at: {dataframe.index[-1]}")
+    print("---------")
+    
+    # How many data points do we have
+    raw_total_points = len(dataframe)
+    print(f"Total number of measurements: {raw_total_points}")
+
+    # What's the average time in seconds time between data points
+    time_between_points = ((dataframe.index[-1] - dataframe.index[0]) / raw_total_points).total_seconds()
+    print(f"Time between measurements: {time_between_points} s")
+    print("---------")
+
+    # Count problem values like NaNs
+   
+    print("Total number of NaNs")
+    print(dataframe.isna().sum())
+    
+    
+
 def process_data(dataframes, meta_data=None):
     """
     Processes multiple time-indexed DataFrames by aligning them to a common time index,
