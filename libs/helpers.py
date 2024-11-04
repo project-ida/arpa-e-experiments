@@ -114,6 +114,9 @@ def plot_panels_with_scatter(combined_df, columns, scatter_x, scatter_y, start=N
     start_time = pd.to_datetime(start) if start else combined_df_downsampled.index[0]
     end_time = pd.to_datetime(stop) if stop else combined_df_downsampled.index[-1]
 
+    # Restrict data to between start_time and end_time
+    combined_df_downsampled = combined_df_downsampled[start_time:end_time]
+
     # Set up the figure and GridSpec layout
     fig = plt.figure(figsize=figsize)
     gs = GridSpec(len(columns), 2, width_ratios=[2, 1])  # Define a grid with 2:1 width ratio for time series and scatter plot
@@ -128,7 +131,7 @@ def plot_panels_with_scatter(combined_df, columns, scatter_x, scatter_y, start=N
     time_axes = []
     for i, (column, color) in enumerate(zip(columns, colors)):
         ax = fig.add_subplot(gs[i, 0], sharex=time_axes[0] if i > 0 else None)
-        ax.plot(combined_df_downsampled.loc[start_time:end_time, column], color=color)
+        ax.plot(combined_df_downsampled[column], color=color)
         ax.set_ylabel(column.replace('_', ' ').title())
         
         # Hide x-tick labels for all but the last subplot
@@ -143,8 +146,8 @@ def plot_panels_with_scatter(combined_df, columns, scatter_x, scatter_y, start=N
 
     # Create the scatter plot in the right column
     ax_scatter = fig.add_subplot(gs[:, 1])  # Use all rows in the second column
-    ax_scatter.scatter(combined_df_downsampled.loc[start_time:end_time, scatter_x],
-                       combined_df_downsampled.loc[start_time:end_time, scatter_y],
+    ax_scatter.scatter(combined_df_downsampled[scatter_x],
+                       combined_df_downsampled[scatter_y],
                        color='orange', alpha=0.7)
     ax_scatter.set_xlabel(scatter_x.replace('_', ' ').title())
     ax_scatter.set_ylabel(scatter_y.replace('_', ' ').title())
