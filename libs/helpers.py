@@ -329,8 +329,8 @@ def plot_panels_with_scatter(combined_df, columns, scatter_x, scatter_y, start=N
     fig, time_axes, ax_scatter = plot_panels_with_scatter(
         combined_df, ['Temp', 'Pressure'], scatter_x='humidity', scatter_y='vibration',
         start="2024-09-23 19:37:42", stop="2024-09-24 13:37:42", colors=['blue', 'green'], 
-        downsample=2, save_path="plot.png", marker="2024-09-24 00:00:00",
-        animate=True, frames=20
+        downsample=10, save_path="plot.png", marker="2024-09-24 00:00:00",
+        animate=True, frames=10
     )
 
     Notes:
