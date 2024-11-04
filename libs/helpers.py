@@ -116,9 +116,10 @@ def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, col
     axes[-1].set_xlabel('Time')
     axes[-1].tick_params(axis='x', rotation=30)
 
-    # Safely get the descriptor from attrs, with a default if it doesn't exist
+    # Safely get the descriptor from attrs and add title only if descriptor is not empty
     descriptor = combined_df.attrs.get("descriptor", "")
-    fig.suptitle(f"{descriptor} {combined_df.index[0].date()}")
+    if descriptor:  # Check if descriptor is not empty
+        fig.suptitle(f"{descriptor} {combined_df.index[0].date()}")
 
     # Adjust layout to prevent overlap
     fig.tight_layout()
@@ -211,9 +212,10 @@ def plot_panels_with_scatter(combined_df, columns, scatter_x, scatter_y, start=N
         scatter_point = ax_scatter.scatter([combined_df_downsampled[scatter_x][closest_index]], 
                                            [combined_df_downsampled[scatter_y][closest_index]], color='blue', s=50)
 
-    # Safely get the descriptor from attrs, with a default if it doesn't exist
-    descriptor = combined_df_downsampled.attrs.get("descriptor", "")
-    fig.suptitle(f"{descriptor} {combined_df_downsampled.index[0].date()}")
+    # Safely get the descriptor from attrs and add title only if descriptor is not empty
+    descriptor = combined_df.attrs.get("descriptor", "")
+    if descriptor:  # Check if descriptor is not empty
+        fig.suptitle(f"{descriptor} {combined_df_downsampled.index[0].date()}")
 
     # Adjust layout to prevent overlap
     fig.tight_layout()
