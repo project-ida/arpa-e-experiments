@@ -83,7 +83,7 @@ def process_data(dataframes, meta_data=None):
     return combined_df
 
 
-def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, colors=None, figsize=(8, 8), marker=None):
+def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, colors=None, downsample=1, figsize=(8, 8), marker=None):
     """
     Plots multiple time series columns from a DataFrame as individual subplots.
 
@@ -115,6 +115,9 @@ def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, col
         the remaining subplots will use the color blue by default. If None, 
         all subplots will use the color blue.
 
+    downsample : int, optional
+        Factor by which to downsample the data, plotting every `downsample`-th point. Default is 1 (no downsampling).
+
     figsize : tuple, optional
         Figure size for the plot, default is (12, 8).
         
@@ -145,10 +148,16 @@ def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, col
     - The `descriptor` attribute in `combined_df` is used as the figure's 
       title if it is non-empty.
     """
+
+    # Downsample the data
+    combined_df_downsampled = combined_df.iloc[::downsample]
     
     # Convert start and stop times if provided, else use entire time range
-    start_time = pd.to_datetime(start) if start else combined_df.index[0]
-    end_time = pd.to_datetime(stop) if stop else combined_df.index[-1]
+    start_time = pd.to_datetime(start) if start else combined_df_downsampled.index[0]
+    end_time = pd.to_datetime(stop) if stop else combined_df_downsampled.index[-1]
+
+    # Restrict data to between start_time and end_time
+    combined_df_downsampled = combined_df_downsampled[start_time:end_time]
 
     # Set up the figure and axes based on the number of columns provided
     fig, axes = plt.subplots(nrows=len(columns), ncols=1, figsize=figsize, sharex=True)
@@ -165,7 +174,7 @@ def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, col
 
     # Plot each specified column on its own subplot
     for ax, column, color in zip(axes, columns, colors):
-        ax.plot(combined_df.loc[start_time:end_time, column], color=color)
+        ax.plot(combined_df_downsampled[column], color=color)
         ax.set_ylabel(column.replace('_', ' ').title())
     
     # Set the x-axis label and rotate ticks for the last subplot
@@ -175,14 +184,14 @@ def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, col
     # Plots a maker as vertical lines on the panels or a point on the scatter
     if marker:
         marker_datetime = pd.to_datetime(marker)
-        closest_index = combined_df.index.asof(marker_datetime)
+        closest_index = combined_df_downsampled.index.asof(marker_datetime)
 
         vertical_lines = [ax.axvline(x=closest_index, color='black', linestyle='--') for ax in axes]
 
     # Safely get the descriptor from attrs and add title only if descriptor is not empty
-    descriptor = combined_df.attrs.get("descriptor", "")
+    descriptor = combined_df_downsampled.attrs.get("descriptor", "")
     if descriptor:  # Check if descriptor is not empty
-        fig.suptitle(f"{descriptor} {combined_df.index[0].date()}")
+        fig.suptitle(f"{descriptor} {combined_df_downsampled.index[0].date()}")
 
     # Adjust layout to prevent overlap
     fig.tight_layout()
