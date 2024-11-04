@@ -84,11 +84,60 @@ def process_data(dataframes, meta_data=None):
 
 
 def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, colors=None):
-    # Example usage
-    # fig, axes = plot_panels(combined_df, ['Thermocouple1Ch1', 'pressure_bar', 'loading'], 
-    #                       start="2024-09-23 19:37:42", stop="2024-09-24 13:37:42", 
-    #                       save_path="plot.png", colors=['blue', 'green', 'red'])
-    # axes[0].set_ylabel("Custom Label") # Modify label after plotting, if needed
+    """
+    Plots multiple time series columns from a DataFrame as individual subplots.
+
+    Parameters:
+    -----------
+    combined_df : pandas.DataFrame
+        A DataFrame with a time-based index and columns to be plotted. 
+        The DataFrame should have attributes, including a `descriptor` (optional),
+        which, if provided and non-empty, will be used as the figure's title.
+
+    columns : list of str
+        A list of column names from `combined_df` to be plotted. Each column 
+        will appear on a separate subplot.
+
+    start : str or pandas.Timestamp, optional
+        The start time for the data to be plotted. If None, the plotting 
+        will begin from the start of the DataFrame's index.
+
+    stop : str or pandas.Timestamp, optional
+        The end time for the data to be plotted. If None, the plotting 
+        will continue until the end of the DataFrame's index.
+
+    save_path : str, optional
+        File path to save the generated plot as an image. If None, the plot 
+        will not be saved.
+
+    colors : list of str, optional
+        A list of colors for each subplot. If fewer colors than columns are provided,
+        the remaining subplots will use the color blue by default. If None, 
+        all subplots will use the color blue.
+
+    Returns:
+    --------
+    fig : matplotlib.figure.Figure
+        The figure object for the generated plot.
+
+    axes : list of matplotlib.axes.Axes
+        A list of axes objects, each corresponding to a subplot for each 
+        specified column in `columns`. 
+
+    Example:
+    --------
+    fig, axes = plot_panels(combined_df, ['Thermocouple1Ch1', 'pressure_bar', 'loading'], 
+                            start="2024-09-23 19:37:42", stop="2024-09-24 13:37:42", 
+                            save_path="plot.png", colors=['blue', 'green', 'red'])
+    axes[0].set_ylabel("Custom Label")  # Modify labels as needed after plotting.
+
+    Notes:
+    ------
+    - The x-axis is shared across subplots, and labels on the last subplot 
+      are rotated for clarity.
+    - The `descriptor` attribute in `combined_df` is used as the figure's 
+      title if it is non-empty.
+    """
     
     # Convert start and stop times if provided, else use entire time range
     start_time = pd.to_datetime(start) if start else combined_df.index[0]
