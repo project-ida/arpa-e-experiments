@@ -83,7 +83,7 @@ def process_data(dataframes, meta_data=None):
     return combined_df
 
 
-def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, colors=None):
+def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, colors=None, figsize=(8, 8)):
     """
     Plots multiple time series columns from a DataFrame as individual subplots.
 
@@ -115,6 +115,9 @@ def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, col
         the remaining subplots will use the color blue by default. If None, 
         all subplots will use the color blue.
 
+    figsize : tuple, optional
+        Figure size for the plot, default is (12, 8).
+
     Returns:
     --------
     fig : matplotlib.figure.Figure
@@ -144,7 +147,7 @@ def plot_panels(combined_df, columns, start=None, stop=None, save_path=None, col
     end_time = pd.to_datetime(stop) if stop else combined_df.index[-1]
 
     # Set up the figure and axes based on the number of columns provided
-    fig, axes = plt.subplots(nrows=len(columns), ncols=1, figsize=(8, 8), sharex=True)
+    fig, axes = plt.subplots(nrows=len(columns), ncols=1, figsize=figsize, sharex=True)
     
     # If there's only one column, axes won't be an array, so we ensure it's iterable
     if len(columns) == 1:
