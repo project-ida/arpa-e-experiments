@@ -164,7 +164,7 @@ def plot_panels_with_scatter(combined_df, columns, scatter_x, scatter_y, start=N
                                            [combined_df_downsampled[scatter_y][closest_index]], color='blue', s=50)
 
     # Safely get the descriptor from attrs, with a default if it doesn't exist
-    descriptor = combined_df_downsampled.attrs.get("descriptor", "Descriptor")
+    descriptor = combined_df_downsampled.attrs.get("descriptor", "")
     fig.suptitle(f"{descriptor} {combined_df_downsampled.index[0].date()}")
 
     # Adjust layout to prevent overlap
@@ -198,7 +198,7 @@ def plot_panels_with_scatter(combined_df, columns, scatter_x, scatter_y, start=N
         plt.close(fig)
 
         # Safely get the descriptor from attrs, with a default if it doesn't exist
-        descriptor = combined_df_downsampled.attrs.get("descriptor", "Descriptor")
+        descriptor = combined_df_downsampled.attrs.get("descriptor", "")
 
         # Animation needs to be saved in order for it to be viewed in another cell via Video()
         ani.save(f"media/{descriptor} {combined_df_downsampled.index[0].date()}.mp4", writer='ffmpeg', fps=30)
