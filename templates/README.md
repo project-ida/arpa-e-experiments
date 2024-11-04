@@ -23,6 +23,7 @@ There are 2 options for using the templates:
 - It will prompt you to sign into github and authorise Colab to save files to ProjectIda
 - It will prompt you to save the notebook
 - You must select the `arpa-e-experiments` repo and choose a new filename making sure to remove the `templates` bit of the file path so that the file ends up in the root of the repository
+- It should look something like this ![](save-notebook-colab.png)
 
 4. Follow the instructions included at the top of `yyyy-mm-dd-descriptor.ipynb`
 5. Make your edits
