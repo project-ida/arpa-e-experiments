@@ -27,6 +27,7 @@ from IPython.display import Image, display, Video, HTML
 ```
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="Heb1eebmS4eI" outputId="c5896322-26c8-45ef-f593-38ff89ec7b47"
+# RUN THIS IF YOU ARE USING GOOGLE COLAB
 import sys
 import os
 !git clone https://github.com/project-ida/arpa-e-experiments.git
