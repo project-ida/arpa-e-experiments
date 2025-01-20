@@ -40,6 +40,8 @@ os.chdir('/content/arpa-e-experiments')
 #file_id = "1Qe67DEDiPcuzZ_5MH9C-wVPrq1VHyDz8"  # Extracted file ID from your URL
 #filename = "Project 1 Specimen 1 Area 2 Site 1 Map Data 11.h5oina"
 
+# the following is a data file from the folder "20241127 Jonah 6"
+
 file_id = "1Qtd9BD_U5W7TxXMVeBNBWXf2IqDzeoTS"  # Extracted file ID from your URL
 filename = "Project 1 Specimen 1 Area 2 Site 20 Map Data 30"
 ```
