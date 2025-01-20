@@ -362,7 +362,7 @@ plt.ylabel("Y Pixel")
 plt.show()
 ```
 
-```python id="7BU8nuAyAnMi" outputId="325959d7-526b-48f1-ebf7-94144823fc3b" colab={"base_uri": "https://localhost:8080/", "height": 807}
+```python colab={"base_uri": "https://localhost:8080/", "height": 807} id="7BU8nuAyAnMi" outputId="325959d7-526b-48f1-ebf7-94144823fc3b"
 scaling_factor = scaling_factor_x  # Microns per pixel
 
 # Calculate dimensions
@@ -415,7 +415,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-```python id="z0w9hty1A3fw" outputId="7fdb579b-ffe7-42fc-c3bd-adc0636471e7" colab={"base_uri": "https://localhost:8080/", "height": 1000}
+```python colab={"base_uri": "https://localhost:8080/", "height": 1000} id="z0w9hty1A3fw" outputId="7fdb579b-ffe7-42fc-c3bd-adc0636471e7"
 # Define the grid size for 3x3 segmentation
 y_segments = 3
 x_segments = 3
@@ -467,6 +467,10 @@ file['/1/EDS/Header/Stage Position/Y'][0] # in mm
 ```python colab={"base_uri": "https://localhost:8080/"} id="WRvByBeEUp2F" outputId="5381e4bb-7e2a-4c18-c611-12a0c4ab63bc"
 file['/1/EDS/Header/Stage Position/Z'][0] # in mm
 ```
+
+<!-- #region id="5_q30xk-CAhy" -->
+The site numbers move from the bottom left upwards in the first column (from 1 to 25) and then start at the bottom of the second column again, moving upward. One can also check the X and Y values (in mm) in the Header/Stage Position part of the H5 files.
+<!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/", "height": 777} id="rtVf4wv6U5ct" outputId="606b3472-d0b4-4c9c-d4c6-2094ea8567fb"
 Image(filename="media/aztec-01.png", width=1474, height=760)
