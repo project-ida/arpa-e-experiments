@@ -270,7 +270,7 @@ This method is commonly used in radiation measurement and other count-based dete
 - G. F. Knoll, *Radiation Detection and Measurement*, 4th ed., Wiley, 2010.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 539, "referenced_widgets": ["a5a91657ab2b40fa921515e92ef50e3c", "a5397672bce34c4381ae2aa7c29ac6cc", "d2850fe27aa44677a1d1bb24ec1bc2b1", "17d182f33881468a8e1b665d0ac20ecf", "7c419e44e307423ebd354d38f3467895"]} id="ouxA8rpoxfUB" outputId="c10c612a-ee7d-43bb-e0a9-3bc5bf2ffdfa"
+```python id="ouxA8rpoxfUB"
 # Function to update the plot based on Z
 def plot_outliers(Z):
     threshold_poisson = lambda_ + Z * np.sqrt(lambda_)
@@ -308,7 +308,7 @@ display(z_slider, interactive_plot)
 Let us now perform the same analysis for gamma counts.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 539, "referenced_widgets": ["82adca6010f84d08b4dad5226c113b49", "50491228604a48ad9b748b8c4d4625b1", "d35db834ad574342a872cc216878c919", "a86488ff253941dfa5cbeb6fc1b61f2f", "54a88901066c4a45b20f13712dbabf99"]} id="K3sVmWq1yWUu" outputId="f0ca8191-003f-4339-c871-006abc776270"
+```python id="K3sVmWq1yWUu"
 # Precompute Poisson mean for gamma background
 lambda_gamma = gamma_df_1_minute_background["Counts"].mean()
 
