@@ -29,7 +29,7 @@ Eljen scintillator detectors work by converting ionizing radiation into visible 
 Our goal is to characterize the background radiation as picked up by the 2" and 5" Eljen detectors. In order to do so, we ran the Eljen detectors in question throughout December 2024 and January 2025. We will know chracterize this background---which will be useful for future analysis.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="PbnVxkXsE-gX" outputId="4b9c88e9-e670-472c-b6af-015b71edb64a"
+```python colab={"base_uri": "https://localhost:8080/"} id="PbnVxkXsE-gX" outputId="003fe9d1-4a47-4b37-8855-207ec31c8f4a"
 # RUN THIS IF YOU ARE USING GOOGLE COLAB
 import sys
 import os
@@ -97,7 +97,7 @@ gamma_df = pd.read_csv(
 Now that we have collected the raw data (i.e. electric signal history) that interests us, let us have a look at the measured neutron and gamma counts.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 448} id="XL6XjRnoFd8j" outputId="a69e4172-b0ef-404c-b84d-ebb5556c8eab"
+```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="XL6XjRnoFd8j" outputId="1b2ebb70-e9dd-42c3-80ef-f24d97a4f9ab"
 plt.figure(figsize=(8, 4))
 plt.plot(neutron_df['Counts'])
 plt.xlabel('Time')
@@ -108,7 +108,7 @@ plt.show()
 # plt.savefig("all-neutron-counts-sec.png", dpi=600)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 443} id="mIZOh2-xFwWf" outputId="51c75475-e4f0-4abb-9a8f-21e86409d80f"
+```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="mIZOh2-xFwWf" outputId="d9b7926e-6acc-4c6f-efc1-f8637e7716c4"
 plt.figure(figsize=(8, 4))
 plt.plot(gamma_df['Counts'])
 plt.xlabel('Time')
@@ -145,7 +145,7 @@ gamma_df_1_minute_background = gamma_df_1_minute[start_time:end_time]
 Now that we have excluded the time before and when the neutron source was introduced, let us have a closer look at our background neutron counts.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 441} id="s9b-zrG1Mue2" outputId="b215fa5d-1df6-4d30-f623-d1ff2c00924e"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="s9b-zrG1Mue2" outputId="3eda5214-3e27-40de-d087-141edf8b8247"
 # Ensure the index is datetime
 neutron_df_1_minute_background.index = pd.to_datetime(neutron_df_1_minute_background.index)
 
@@ -195,7 +195,7 @@ We will consider that count is "significantly high" if it exceeds $\lambda + \sq
 where $Z = 3$ corresponds to a $3\sigma$ threshold (confidence level ~99.7%)
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 441} id="HOD0IxyytMPM" outputId="8f2458a4-7728-4562-d855-64ad8bd94eed"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="HOD0IxyytMPM" outputId="9a7add5e-973b-45ed-9068-be242bf53e6d"
 histograms = []
 for day, group in grouped_by_day:
     hist_values, bin_edges = np.histogram(group["Counts"], bins=bins, density=True)
@@ -270,7 +270,7 @@ This method is commonly used in radiation measurement and other count-based dete
 - G. F. Knoll, *Radiation Detection and Measurement*, 4th ed., Wiley, 2010.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 281, "referenced_widgets": ["ec1198abd403475cb4012bc460d61c3c", "d9b0f1771728442eb28ed74ffdfb7626", "227761c9985c49b9bee446e5a59a77fb", "784f49f39ac44a9c9022a6e9f559a33b", "d2b7ba0e425745d9b5f5507be1fb99da"]} id="ouxA8rpoxfUB" outputId="916ca987-d1ff-40b1-8ca1-92411fd55241"
+```python colab={"base_uri": "https://localhost:8080/", "height": 539, "referenced_widgets": ["a5a91657ab2b40fa921515e92ef50e3c", "a5397672bce34c4381ae2aa7c29ac6cc", "d2850fe27aa44677a1d1bb24ec1bc2b1", "17d182f33881468a8e1b665d0ac20ecf", "7c419e44e307423ebd354d38f3467895"]} id="ouxA8rpoxfUB" outputId="c10c612a-ee7d-43bb-e0a9-3bc5bf2ffdfa"
 # Function to update the plot based on Z
 def plot_outliers(Z):
     threshold_poisson = lambda_ + Z * np.sqrt(lambda_)
@@ -308,7 +308,7 @@ display(z_slider, interactive_plot)
 Let us now perform the same analysis for gamma counts.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 281, "referenced_widgets": ["6a370f39b65e488ebd2d17b54ae74545", "c2efabe9850841e09494a69f82bcb965", "caf727006bcb4a9e9148ed419d7be4ab", "5ff37f58a382480294b5082208246bfc", "a06cf7e352dd4327ab2fca6144d723bb"]} id="K3sVmWq1yWUu" outputId="a498f753-1d7c-4b82-b1e1-b757bfd18536"
+```python colab={"base_uri": "https://localhost:8080/", "height": 539, "referenced_widgets": ["82adca6010f84d08b4dad5226c113b49", "50491228604a48ad9b748b8c4d4625b1", "d35db834ad574342a872cc216878c919", "a86488ff253941dfa5cbeb6fc1b61f2f", "54a88901066c4a45b20f13712dbabf99"]} id="K3sVmWq1yWUu" outputId="f0ca8191-003f-4339-c871-006abc776270"
 # Precompute Poisson mean for gamma background
 lambda_gamma = gamma_df_1_minute_background["Counts"].mean()
 
