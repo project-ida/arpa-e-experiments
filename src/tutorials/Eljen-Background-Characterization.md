@@ -11,11 +11,9 @@ jupyter:
     name: python3
 ---
 
+<!-- #region id="a360f4c0-baa3-4325-b14d-8bd37958784c" -->
 <a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/neutrons-background-1/tutorials/Eljen-Background-Characterization.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/neutrons-background-1/tutorials/Eljen-Background-Characterization.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
-
-```python id="-_ch-zBMyMMF"
-pip install ipywidgets
-```
+<!-- #endregion -->
 
 <!-- #region id="Fa_xEG7NE-yB" -->
 # Eljen Detector Background Characterization
@@ -29,7 +27,7 @@ Eljen scintillator detectors work by converting ionizing radiation into visible 
 Our goal is to characterize the background radiation as picked up by the 2" and 5" Eljen detectors. In order to do so, we ran the Eljen detectors in question throughout December 2024 and January 2025. We will know chracterize this background---which will be useful for future analysis.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="PbnVxkXsE-gX" outputId="003fe9d1-4a47-4b37-8855-207ec31c8f4a"
+```python colab={"base_uri": "https://localhost:8080/"} id="PbnVxkXsE-gX" outputId="b7467cee-2d67-4d1b-e98b-1750874d04e3"
 # RUN THIS IF YOU ARE USING GOOGLE COLAB
 import sys
 import os
@@ -97,7 +95,7 @@ gamma_df = pd.read_csv(
 Now that we have collected the raw data (i.e. electric signal history) that interests us, let us have a look at the measured neutron and gamma counts.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="XL6XjRnoFd8j" outputId="1b2ebb70-e9dd-42c3-80ef-f24d97a4f9ab"
+```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="XL6XjRnoFd8j" outputId="344ae7f6-ce63-4aaf-8fd4-77abb53feac8"
 plt.figure(figsize=(8, 4))
 plt.plot(neutron_df['Counts'])
 plt.xlabel('Time')
@@ -108,7 +106,7 @@ plt.show()
 # plt.savefig("all-neutron-counts-sec.png", dpi=600)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="mIZOh2-xFwWf" outputId="d9b7926e-6acc-4c6f-efc1-f8637e7716c4"
+```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="mIZOh2-xFwWf" outputId="d27502b7-167f-435b-90a7-e991f0fe7094"
 plt.figure(figsize=(8, 4))
 plt.plot(gamma_df['Counts'])
 plt.xlabel('Time')
@@ -145,7 +143,7 @@ gamma_df_1_minute_background = gamma_df_1_minute[start_time:end_time]
 Now that we have excluded the time before and when the neutron source was introduced, let us have a closer look at our background neutron counts.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="s9b-zrG1Mue2" outputId="3eda5214-3e27-40de-d087-141edf8b8247"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="s9b-zrG1Mue2" outputId="2e0793be-a5f1-4caf-a6f5-0c8a0060cd85"
 # Ensure the index is datetime
 neutron_df_1_minute_background.index = pd.to_datetime(neutron_df_1_minute_background.index)
 
@@ -195,7 +193,7 @@ We will consider that count is "significantly high" if it exceeds $\lambda + \sq
 where $Z = 3$ corresponds to a $3\sigma$ threshold (confidence level ~99.7%)
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="HOD0IxyytMPM" outputId="9a7add5e-973b-45ed-9068-be242bf53e6d"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="HOD0IxyytMPM" outputId="7aa12946-f877-4974-bfa5-fc0031283162"
 histograms = []
 for day, group in grouped_by_day:
     hist_values, bin_edges = np.histogram(group["Counts"], bins=bins, density=True)
@@ -293,15 +291,14 @@ def plot_outliers(Z):
     plt.grid(True)
     plt.tight_layout()
     plt.show()
+```
 
-z_slider = widgets.IntSlider(value=3, min=1, max=10, step=1,
-                             description='Z-score:', continuous_update=False)
-# Connect the slider to the function
-interactive_plot = widgets.interactive_output(plot_outliers, {'Z': z_slider})
+<!-- #region id="LYRh5-UrRJlO" -->
+In order to visualize the effect of choosing different values of $Z$, feel free t interact with the code block below and play around with the variables!
+<!-- #endregion -->
 
-# Display the slider and plot
-display(z_slider, interactive_plot)
-
+```python colab={"base_uri": "https://localhost:8080/", "height": 364} id="X6bom6B1Q97q" outputId="c8b88576-8c3e-4b29-9371-0fc09a204c14"
+plot_outliers(Z=3)
 ```
 
 <!-- #region id="Kno9Dvjc4H3i" -->
@@ -334,19 +331,12 @@ def plot_gamma_outliers(Z):
     plt.grid(True)
     plt.tight_layout()
     plt.show()
-
-# Create integer slider for Z from 1 to 10
-z_slider_gamma = widgets.IntSlider(value=3, min=1, max=10, step=1,
-                                   description='Z-score:', continuous_update=False)
-
-# Create interactive output
-interactive_plot_gamma = widgets.interactive_output(plot_gamma_outliers, {'Z': z_slider_gamma})
-
-# Display the slider and plot
-display(z_slider_gamma, interactive_plot_gamma)
-
 ```
 
-```python id="NSK1Nxi67eqi"
+<!-- #region id="xmPhCdfGRWM8" -->
+Similarly to above, feel free to play around with $Z$ to observe the effect of its value on our count threshold.
+<!-- #endregion -->
 
+```python id="NSK1Nxi67eqi" colab={"base_uri": "https://localhost:8080/", "height": 364} outputId="6e86efc6-a642-4b80-fc3a-5bef65a559d4"
+plot_gamma_outliers(Z=3)
 ```
