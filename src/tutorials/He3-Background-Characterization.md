@@ -11,11 +11,9 @@ jupyter:
     name: python3
 ---
 
+<!-- #region id="a6fb405c-18f7-4224-9ec8-24f0a5c3c825" -->
 <a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/neutrons-background-2/tutorials/He3-Background-Characterization.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/neutrons-background-2/tutorials/He3-Background-Characterization.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
-
-```python id="Rjxll-Sdchar"
-
-```
+<!-- #endregion -->
 
 <!-- #region id="_WZ7vK7sctla" -->
 # Helium-3 Detector Background Characterization
@@ -37,7 +35,7 @@ Our goal is to characterize the background radiation detected by the Helium-3 ne
 
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="PxFHoPsndN0t" outputId="fea91b93-d5c9-4342-bc69-3eb4a22e6ec6"
+```python colab={"base_uri": "https://localhost:8080/"} id="PxFHoPsndN0t" outputId="19ead881-1d66-42e9-ac2a-a0c2cf481193"
 # RUN THIS IF YOU ARE USING GOOGLE COLAB
 import sys
 import os
@@ -55,8 +53,6 @@ import matplotlib.pyplot as plt
 import scipy.stats as stats
 from scipy.stats import norm
 from scipy.stats import poisson
-
-import ipywidgets as widgets
 from IPython.display import display
 
 from IPython.display import Image
@@ -109,7 +105,7 @@ he3_all = he3_all.sort_index()
 Now that we have collected the raw data (i.e. electric signal history) that interests us, let us have a look at the measured neutron and gamma counts.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="bUOQ2fYdd712" outputId="6decf25e-d690-4483-ea8e-6240dd4ee76b"
+```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="bUOQ2fYdd712" outputId="21c11446-99c1-413f-c816-eac991ffd815"
 plt.figure(figsize=(8, 4))
 plt.plot(he3_all['Counts ch50-1000'])
 plt.xlabel('Time')
@@ -120,11 +116,11 @@ plt.show()
 # plt.savefig("He3-counts-dec.png", dpi=600)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 335} id="7HJkR9hpexLK" outputId="dc599529-5ba8-4b34-c772-6c0848d53898"
+```python colab={"base_uri": "https://localhost:8080/", "height": 335} id="7HJkR9hpexLK" outputId="492f7102-c7da-4208-aa2b-840c10dc23b8"
 he3_all['Counts ch50-1000'].describe()
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="3BWIPYvwexio" outputId="67de1e10-e136-46c1-d4b3-c1a00eca54d5"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="3BWIPYvwexio" outputId="86bc66d5-0087-4c28-cda1-011d516b5e8c"
 # Ensure the index is datetime
 he3_all.index = pd.to_datetime(he3_all.index)
 
@@ -150,10 +146,10 @@ plt.show()
 ```
 
 <!-- #region id="zxgDMmwGfr8K" -->
-From the plot above, it is unclear whether the background ditribution corresponds to a Poisson ditribution with a large $\lambda$ or a Gaussian distribution. Let us begin by attempting to fit the data to a Poisson distribution.
+From the plot above, it is unclear whether the background ditribution corresponds to a Poisson distribution with a large $\lambda$ or a Gaussian distribution. Let us begin by attempting to fit the data to a Poisson distribution.
 <!-- #endregion -->
 
-```python id="RX4TIdihhA8K"
+```python id="RX4TIdihhA8K" outputId="83670190-27d9-412d-ade9-5af8874239a5" colab={"base_uri": "https://localhost:8080/"}
 he3_all.index = pd.to_datetime(he3_all.index)
 
 grouped_by_day = he3_all.groupby(he3_all.index.date)
@@ -205,16 +201,14 @@ def plot_with_z_band(Z):
     plt.grid(True)
     plt.tight_layout()
     plt.show()
+```
 
-# Create Z-score slider
-z_slider = widgets.IntSlider(value=3, min=1, max=5, step=1, description='Z-score:', continuous_update=False)
+<!-- #region id="IVdhMt1xSXWj" -->
+The code above gives us a function to plot a histogram of He-3 counts along with a normal fit and a $Z\cdot \sigma$ band. Feel free o play around with the value of Z below to observe its effects on which counts are considered in our model
+<!-- #endregion -->
 
-# Interactive output
-interactive_plot = widgets.interactive_output(plot_with_z_band, {'Z': z_slider})
-
-# Display
-display(z_slider, interactive_plot)
-
+```python id="geSAupq1SUn7" outputId="aff83bbe-0489-40f8-d2c0-38c4a10a20de" colab={"base_uri": "https://localhost:8080/", "height": 601}
+plot_with_z_band(Z=3)
 ```
 
 ```python id="g7WTO2_DiOss"
@@ -276,14 +270,14 @@ def plot_histogram_with_z(Z):
     plt.grid(True)
     plt.tight_layout()
     plt.show()
+```
 
-# Z-score slider
-z_slider = widgets.IntSlider(value=3, min=1, max=5, step=1, description='Z-score:', continuous_update=False)
+<!-- #region id="RzasFIgwSsca" -->
+Similarly to above, feel free to play around with different values of $Z$ below. The only difference here is that we are considering a POisson fit to our background.
+<!-- #endregion -->
 
-# Display
-interactive_plot = widgets.interactive_output(plot_histogram_with_z, {'Z': z_slider})
-display(z_slider, interactive_plot)
-
+```python id="6eiTTDaISryL" outputId="35e56bb0-5119-47a3-a028-b191715fade0" colab={"base_uri": "https://localhost:8080/", "height": 601}
+plot_histogram_with_z(Z=3)
 ```
 
 <!-- #region id="3zUTAdVujXne" -->
@@ -320,19 +314,16 @@ def plot_he3_outliers(Z):
     plt.grid(True)
     plt.tight_layout()
     plt.show()
-
-# Create the Z-score slider
-z_slider_he3 = widgets.IntSlider(value=3, min=1, max=10, step=1,
-                                 description='Z-score:', continuous_update=False)
-
-# Connect slider to plotting function
-interactive_plot_he3 = widgets.interactive_output(plot_he3_outliers, {'Z': z_slider_he3})
-
-# Display slider and plot
-display(z_slider_he3, interactive_plot_he3)
-
 ```
 
-```python id="m9WCJBdMjrwb"
+<!-- #region id="b81Pk6pBS93C" -->
+The different alues of $Z$ will lead to different considerations of what counts are "outliers". Again, feel free to play around with the different values of Z to observe the effect on our counting. The standard, as discussed above, will be $Z=3$.
+<!-- #endregion -->
+
+```python id="m9WCJBdMjrwb" outputId="0fe8314e-f14d-4443-f149-79738041060f" colab={"base_uri": "https://localhost:8080/", "height": 363}
+plot_he3_outliers(Z=3)
+```
+
+```python id="OcA2eerVTPVC"
 
 ```
