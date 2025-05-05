@@ -2,6 +2,85 @@ import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 import matplotlib.animation as animation
 import pandas as pd
+import requests
+from io import StringIO
+from .auth import get_credentials
+
+def load_data(url):
+    """
+    Loads a CSV file from a password-protected URL into a pandas DataFrame.
+
+    This function retrieves a CSV file from a specified URL using HTTP Basic Authentication
+    with credentials stored via the auth module. It parses the CSV into a DataFrame with a
+    time-based index and handles authentication or HTTP errors gracefully.
+
+    Parameters:
+    -----------
+    url : str
+        The URL of the password-protected CSV file to be loaded. The file should be in CSV
+        format with a 'time' column for the index.
+
+    Returns:
+    --------
+    pandas.DataFrame or None
+        A DataFrame with a time-based index ('time') if the data is loaded successfully.
+        Returns None if authentication fails (e.g., 401 Unauthorized or missing credentials).
+
+    Raises:
+    -------
+    RuntimeError
+        If the HTTP request fails for reasons other than authentication (e.g., network issues,
+        404 Not Found, or other server errors).
+
+    Example:
+    --------
+    from libs.auth import authenticate
+    from libs.helpers import load_data
+    
+    authenticate()  # Prompt for credentials
+    url = "https://example.com/data.csv"
+    df = load_data(url)
+    if df is not None:
+        print(df.head())
+
+    Notes:
+    ------
+    - Assumes that `authenticate()` from the auth module has been called to set credentials.
+    - The CSV file must have a 'time' column, which is parsed as a datetime and set as the index.
+    - Uses ISO8601 format for parsing the 'time' column.
+    """
+    try:
+        # Retrieve credentials
+        credentials = get_credentials()
+        username = credentials['username']
+        password = credentials['password']
+        
+        # Fetch the CSV file with HTTP Basic Authentication
+        response = requests.get(url, auth=(username, password))
+        
+        # Check if the request was successful
+        if response.status_code == 200:
+            # Convert the response content to a string and load it into a pandas DataFrame
+            csv_content = response.text
+            df = pd.read_csv(
+                StringIO(csv_content),
+                parse_dates=['time'],
+                date_format="ISO8601",
+                index_col='time'
+            )
+            print("Data file loaded successfully!")
+            return df
+        elif response.status_code == 401:
+            print("Unauthorized: Please verify your username and password or re-run authenticate().")
+            return None
+        else:
+            raise RuntimeError(f"Failed to retrieve the file. Status code: {response.status_code}")
+    
+    except ValueError as e:
+        print("Authentication error:", str(e))
+        return None
+    except Exception as e:
+        raise RuntimeError(f"Error loading data: {e}")
 
 def print_info(dataframe):
     """
