@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.16.6
+      jupytext_version: 1.17.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -49,7 +49,13 @@ from IPython.display import HTML
 # - plot_panels
 # - plot_panels_with_scatter
 # - print_info
+# - load_data
 from libs.helpers import *
+
+# Necessary for using load_data on password protected data urls
+# - authenticate
+# - get_credentials
+from libs.auth import *
 ```
 
 ```python id="24457467-13a8-466c-a16f-7d7868e7386b"
@@ -68,12 +74,7 @@ meta = {
 
 ```python id="fde663ef-7691-4c50-8a21-df4e77c67d25"
 # Read the tempearture data
-temperature_df = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/new-chamber-first-pd-5.csv',
-    parse_dates=['time'],
-    date_format="ISO8601",
-    index_col='time'
-)
+temperature_df = load_data('http://nucleonics.mit.edu/csv-files/new-chamber-first-pd-5.csv')
 ```
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="686ac467-0ef2-48a8-9598-a80f357130a8" outputId="b03de5ed-5e32-4199-d9dd-c6a9d562b24d"
@@ -129,12 +130,7 @@ temperature_df['Inferred mean T (C)'] = temperature_df['Temperature (C)'].iloc[0
 
 ```python id="3a6692b1-462c-43de-83de-d31864a847b3"
 # Read the heating power data
-heating_df = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/new-chamber-first-pd-1.csv',
-    parse_dates=['time'],
-    date_format="ISO8601",
-    index_col='time'
-)
+heating_df = load_data('http://nucleonics.mit.edu/csv-files/new-chamber-first-pd-1.csv')
 ```
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="81174345-4f9b-4095-ab2e-3dfd172ea8a2" outputId="33b619a3-b277-4ffc-eaac-2d694f0dce6c"
@@ -166,12 +162,7 @@ plt.show()
 
 ```python id="D8kU4YY7b3W7"
 # Read the pressure data
-pressure_df = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/new-chamber-first-pd-3.csv',
-    parse_dates=['time'],
-    date_format="ISO8601",
-    index_col='time',
-)
+pressure_df = pd.read_csv('http://nucleonics.mit.edu/csv-files/new-chamber-first-pd-3.csv')
 ```
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="5a016413-224d-4ffd-bdd5-1e403830f278" outputId="65d2d7c9-9b2e-4b38-b978-89e017f04787"

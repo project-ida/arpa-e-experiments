@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.16.5
+      jupytext_version: 1.17.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -49,7 +49,13 @@ from IPython.display import HTML
 # - plot_panels
 # - plot_panels_with_scatter
 # - print_info
+# - load_data
 from libs.helpers import *
+
+# Necessary for using load_data on password protected data urls
+# - authenticate
+# - get_credentials
+from libs.auth import *
 ```
 
 ```python id="77ff6961-702c-4e53-b339-6d98a95d73c3"
@@ -68,15 +74,10 @@ meta = {
 
 ```python id="fde663ef-7691-4c50-8a21-df4e77c67d25"
 # Read the tempearture data
-temperature_df = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/loading%20deloading%20runs/thermocouples_september_ti-1.csv',
-    parse_dates=['time'],
-    date_format="ISO8601",
-    index_col='time'
-)
+temperature_df = load_data('http://nucleonics.mit.edu/csv-files/loading%20deloading%20runs/thermocouples_september_ti-1.csv')
 ```
 
-```python id="91c572f5-e03c-470d-961f-4e86959c0ed6" outputId="3af10012-e740-4a31-b86e-1e22d89c7c06" colab={"base_uri": "https://localhost:8080/"}
+```python colab={"base_uri": "https://localhost:8080/"} id="91c572f5-e03c-470d-961f-4e86959c0ed6" outputId="3af10012-e740-4a31-b86e-1e22d89c7c06"
 # Print out basic description of the data, including any NaNs
 print_info(temperature_df)
 ```
