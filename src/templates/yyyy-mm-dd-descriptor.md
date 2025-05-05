@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.16.4
+      jupytext_version: 1.17.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -57,7 +57,13 @@ from IPython.display import HTML
 # - plot_panels
 # - plot_panels_with_scatter
 # - print_info
+# - load_data
 from libs.helpers import *
+
+# Necessary for using load_data on password protected data urls
+# - authenticate
+# - get_credentials
+from libs.auth import *
 ```
 
 ```python id="961e61cb-8a0c-4f45-9c9e-ec6c81441524"
@@ -71,16 +77,10 @@ meta = {
 <!-- #endregion -->
 
 ```python id="fde663ef-7691-4c50-8a21-df4e77c67d25"
-# Read the data from source that includes headers
-example_df = pd.read_csv(
-    'CHANGE THIS TO DATA URL',
-    parse_dates=['time'],
-    date_format="ISO8601",
-    index_col='time'
-)
+# Read the data from remote source that includes headers
+example_df = load_data('CHANGE THIS TO DATA URL')
 
-
-# Read the data from source that does NOT include headers
+# Manually read the data from source that does NOT include headers
 # CHANGE "names" to be descriptive of the measurements
 # e.g. pressure data  names=['time', 'Voltage1', 'Voltage2', 'Voltage3', 'Voltage4']
 example_df = pd.read_csv(

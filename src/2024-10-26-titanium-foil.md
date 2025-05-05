@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.16.5
+      jupytext_version: 1.17.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -49,7 +49,13 @@ from IPython.display import HTML
 # - plot_panels
 # - plot_panels_with_scatter
 # - print_info
+# - load_data
 from libs.helpers import *
+
+# Necessary for using load_data on password protected data urls
+# - authenticate
+# - get_credentials
+from libs.auth import *
 ```
 
 ```python id="22ef5515-17c7-40fd-af05-708908d8ca4d"
@@ -68,12 +74,7 @@ meta = {
 
 ```python id="fde663ef-7691-4c50-8a21-df4e77c67d25"
 # Read the tempearture data
-temperature_df = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/loading%20deloading%20runs/thermocouples_october_ti2-1.csv',
-    parse_dates=['time'],
-    date_format="ISO8601",
-    index_col='time'
-)
+temperature_df = load_data('http://nucleonics.mit.edu/csv-files/loading%20deloading%20runs/thermocouples_october_ti2-1.csv')
 ```
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="798ab403-d69c-4681-bcbd-4519a1d0192d" outputId="5abb678f-ceda-41f0-ce90-20d549214078"
@@ -115,12 +116,7 @@ plt.show()
 
 ```python id="D8kU4YY7b3W7"
 # Read the pressure data
-pressure_df = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/loading%20deloading%20runs/thermocouples_october_ti2-3.csv',
-    parse_dates=['time'],
-    date_format="ISO8601",
-    index_col='time'
-)
+pressure_df = pd.read_csv('http://nucleonics.mit.edu/csv-files/loading%20deloading%20runs/thermocouples_october_ti2-3.csv')
 ```
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="223c2229-165b-486b-b203-59bec48799a4" outputId="3e422f37-8570-49f6-a18a-437a595f660c"

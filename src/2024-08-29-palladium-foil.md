@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.16.4
+      jupytext_version: 1.17.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -49,7 +49,13 @@ from IPython.display import HTML
 # - plot_panels
 # - plot_panels_with_scatter
 # - print_info
+# - load_data
 from libs.helpers import *
+
+# Necessary for using load_data on password protected data urls
+# - authenticate
+# - get_credentials
+from libs.auth import *
 ```
 
 ```python id="24457467-13a8-466c-a16f-7d7868e7386b"
@@ -68,12 +74,7 @@ meta = {
 
 ```python id="fde663ef-7691-4c50-8a21-df4e77c67d25"
 # Read the tempearture data
-temperature_df = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/loading%20deloading%20runs/thermocouples_september-1.csv',
-    parse_dates=['time'],
-    date_format="ISO8601",
-    index_col='time'
-)
+temperature_df = load_data('http://nucleonics.mit.edu/csv-files/loading%20deloading%20runs/thermocouples_september-1.csv')
 ```
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="686ac467-0ef2-48a8-9598-a80f357130a8" outputId="908f4588-e22f-4b8c-cf8c-4ab4f58149f0"
@@ -118,12 +119,7 @@ plt.show()
 
 ```python id="3a6692b1-462c-43de-83de-d31864a847b3"
 # Read the heating power data
-heating_df = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/loading%20deloading%20runs/thermocouples_september-2.csv',
-    parse_dates=['time'],
-    date_format="ISO8601",
-    index_col='time'
-)
+heating_df = load_data('http://nucleonics.mit.edu/csv-files/loading%20deloading%20runs/thermocouples_september-2.csv')
 ```
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="81174345-4f9b-4095-ab2e-3dfd172ea8a2" outputId="b24189d5-f0ed-4350-c709-1178d5b90893"
