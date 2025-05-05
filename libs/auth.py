@@ -13,7 +13,7 @@ def authenticate():
     password = getpass("Enter password: ")
     _credentials['username'] = username
     _credentials['password'] = password
-    print("Authentication successful.")
+    print("Credentials saved.")
 
 def get_credentials():
     """
