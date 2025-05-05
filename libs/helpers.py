@@ -11,6 +11,11 @@ def print_info(dataframe):
     total number of data points, average time between measurements, and a count of NaN
     values for each column.
 
+    It also provides a summary of the time differences between successive measurements,
+    showing the most common interval (Δt), the second most common interval (if available),
+    and the number and proportion of measurements with less common intervals. This helps
+    identify irregular sampling or data collection issues.
+
     Parameters:
     -----------
     dataframe : pandas.DataFrame
@@ -23,6 +28,8 @@ def print_info(dataframe):
     - End time of measurements.
     - Total number of data points.
     - Average time interval (in seconds) between data points.
+    - Most common and second most common time intervals between measurements.
+    - Count and percentage of measurements with non-standard time intervals.
     - Count of NaN values per column.
 
     Example:
@@ -35,7 +42,14 @@ def print_info(dataframe):
     - Calculates the time interval by dividing the total time span by the number of points.
     - Useful for quickly inspecting data completeness and identifying potential data gaps.
     """
-    
+
+
+    # Ensure index is datetime and sorted
+    dataframe = dataframe.copy()
+    dataframe.index = pd.to_datetime(dataframe.index)
+    dataframe = dataframe.sort_index()
+
+        
     # When does data collection begin and end
     print(f"Measurements start at: {dataframe.index[0]}")
     print(f"Measurements end at: {dataframe.index[-1]}")
@@ -47,13 +61,33 @@ def print_info(dataframe):
 
     # What's the average time in seconds time between data points
     time_between_points = ((dataframe.index[-1] - dataframe.index[0]) / raw_total_points).total_seconds()
-    print(f"Time between measurements: {time_between_points} s")
+    print(f"Average time between measurements: {time_between_points:.6f} s")
     print("---------")
 
-    # Count problem values like NaNs
-   
+    # Time difference analysis
+    delta_seconds = dataframe.index.to_series().diff().dt.total_seconds().dropna().round(3)
+    delta_counts = delta_seconds.value_counts().sort_values(ascending=False)
+
+    if len(delta_counts) > 0:
+        most_common = delta_counts.index[0]
+        most_common_count = delta_counts.iloc[0]
+        print(f"Most common Δt between measurements: {most_common} s ({most_common_count} instances)")
+
+        if len(delta_counts) > 1:
+            second_common = delta_counts.index[1]
+            second_common_count = delta_counts.iloc[1]
+            print(f"Second most common Δt: {second_common} s ({second_common_count} instances)")
+
+        other_counts = delta_counts.iloc[1:].sum()
+        print(f"Measurements with a Δt not equal to the most common: {other_counts} ({other_counts / raw_total_points:.2%})")
+    else:
+        print("No time difference data available (only one timestamp?)")
+    print("---------")
+
+    # Count NaNs
     print("Total number of NaNs")
     print(dataframe.isna().sum())
+
     
     
 
