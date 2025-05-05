@@ -8,17 +8,18 @@ from .auth import get_credentials
 
 def load_data(url):
     """
-    Loads a CSV file from a password-protected URL into a pandas DataFrame.
+    Loads a CSV file from a URL into a pandas DataFrame, handling password protection if required.
 
-    This function retrieves a CSV file from a specified URL using HTTP Basic Authentication
-    with credentials stored via the auth module. It parses the CSV into a DataFrame with a
-    time-based index and handles authentication or HTTP errors gracefully.
+    This function first checks if the URL requires authentication by attempting an unauthenticated
+    request. If successful (200 OK), it loads the data without credentials. If it receives a 401
+    Unauthorized response, it uses stored credentials from the auth module to authenticate and
+    retry the request. The CSV is parsed into a DataFrame with a time-based index.
 
     Parameters:
     -----------
     url : str
-        The URL of the password-protected CSV file to be loaded. The file should be in CSV
-        format with a 'time' column for the index.
+        The URL of the CSV file to be loaded. The file should be in CSV format with a 'time'
+        column for the index, and may be password-protected.
 
     Returns:
     --------
@@ -37,30 +38,34 @@ def load_data(url):
     from libs.auth import authenticate
     from libs.helpers import load_data
     
-    authenticate()  # Prompt for credentials
-    url = "https://example.com/data.csv"
+    # For password-protected URL, authenticate first
+    authenticate()  # Prompt for credentials if needed
+    url = "https://example.com/protected_data.csv"
+    df = load_data(url)
+    if df is not None:
+        print(df.head())
+
+    # For unprotected URL, no authentication needed
+    url = "https://example.com/public_data.csv"
     df = load_data(url)
     if df is not None:
         print(df.head())
 
     Notes:
     ------
-    - Assumes that `authenticate()` from the auth module has been called to set credentials.
+    - Checks for password protection with an initial unauthenticated request.
+    - If 401 is received, assumes authentication is required and uses credentials from authenticate().
     - The CSV file must have a 'time' column, which is parsed as a datetime and set as the index.
     - Uses ISO8601 format for parsing the 'time' column.
+    - Credentials are optional; if not needed, the function skips authentication.
+    - Useful for loading both public and protected experiment data with a consistent interface.
     """
     try:
-        # Retrieve credentials
-        credentials = get_credentials()
-        username = credentials['username']
-        password = credentials['password']
+        # Initial unauthenticated request to check if password is required
+        response = requests.get(url)
         
-        # Fetch the CSV file with HTTP Basic Authentication
-        response = requests.get(url, auth=(username, password))
-        
-        # Check if the request was successful
         if response.status_code == 200:
-            # Convert the response content to a string and load it into a pandas DataFrame
+            # No authentication required, process the response
             csv_content = response.text
             df = pd.read_csv(
                 StringIO(csv_content),
@@ -71,8 +76,24 @@ def load_data(url):
             print("Data file loaded successfully!")
             return df
         elif response.status_code == 401:
-            print("Unauthorized: Please verify your username and password or re-run authenticate().")
-            return None
+            # Authentication required, retrieve credentials and retry
+            credentials = get_credentials()
+            username = credentials['username']
+            password = credentials['password']
+            response = requests.get(url, auth=(username, password))
+            if response.status_code == 200:
+                csv_content = response.text
+                df = pd.read_csv(
+                    StringIO(csv_content),
+                    parse_dates=['time'],
+                    date_format="ISO8601",
+                    index_col='time'
+                )
+                print("Data file loaded successfully with authentication!")
+                return df
+            else:
+                print("Unauthorized: Please verify your username and password or re-run authenticate().")
+                return None
         else:
             raise RuntimeError(f"Failed to retrieve the file. Status code: {response.status_code}")
     
