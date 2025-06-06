@@ -27,6 +27,10 @@ Eljen scintillator detectors work by converting ionizing radiation into visible 
 Our goal is to characterize the background radiation as picked up by the 2" and 5" Eljen detectors. In order to do so, we ran the Eljen detectors in question throughout December 2024 and January 2025. We will now characterize this background---which will be useful for future analysis.
 
 In this notebook, we start by diving into the data from the 2inch liquid scintillation detector.
+
+Data panel can be found here: https://lenr.mit.edu/data/load-panel.php?filename=eljen/eljen-2inch-long-term
+
+% Need to figure out how we can merge the root files for bin indeendent
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="PbnVxkXsE-gX" outputId="061563be-13bd-420d-9806-287065d218b6"
@@ -456,6 +460,17 @@ Before each new experimental run, we should perform a short background measureme
      - Cosmic‐ray “weather” ?
 
 By embedding this “quick‐check” step into every experimental workflow, we ensure that our background conditions match the long‐term characterization before any experiment is conducted.
+<!-- #endregion -->
+
+<!-- #region id="SZ6BNXIuNxKg" -->
+# Bin Free
+
+We want to implement a new method that does not deend on binning.
+The idea is to record deltas between counts in the eljen rather than the number of counts every second.
+
+We then want to plot the cumulative spectrum of counts so get the probability of observing delta smaller than a certain value ie $P(\Delta t ≤ t$).
+
+Our Eljen detector has ns second precision so we have a " fundamental " binning limit but it is much smaller than the typical time spacing between counts (insert mean, min, max) so we will consider that we are in the infinitessimal limit.
 <!-- #endregion -->
 
 <!-- #region id="O5vt828MwjnM" -->
