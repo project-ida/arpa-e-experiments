@@ -7,7 +7,8 @@ jupyter:
       format_version: '1.3'
       jupytext_version: 1.17.2
   kernelspec:
-    display_name: Python 3
+    display_name: Python 3 (ipykernel)
+    language: python
     name: python3
 ---
 
@@ -22,15 +23,16 @@ jupyter:
 
 Eljen scintillator detectors work by converting ionizing radiation into visible light. Radiation excites molecules in the plastic; these de-excite and emit photons. The light is detected by a photomultiplier tube (PMT) or Silicon photomultiplier (SiPM), producing an electrical signal proportional to the energy deposited.
 
-## 5 and 2 inch Eljen detector - December 2024/ January 2025
+### Our Eljen Detectors 
 
-Our goal is to characterize the background radiation as picked up by the 2" and 5" Eljen detectors. In order to do so, we ran the Eljen detectors in question throughout December 2024 and January 2025. We will now characterize this background---which will be useful for future analysis.
+In the lab, we have access to both a 2" and a 5" Eljen detector. Our goal in this notebook is to set up a precedure for chracterizing the background of one of these detectors from a "long"(~1 month) background measurments. Thus, we would like to characterize the probabilistic distribution of the background counts picked up by an Eljen detector and set up a protocolto use statistical tests to determine whether certain counts or bursts are background or events of significance in our experiments. 
 
-In this notebook, we start by diving into the data from the 2inch liquid scintillation detector.
+In this first notebook, we will begin by analysising our **2" Eljen detector**.
 
-Data panel can be found here: https://lenr.mit.edu/data/load-panel.php?filename=eljen/eljen-2inch-long-term
+In order to do so, we began by running the Eljen detectors in question throughout December 2024 and January 2025. We will now characterize this background---which will be useful for future analysis.
 
-% Need to figure out how we can merge the root files for bin indeendent
+
+The data panel describing this backgroundmeasurement can be found here: https://lenr.mit.edu/data/load-panel.php?filename=eljen/eljen-2inch-long-term
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="PbnVxkXsE-gX" outputId="061563be-13bd-420d-9806-287065d218b6"
@@ -40,6 +42,20 @@ import os
 !git clone https://github.com/project-ida/arpa-e-experiments.git
 sys.path.insert(0,'/content/arpa-e-experiments')
 os.chdir('/content/arpa-e-experiments')
+```
+
+```python
+# RUN THIS IF YOU ARE LOCAL. 
+# It makes sure we can import helpers from libs which is one level up
+
+import sys
+import os
+
+# Get the parent directory (one level up from the current directory)
+project_root = os.path.abspath(os.path.join(os.getcwd(), '..'))
+
+# Add the parent directory to sys.path
+sys.path.insert(0, project_root)
 ```
 
 ```python id="8blAJNCbE4iU"
@@ -96,7 +112,7 @@ gamma_df = pd.read_csv(
 ```
 
 ```python id="NFbBUXQIKQgk"
-# we will also startnumbering our figures here for easier reference later in the notebook'
+# we will also start numbering our figures here for easier reference later in the notebook'
 fig_counter = 0
 ```
 
@@ -106,28 +122,35 @@ fig_counter = 0
 Now that we have collected the raw data (i.e. electric signal history) that interests us, let us have a look at the measured neutron and gamma counts.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="XL6XjRnoFd8j" outputId="65956611-7955-484d-d41d-476e0a9adeda"
+```python
 from matplotlib.patches import Rectangle
+
 fig_counter += 1
 
 plt.figure(figsize=(8, 4))
-plt.plot(neutron_df['Counts'])
+plt.plot(neutron_df['Counts'], label='Counts', zorder=1)
 plt.xlabel('Time')
 plt.ylabel('Counts')
 plt.xticks(rotation=45)
 plt.title(f"{meta['descriptor']} - Neutron Counts (Fig. {fig_counter})")
 
-# highlight December 18th because this corresponds to a neutron burst due to the introduction of Cf-252
 ax = plt.gca()
 start = pd.to_datetime('2024-12-18')
 end   = start + pd.Timedelta(days=1)
 ymin, ymax = ax.get_ylim()
-rect = Rectangle((start, ymin), end-start, ymax-ymin,
-                 linewidth=2, edgecolor='red', facecolor='none')
+
+rect = Rectangle((start, ymin),
+                 end - start,
+                 ymax - ymin,
+                 linewidth=2,
+                 edgecolor='red',
+                 facecolor='none',
+                 zorder=2)     
+
 ax.add_patch(rect)
 
+plt.legend()
 plt.show()
-# plt.savefig("all-neutron-counts-sec.png", dpi=600)
 ```
 
 <!-- #region id="wppSJfQSKnvx" -->
@@ -141,7 +164,7 @@ n \;=\; 3.086\% \times 3.7675 \;\approx\; 0.11627\ \text{neutrons per decay}
 11.627\ \text{neutrons per 100 decays}
 $$
 
-Furthermore, spontaneous fission of ²⁵²Cf is accompanied by prompt γ-rays emitted within $10^{-14}$–$10^{-12}\,\text{s}$ of fragment formation (cf https://www.sciencedirect.com/science/article/pii/0375947475904820?utm). The average γ-multiplicity is approximately 10.3 photons per fission (cf https://link.springer.com/article/10.1007/BF02847802?utm), essentially simultaneous with neutron emission. Therefore, we expect to observe a coincident γ-burst in any detector with sufficient energy threshold and timing resolution, aligned with the neutron spike seen on 18 December.
+Furthermore, spontaneous fission of ²⁵²Cf is accompanied by prompt [γ-rays emitted within $10^{-14}$–$10^{-12}\,\text{s}$ of fragment formation](https://www.sciencedirect.com/science/article/pii/0375947475904820?utm). The average γ-multiplicity is approximately [10.3 photons per fission](https://link.springer.com/article/10.1007/BF02847802?utm), essentially simultaneous with neutron emission. Therefore, we expect to observe a coincident γ-burst in any detector with sufficient energy threshold and timing resolution, aligned with the neutron spike seen on 18 December.
 
 This is indeed the case in the following plot.
 <!-- #endregion -->
@@ -167,7 +190,8 @@ rect = Rectangle(
     ymax - ymin,
     linewidth=2,
     edgecolor='red',
-    facecolor='none'
+    facecolor='none', 
+    zorder=10
 )
 ax.add_patch(rect)
 
@@ -180,6 +204,7 @@ plt.show()
 ## Step 3 - Resampling data and Removing Neutron burst
 
 The current data is taken about once per second. We'll now aggregate this data to present counts in 1 minute intervals.
+This is an arbitrary choice, but will allow us to develop wom intuition about count binning. Indeed, larger time itnervals will necessarily include more counts, so it will be easier to distinguish by eye any significant events. This is not nessecarily the method we will keep for further analysis, but it remains useful in our intuition builing. In the future, we hope to remove the arbitrarity of binning all together (see later notebook explained in last section of this notebook).
 
 Furthermore, we noticed above a neutron and gamma burst on December 18th. This corresponded to a time-period in which we brought a Cf-252 neutron source into the lab (ie the bursts that the detectors are picking up). Hence, in order to define a clear background time, we will start collecting data from December 19th.
 
@@ -264,9 +289,11 @@ Under these conditions, the number of neutrons detected in a fixed time interval
 
 The standard deviation is thus $\sigma = \sqrt{λ}$
 
-We will consider that count is "significantly high" if it exceeds $\lambda + \sqrt{\lambda}\cdot Z$
+In the literature, we will typically consider that count is "significantly high" if it exceeds $\lambda + \sqrt{\lambda}\cdot Z$
 
 where $Z = 3$ corresponds to a $3\sigma$ threshold (confidence level ~99.7%)
+
+Let us now have a closer look at how close our background is to this Poisson distribution. 
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="HOD0IxyytMPM" outputId="ecbfe010-f42d-48a5-c5dc-3e4cc3ac92de"
@@ -330,6 +357,7 @@ The black line corresponds to the average distribution of neutron counts across 
 The grey shaded area shows the spread of day-to-day variation, with upper and lower bounds at 3 standard deviations above and below the mean. Days that would lie outside this band would be statistically rare under normal conditions (probability < 0.3%). Hence, we may identify neutron bursts in future runs by looking at "outliers" of this grey shaded area.
 
 The red dashed line corresponds to the theoretical distribution assuming that neutron counts follow a Poisson process. We plotted this normalized Poisson ditribution assuming the Poisson paramter $\lambda$ to me the mean of our background data i.e. $\lambda \approx 0.63$.
+<!-- #endregion -->
 
 ### Quantitative goodness-of-fit
 
@@ -344,9 +372,8 @@ In order to test more rigorously whether our background truly follows a Poisson 
 3. A large $p$-value $(p>0.05$) implies we cannot reject the Poisson hypothesis at the $5 \%$ level.
 
 In the code below, we conduct this goodness of fit analysis and find a p value of $p = 0.9996229005$ so we cannot reject the null-hypothesis. Hence, for our purposes, we are in a good position to say that background follows a Poisson process.
-<!-- #endregion -->
 
-```python id="U8k5e80GVa8a" outputId="3e51874e-ba46-43f3-ff8b-69e4ef181e26" colab={"base_uri": "https://localhost:8080/"}
+```python colab={"base_uri": "https://localhost:8080/"} id="U8k5e80GVa8a" outputId="3e51874e-ba46-43f3-ff8b-69e4ef181e26"
 # — Chi-square goodness-of-fit test —
 # Aggregate observed counts across all days
 O_counts = histograms.sum(axis=0)       # observed total counts per bin
@@ -375,11 +402,11 @@ else:
 <!-- #region id="5oIuVt7mR_6y" -->
 ## Side-Step 4.2 – Stability of the Background Rate and Normality of Daily Means
 
-Furthremore, before trusting the aformentioned single global $\lambda$, we should check how much the daily average neutron count per minute varies over our measurement period—and whether those daily means themselves follow an approximately normal distribution (by the Central Limit Theorem, if $\lambda$ is truly constant).
+Furthermore, before trusting the aformentioned single global $\lambda$, we should check how much the daily average neutron count per minute varies over our measurement period, and whether those daily means themselves follow an approximately normal distribution (by the Central Limit Theorem, if $\lambda$ is truly constant).
 
 <!-- #endregion -->
 
-```python id="NCIVtudYR4nY" outputId="42837b94-ca98-4d12-e8f1-718407601ffc" colab={"base_uri": "https://localhost:8080/", "height": 975}
+```python colab={"base_uri": "https://localhost:8080/", "height": 975} id="NCIVtudYR4nY" outputId="42837b94-ca98-4d12-e8f1-718407601ffc"
 # 1. Compute daily means
 daily_means = [group["Counts"].mean() for _, group in grouped_by_day]
 days = list(grouped_by_day.groups.keys())
@@ -402,7 +429,13 @@ plt.ylabel('Density')
 plt.title(f'Distribution of Daily Means (Fig. {fig_counter+1})')
 plt.legend()
 plt.show()
+```
 
+## Goodness of fit check
+
+The above plot does not shed enough light on how close our mean distribution is to a normal one. In order to determine the goodness of our fit, we may start with a graphical check: the QQ-plot. This plot sample quantiles vs theoretical normal quantiles; and deviations from the straight line highlight non-normality.
+
+```python
 # 4. QQ-plot for normality check
 plt.figure(figsize=(6, 6))
 stats.probplot(daily_means, dist="norm", plot=plt)
@@ -410,8 +443,35 @@ plt.title(f'QQ Plot of Daily Means (Fig. {fig_counter+2})')
 plt.show()
 ```
 
+This, however, is not a "quantitative" measure of the goodness of our fit. For this, we will perform the Shapiro-Wilk test. 
+
+The Shapiro–Wilk test computes a statistic  
+$$
+W \;=\; \frac{\bigl(\sum_{i=1}^n a_i\,x_{(i)}\bigr)^2}
+                {\sum_{i=1}^n\bigl(x_i - \bar x\bigr)^2}\,,
+$$  
+
+where the $x_{(i)}$ are the ordered sample values, the $a_i$ are constants derived from the means and covariances of order statistics of a normal distribution, and $\bar x$ is the sample mean.  Under the null hypothesis that the data come from a normal distribution, $W$ is close to 1; values substantially below 1 indicate departure from normality.
+
+In practice, we obtain from `scipy.stats.shapiro(daily_means)` both the test statistic $W$ and a $p$-value.  We then compare the $p$-value to our significance level (commonly $\alpha=0.05$):
+
+- If $p > 0.05$, we **fail to reject** the null hypothesis: there is no strong evidence against normality.
+- If $p \le 0.05$, we **reject** the null hypothesis: the daily means significantly deviate from a normal distribution.
+
+
+```python
+# 5. Shapiro–Wilk test for normality
+W, p_value = stats.shapiro(daily_means)
+print(f"Shapiro–Wilk test: W = {W:.4f}, p-value = {p_value:.4f}")
+
+if p_value > 0.05:
+    print("Fail to reject H₀: data are consistent with a normal distribution")
+else:
+    print("Reject H₀: data significantly deviate from normality")
+```
+
 <!-- #region id="Ck9s6nzRS0JR" -->
-The above plots show that the daily mens are tightly clustered, which supports our above assumption of a stable background rate.
+By combining the visual Q–Q plot and the Shapiro–Wilk test, we obtain both qualitative and quantitative assurance that our daily means are well-approximated by a normal distribution—bolstering confidence in using a single global $\lambda$ for the background rate.  
 
 So, it is a reasonable assumption to claim that our $\lambda$ is essentially constant over the January-December background collection period.
 <!-- #endregion -->
@@ -448,7 +508,7 @@ Before each new experimental run, we should perform a short background measureme
 
 1. Compute the short-run mean  
    $$\hat\lambda_{\rm short} = \frac{\text{total counts in check}}{\text{duration in minutes}}$$
-2. Compare to long-term λ ?
+2. Compare to long-term λ 
 3. Goodness‐of‐fit test (optional)
    - Build a quick histogram of the short-run counts and perform a χ² test against $\mathrm{Poisson}(\lambda)$.  
    - If $p > 0.05$, background is consistent; otherwise investigate.  
@@ -457,224 +517,67 @@ Before each new experimental run, we should perform a short background measureme
    - If anomalous: pause and check for  
      - Instrument issues   
      - Environmental changes
-     - Cosmic‐ray “weather” ?
+     - Cosmic‐ray “weather” 
 
 By embedding this “quick‐check” step into every experimental workflow, we ensure that our background conditions match the long‐term characterization before any experiment is conducted.
 <!-- #endregion -->
 
 <!-- #region id="SZ6BNXIuNxKg" -->
-# Bin Free
+# Next Steps - Bin-Independent distributions.
 
-We want to implement a new method that does not deend on binning.
-The idea is to record deltas between counts in the eljen rather than the number of counts every second.
+In the notebook above, we chose arbitrary time-bins of 1 second and 1 minute. Howvere, ther Eljen detectors do not record counts per minute, but rather record individual waveforms and their timestamps with nano-second precision. Thus, it would be possible to implement a neutron background analysis method independent of binning.
 
-We then want to plot the cumulative spectrum of counts so get the probability of observing delta smaller than a certain value ie $P(\Delta t ≤ t$).
+We propose to work instead directly with inter-arrival times (deltas) between successive neutron/ gamma counts. This approach appears rather natural for a Poisson process, where the times ebtween events are exponentially ditributed. 
 
-Our Eljen detector has ns second precision so we have a " fundamental " binning limit but it is much smaller than the typical time spacing between counts (insert mean, min, max) so we will consider that we are in the infinitessimal limit.
-<!-- #endregion -->
-
-<!-- #region id="O5vt828MwjnM" -->
-## Step 6 - Zooming in on outliers
-
-Once we have established the stability of background, we are interested in determining whether any specific neutron burst is "significantly high". To do this, we use the well-established normal approximation to the Poisson distribution.
-
-Given a Poisson process with mean rate $ \lambda $, the standard deviation is $ \sqrt{\lambda} $. Under this approximation, an observed count is considered statistically significant at Z standard deviations if:
-
-$$ \text{Count} > \lambda + Z \cdot \sqrt{\lambda}$$
-
-This method is commonly used in radiation measurement and other count-based detection systems, as detailed in:
-
-- G. F. Knoll, *Radiation Detection and Measurement*, 4th ed., Wiley, 2010.
-<!-- #endregion -->
-
-```python id="ouxA8rpoxfUB"
-# Function to update the plot based on Z
-def plot_outliers(Z):
-    threshold_poisson = lambda_ + Z * np.sqrt(lambda_)
-    poisson_outliers = neutron_df_1_minute_background[neutron_df_1_minute_background["Counts"] > threshold_poisson]
-
-    plt.figure(figsize=(14, 5))
-    plt.plot(neutron_df_1_minute_background.index, neutron_df_1_minute_background["Counts"],
-             label="Counts per Minute", color='blue', linewidth=1)
-
-    plt.scatter(poisson_outliers.index, poisson_outliers["Counts"],
-                color='red', label=f"Outliers (> {threshold_poisson:.2f} counts)", zorder=5)
-
-    plt.axhline(threshold_poisson, color='gray', linestyle='--', linewidth=1.5,
-                label=f"Z = {Z:.1f} Threshold")
-
-    plt.title(f"Neutron Count Time Series with Z={Z:.1f} Outlier Threshold")
-    plt.xlabel("Time")
-    plt.ylabel("Counts per Minute")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
-    return threshold_poisson
-```
-
-<!-- #region id="LYRh5-UrRJlO" -->
-## Interpreting the Outlier Threshold Plot
-
-In the plot generated by the code above: `plot_outliers(Z)`, you’ll see:
-
-- **Blue line**: the time series of 1-minute neutron counts during our background period.  
-- **Gray dashed horizontal line**: the chosen significance threshold  
-  $$
-    \lambda + Z\,\sqrt{\lambda},
-  $$  
-  where $\lambda$ is the long-term background mean and $Z$ is the number of standard deviations.  
-- **Red dots**: the individual 1-minute bins whose counts exceed that threshold and are therefore flagged as “outliers.”
-
-### How to Read the Plot
-
-1. **Threshold level**  
-   - If you set \(Z=3\), the gray line sits at \(\lambda + 3\sqrt{\lambda}\).  
-   - Under a pure Poisson background, fewer than 0.13% of minutes should exceed this threshold by chance alone.  
-
-2. **Sensitivity vs. false-alarm rate**  
-   - **Lower \(Z\)** makes the threshold lower and flags more bins (higher sensitivity but more false positives).  
-   - **Higher \(Z\)** raises the bar, flagging only the most extreme bursts (fewer false alarms but possibly missing smaller but real events).
-
-3. **Temporal context**  
-   - Look at clusters of red dots: repeated outliers close in time may indicate a sustained burst or a transient change in background conditions.  
-   - Isolated red dots could be statistical fluctuations (especially if \(Z\) is low).
-
-4. **Choosing \(Z\) for your experiment**  
-   - For routine background checks, \(Z=3\) is a common industry standard (≈99.7% confidence).  
-   - If you need very low false-alarm rates, consider \(Z=4\) or higher.  
-   - You can interactively adjust \(Z\) below to see how the balance between sensitivity and specificity changes.
+Let us propose a temporary outline for this method, which we will elaborate in a future notebook. 
 
 
-In order to visualize the effect of choosing different values of $Z$, feel free to interact with the code block below and play around with the variables!
-<!-- #endregion -->
+### 1. Record the inter-arrival times
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 414} id="X6bom6B1Q97q" outputId="5fe8a00b-8f34-47fe-fe67-783ce864d394"
-plot_outliers(Z=3)
-```
+Let our raw timestamps be  
+$$t_1, t_2, \dots, t_N$$  
+(measured in seconds with our Eljen detector’s native nanosecond precision).  Define  
+$$\Delta t_i = t_{i} - t_{i-1},\quad i=2,\dots,N.$$  
+Because our detector’s resolution is $\Delta t_{\min} = 1\ \mathrm{ns}$ but the observed spacings are typically much larger, we can treat the data as effectively continuous.
 
-<!-- #region id="rKNEzgJXeNr1" -->
-## Accounting for Multiple Comparisons (Family-Wise Error Rate)
+### 2. Empirical cumulative distribution (CDF)
 
-When you scan a long time series for outliers, each minute’s count is a separate hypothesis test (“is this minute an outlier?”).  If you keep using a fixed 3 σ threshold (per-test α≈0.00135), then over $N$ independent minutes your **family-wise error rate** (FWER) grows:
-
+Instead of a histogram, we build the empirical CDF of the inter-arrival times:
 $$
-\text{FWER} = 1 - (1 - \alpha)^N \approx N \cdot \alpha \quad (\text{for small }\alpha).
+\widehat F(t)
+\;=\;
+\frac{1}{N-1}
+\sum_{i=2}^{N}
+\mathbf{1}\bigl(\Delta t_i \le t\bigr).
 $$
+Plotting $\widehat F(t)$ against $t$ gives the **cumulative spectrum**:
+- On the horizontal axis: time $t$ (s)
+- On the vertical axis: probability $P(\Delta t \le t)$
 
-For example, over a 1 day background run $(N≈1440$ minutes),  
-$$
-\text{FWER} \approx 1440 \times 0.00135 ≈ 1.94,
-$$
-i.e. almost certain to see at least one “false” 3 σ outlier just by chance.
+### 3. Comparison to the theoretical exponential CDF
 
-Let's look into a possible solution for this issue: ?
-
-### Bonferroni Correction
-
-A simple (but conservative) fix is the **Bonferroni correction**, which sets the per-test α to  
+For a homogeneous Poisson process with rate $\lambda$ (counts per second), the true inter-arrival distribution is  
 $$
-\alpha_{\rm per-test} = \frac{\alpha_{\rm family}}{N},
-$$
-so that  
-$$
-\text{FWER} \;\le\; N \times \alpha_{\rm per-test} = \alpha_{\rm family}.
+F_{\rm exp}(t) = 1 - e^{-\lambda\,t}.
 $$  
-If you want $\mathrm{FWER}=0.05$ over $N=1440$ minutes, then  
-$$
-\alpha_{\rm per-test} = \frac{0.05}{1440} \approx 3.5\times10^{-5},
-$$
-which corresponds to a threshold  
-$$
-Z_{\rm adj} = \Phi^{-1}(1 - \tfrac12\,\alpha_{\rm per-test}) \approx 4.0,
-$$
-i.e. roughly a 4 σ cut instead of 3 σ.
+We can overlay this on our empirical CDF:
+1. Estimate $\lambda = 1 / \bar{\Delta t}$.  
+2. Compute  
+   $$
+   F_{\rm exp}(t) = 1 - \exp\!\bigl(-t / \bar{\Delta t}\bigr).
+   $$
+3. Plot both curves on the same axes to visually assess agreement.
 
+
+### 4. Quantitative goodness-of-fit
+
+To go beyond the visual overlay, we can perform a **Kolmogorov–Smirnov (K–S) test** comparing
+$$
+\{\Delta t_i\}_{i=2}^N
+$$
+to the exponential distribution with parameter $\hat\lambda = 1/\bar\Delta t$.  In Python:
 <!-- #endregion -->
 
-<!-- #region id="VZtjxipWfV4O" -->
-## New method for Visualizing Pointwise Poisson Probabilities
-
-Rather than just flagging a binary outlier, we can compute for each 1-minute count $k$ its exact tail-probability under Poisson$(\lambda)$:
-
-$$
-p_k = P(\,K\ge k\,) \;=\; 1 - F(k-1;\lambda),
-$$
-
-and then plot $\log_{10}(p_k)$ against time.  This tells you at a glance how unlikely each point is, without choosing a hard $Z$.
-
-
-<!-- #endregion -->
-
-```python id="FZ6OcVbKfVID" outputId="26217b8b-f8d7-4de3-a456-e4ea26bf3e64" colab={"base_uri": "https://localhost:8080/", "height": 319}
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy.stats import poisson
-
-# λ from long-term background
-lambda_ = neutron_df_1_minute_background["Counts"].mean()
-
-# Compute tail-probabilities and log10
-counts = neutron_df_1_minute_background["Counts"].values.astype(int)
-p_tail = 1 - poisson.cdf(counts - 1, mu=lambda_)
-log_p = np.log10(p_tail)
-
-# Plot log10(p-value) time series
-plt.figure(figsize=(14, 4))
-plt.plot(neutron_df_1_minute_background.index, log_p, lw=1, color='blue')
-plt.axhline(np.log10(0.00135), color='gray', linestyle='--', label='3σ p-threshold')
-plt.axhline(np.log10(0.05/len(counts)), color='red', linestyle='--',
-            label='Bonferroni p-threshold (α=0.05)')
-plt.ylim(-10, 0)
-plt.xlabel("Time")
-plt.ylabel(r"$\log_{10}$[P(K $\geq$ k)]")
-plt.title("Log Tail-Probability of Each 1-min Count Under Poisson Background")
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.show()
-```
-
-<!-- #region id="Kno9Dvjc4H3i" -->
-Let us now perform the same analysis for gamma counts.
-<!-- #endregion -->
-
-```python id="K3sVmWq1yWUu"
-# Precompute Poisson mean for gamma background
-lambda_gamma = gamma_df_1_minute_background["Counts"].mean()
-
-# Define the plotting function
-def plot_gamma_outliers(Z):
-    threshold_poisson = lambda_gamma + Z * np.sqrt(lambda_gamma)
-    poisson_outliers = gamma_df_1_minute_background[gamma_df_1_minute_background["Counts"] > threshold_poisson]
-
-    plt.figure(figsize=(14, 5))
-    plt.plot(gamma_df_1_minute_background.index, gamma_df_1_minute_background["Counts"],
-             label="Gamma Counts per Minute", color='purple', linewidth=1)
-
-    plt.scatter(poisson_outliers.index, poisson_outliers["Counts"],
-                color='orange', label=f"{len(poisson_outliers)} Outliers (> {threshold_poisson:.2f} counts)", zorder=5)
-
-    plt.axhline(threshold_poisson, color='gray', linestyle='--', linewidth=1.5,
-                label=f"Z = {Z} Threshold")
-
-    plt.title(f"Gamma Count Time Series with Z={Z} Outlier Threshold")
-    plt.xlabel("Time")
-    plt.ylabel("Gamma Counts per Minute")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
-```
-
-<!-- #region id="xmPhCdfGRWM8" -->
-Similarly to above, feel free to play around with $Z$ to observe the effect of its value on our count threshold.
-<!-- #endregion -->
-
-```python id="NSK1Nxi67eqi" colab={"base_uri": "https://localhost:8080/", "height": 396} outputId="658a4ac6-e3cb-4bf1-ffa1-44b2bfcbbeda"
-plot_gamma_outliers(Z=3)
-```
-
-```python id="VYEJ8mNlKhgy"
+```python
 
 ```
