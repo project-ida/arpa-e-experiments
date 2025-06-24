@@ -84,7 +84,7 @@ We need to do a few authentication steps:
 -  Authenticate Colab to pull the nuclear particle master sheet using the Drive API.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="bdb45b31-49e7-4c05-a95d-24bc874a6d5d"
+```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="e204528d-ca1a-4119-f6d2-3785d82dc52d"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -130,13 +130,12 @@ sheet = gc.open_by_key(sheet_id).sheet1
 df = pd.DataFrame(sheet.get_all_records())
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="74cb0aeb-8497-4a96-c170-35ce67286627"
-
+```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="440948ac-8db7-493b-cfeb-132de67bc2c4"
 # Find the row where Experiment ID matches
 row = df[df['Experiment ID'] == experiment_id]
 
 # Extract times from columns M, N, O, P, Q, R, S
-times = row[['Setup start', 'Calibration start', 'Background 1 start', 'Experiment start', 'Background 2 start', 'Background 2 end']]
+times = row[['Setup', 'Calibration', 'Background 1', 'Experiment', 'Background 2', 'End']]
 
 times = times.apply(pd.to_datetime)
 
@@ -173,14 +172,25 @@ def get_all_psd_data(times):
     data = get_psd_data(times.iloc[0, i], times.iloc[0, i + 1])
     psd_data.append(data)
   return psd_data
+
+def get_all_psd_data(times):
+    psd_data = {}
+    columns = times.columns[1:]  # Exclude the first column (index)
+    for i in range(len(columns) - 1):
+        start_time = times.iloc[0, i + 1]
+        end_time = times.iloc[0, i + 2]
+        if pd.notna(start_time) and pd.notna(end_time):
+            data = get_psd_data(start_time, end_time)
+            psd_data[columns[i]] = data
+    return psd_data
 ```
 
 <!-- #region id="6VVPzETa25RP" -->
 We will now extract PSD data for all periods in our experiment.
 <!-- #endregion -->
 
-```python id="jkTzpa8ernu2"
-calibration_data, background_1_data, experiment_data, background_2_data = get_all_psd_data(times.iloc[:,1:])
+```python id="XvxNY0tbKePZ"
+psd_data = get_all_psd_data(times)
 ```
 
 <!-- #region id="e-WFcA3Y3f6X" -->
@@ -231,8 +241,11 @@ def plot_psd(data, title="PSD", psp_threshold=None, ax=None):
 We begin with the calibration period for which we have the largest number of events due to the presence of a source of radiation. This PSD plot is what we'll use to extract a simple psp threshold value that can be used to quickly discriminate between gammas (lower psp) and neutrons (higher psp).  
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="b2e4d91a-220a-4cf4-b78d-e3ffe184bcab"
-plot_psd(calibration_data, f'Calibration (30 min)')
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="d9a89495-b3af-4827-8c53-981a73153f3e"
+if "Calibration" in psd_data:
+  plot_psd(psd_data["Calibration"], f'Calibration (30 min)')
+else:
+  print("‼️ Calibration data does not exist, cannot create PSD plot. ‼️")
 
 ```
 
@@ -312,60 +325,81 @@ def find_psp_midpoint(data, target_energy=500, energy_range=(0, 4000), psp_range
 In this analysis we'll use Energy  = 500
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 541} id="eq9yNEu9u1WM" outputId="fc199b9a-38ea-489c-d570-fb56c957ac91"
-target_energy = 500
-psp_threshold = find_psp_midpoint(calibration_data)
+```python colab={"base_uri": "https://localhost:8080/", "height": 541} id="eq9yNEu9u1WM" outputId="fa850350-5e84-40d3-d9d5-a6dee467cb45"
+if "Calibration" in psd_data:
+  target_energy = 500
+  psp_threshold = find_psp_midpoint(psd_data["Calibration"])
+else:
+  psp_threshold = None
+  print("‼️ Calibration data does not exist, cannot perform psp thresold analysis ‼️")
+
 ```
 
 <!-- #region id="k3oLzeKc53Y4" -->
 Now that we have our threshold, we can remake the PSD plots to see if there is anything obviously wrong with the analysis.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="db4ef54f-1c74-4822-dcb5-e7a2434fc03a"
-plot_psd(calibration_data, 'Calibration (30 min)', psp_threshold)
-
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="131b02c0-2170-45cb-8107-57ec06ae11ca"
+if "Calibration" in psd_data:
+  plot_psd(psd_data["Calibration"], 'Calibration (30 min)', psp_threshold)
+else:
+  print("‼️ Calibration data does not exist, cannot create PSD plot ‼️")
 ```
 
 <!-- #region id="tIsjeWlh6EuO" -->
-It can also be instructive to create the PSD plots for both background periods - we would not expect significant changes between the two. Here, we just eyeball them, but performing a statistical analysis will be the next step.
+It can also be instructive to create the PSD plots for the background periods - we would not expect significant changes between the two. Here, we just eyeball them, but performing a statistical analysis will be the next step.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 487} id="lqeyLIBawd9O" outputId="cfe5fa34-3315-418d-bb96-5b4a9c549e3c"
+```python colab={"base_uri": "https://localhost:8080/", "height": 487} id="lqeyLIBawd9O" outputId="1652cab1-7414-4774-af33-5f881570d761"
+if "Background 1" in psd_data and "Background 2" in psd_data:
+  fig, axes = plt.subplots(1, 2, figsize=(14, 5), squeeze=False)
+  axes = axes.flatten()  # Flatten for easy indexing
+  plot_psd(psd_data["Background 1"], title='Background 1 (12 hours)', psp_threshold=psp_threshold, ax=axes[0])
+  plot_psd(psd_data["Background 2"], title='Background 2 (12 hours)', psp_threshold=psp_threshold, ax=axes[1])
+elif "Background 1" in psd_data:
+  print("Background 2 data does not exist, plotting just Background 1 data")
+  plot_psd(psd_data["Background 1"], title='Background 1 (12 hours)', psp_threshold=psp_threshold)
+else:
+  print("‼️ Background data does not exist, cannot create PSD plots ‼️")
 
-fig, axes = plt.subplots(1, 2, figsize=(14, 5), squeeze=False)
-axes = axes.flatten()  # Flatten for easy indexing
-plot_psd(background_1_data, title='Background 1 (12 hours)', psp_threshold=psp_threshold, ax=axes[0])
-plot_psd(background_2_data, title='Background 2 (12 hours)', psp_threshold=psp_threshold, ax=axes[1])
+
+
+
 ```
 
 <!-- #region id="X9aCY0ta6rdZ" -->
 And of course we can look at the experimental period.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="0mYMvYpTsdf1" outputId="e2644bb3-b4a5-47d8-80d1-df12e86b8542"
-experiment_period = (times.iloc[0]["Background 2 start"] - times.iloc[0]["Experiment start"]).days
-plot_psd(experiment_data, f'Experiment ({experiment_period} days)', psp_threshold=psp_threshold)
-
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="0mYMvYpTsdf1" outputId="9f7b8150-310e-490c-bcc7-e5cc1209e54f"
+if "Experiment" in psd_data:
+  experiment_period = (times.iloc[0]["Background 2"] - times.iloc[0]["Experiment"]).days
+  plot_psd(psd_data["Experiment"], f'Experiment ({experiment_period} days)', psp_threshold=psp_threshold)
+else:
+  print("‼️ Exeperiment data does not exist, cannot create PSD plot ‼️")
 ```
 
 <!-- #region id="x8mWf6Sky1SA" -->
 Finally, we now update the master spreadsheet with the PSP threshold that will be used to gamma/neutron discrimination.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="825bb417-6d69-4c94-e848-3d7d024d2308"
-# Update the DataFrame with the midpoint value
-if not row.empty:
-    row_index = df.index[df['Experiment ID'] == experiment_id][0]
-    df.at[row_index, 'psp threshold'] = psp_threshold  # Update the 'psp threshold' column
-    print(f"Updated 'psp threshold' to {psp_threshold:.6f} for Experiment ID {experiment_id}")
+```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="c23f58a2-d681-4efa-a21e-c70891fa0be5"
+if psp_threshold is not None and "Calibration" in psd_data:
+  # Update the DataFrame with the midpoint value
+  if not row.empty:
+      row_index = df.index[df['Experiment ID'] == experiment_id][0]
+      df.at[row_index, 'psp threshold'] = psp_threshold  # Update the 'psp threshold' column
+      print(f"Updated 'psp threshold' to {psp_threshold:.6f} for Experiment ID {experiment_id}")
 
-    # Clean the DataFrame to handle NaN values
-    df_clean = df.fillna('')  # Replace NaN with empty string, or use 0 if appropriate
+      # Clean the DataFrame to handle NaN values
+      df_clean = df.fillna('')  # Replace NaN with empty string, or use 0 if appropriate
 
-    # Write the updated DataFrame back to the Google Sheet using gspread
-    values = [df_clean.columns.tolist()] + df_clean.values.tolist()  # Header + data
-    sheet.update(values, 'A1')  # Update starting at A1
-    print("Google Sheet updated successfully.")
+      # Write the updated DataFrame back to the Google Sheet using gspread
+      values = [df_clean.columns.tolist()] + df_clean.values.tolist()  # Header + data
+      sheet.update(values, 'A1')  # Update starting at A1
+      print("Google Sheet updated successfully.")
+  else:
+      print(f"No row found for Experiment ID {experiment_id}")
 else:
-    print(f"No row found for Experiment ID {experiment_id}")
+  print("‼️ No psp threshold has been calculated. Nothing to upload to master sheet.")
 ```
