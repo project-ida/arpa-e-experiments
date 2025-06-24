@@ -11,12 +11,14 @@ jupyter:
     name: python3
 ---
 
+<!-- #region id="718fa448-89aa-4055-a179-b265ca731032" -->
 <a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/tutorials/PSD_Analysis.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/tutorials/PSD_Analysis.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
+<!-- #endregion -->
 
 <!-- #region id="zPGvduxO5Zva" -->
 
 ‼️ **Prerequisites** ‼️:
-- Access to the `Nucleonics` Google drive folder (it must also be added as a shortcut in your own drive)
+- Access to the `Nucleonics` Google drive folder (it must also be added as a shortcut called "Nucleonics" in your own drive)
 - Access to the nucleonics `.env` folder (where sensitive info lives)
 <!-- #endregion -->
 
