@@ -88,7 +88,7 @@ We need to do a few authentication steps:
 -  Authenticate Colab to pull the nuclear particle master sheet using the Drive API.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="00dc3258-84a5-4c49-98c0-e7243372bc0b"
+```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="7df89cd9-5b34-46db-ce69-f92c00e577d7"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -134,7 +134,7 @@ sheet = gc.open_by_key(sheet_id).sheet1
 df = pd.DataFrame(sheet.get_all_records())
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="d3251ad1-8b86-49b8-840a-67b61f69d99b"
+```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="090d6747-a75b-4563-ea92-d5323113d78f"
 # Find the row where Experiment ID matches
 row = df[df['Experiment ID'] == experiment_id]
 
@@ -170,24 +170,27 @@ def get_psd_data(start_time, end_time):
   """
   return pd.read_sql(query, engine, index_col=None)
 
-def get_all_psd_data(times):
-  psd_data = []
-  for i in range(len(times.iloc[:,1:].values[0])):
-    data = get_psd_data(times.iloc[0, i], times.iloc[0, i + 1])
-    psd_data.append(data)
-  return psd_data
 
 def get_all_psd_data(times):
     psd_data = {}
     psd_periods = {}
-    columns = times.columns[1:]  # Exclude the first column (index)
-    for i in range(len(columns) - 1):
-        start_time = times.iloc[0, i + 1]
-        end_time = times.iloc[0, i + 2]
-        if pd.notna(start_time) and pd.notna(end_time):
-            data = get_psd_data(start_time, end_time)
-            psd_data[columns[i]] = data
-            psd_periods[columns[i]] = end_time - start_time
+    columns = times.columns  # Include all columns, including 'Setup'
+
+    for i in range(len(columns) - 1):  # Stop before the last column
+        start_time = times.iloc[0, i]
+        if pd.notna(start_time):
+            # Find the next non-empty time
+            end_time = None
+            for j in range(i + 1, len(columns)):
+                if pd.notna(times.iloc[0, j]):
+                    end_time = times.iloc[0, j]
+                    break
+            # Only proceed if a valid end_time was found
+            if end_time is not None:
+                data = get_psd_data(start_time, end_time)
+                psd_data[columns[i]] = data
+                psd_periods[columns[i]] = end_time - start_time
+
     return psd_data, psd_periods
 ```
 
@@ -276,7 +279,7 @@ def plot_psd(data, period=None, title="PSD", psp_threshold=None, ax=None):
 We begin with the calibration period for which we have the largest number of events due to the presence of a source of radiation. This PSD plot is what we'll use to extract a simple psp threshold value that can be used to quickly discriminate between gammas (lower psp) and neutrons (higher psp).  
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="cf794f43-9af6-4358-f699-849243c3c053"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="da13a2ca-8544-4c6a-81b8-0c034799a7cf"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration")
 else:
@@ -360,7 +363,7 @@ def find_psp_midpoint(data, target_energy=500, energy_range=(0, 4000), psp_range
 In this analysis we'll use Energy  = 500
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 541} id="eq9yNEu9u1WM" outputId="b7ec1894-5c09-4277-f9e2-c54fde984b72"
+```python colab={"base_uri": "https://localhost:8080/", "height": 541} id="eq9yNEu9u1WM" outputId="57e4358b-2701-4a1d-ea9a-7cc41a58e5cc"
 if data_exists("Calibration"):
   target_energy = 500
   psp_threshold = find_psp_midpoint(psd_data["Calibration"])
@@ -374,7 +377,7 @@ else:
 Now that we have our threshold, we can remake the PSD plots to see if there is anything obviously wrong with the analysis.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="0b84d2cc-fb5d-4762-d494-5ea4609d6968"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="3292e520-6997-426e-b2c2-37017e927a0d"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration", psp_threshold)
 else:
@@ -385,7 +388,7 @@ else:
 It can also be instructive to create the PSD plots for the background periods - we would not expect significant changes between the two. Here, we just eyeball them, but performing a statistical analysis will be the next step.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 487} id="lqeyLIBawd9O" outputId="2bed0579-719a-4576-c869-6c1850dadf81"
+```python colab={"base_uri": "https://localhost:8080/", "height": 582} id="lqeyLIBawd9O" outputId="bca8ab76-2e7c-49f4-fb90-d75bde14c205"
 if data_exists("Background 1") and data_exists("Background 2"):
   fig, axes = plt.subplots(1, 2, figsize=(14, 5), squeeze=False)
   axes = axes.flatten()  # Flatten for easy indexing
@@ -405,7 +408,7 @@ else:
 And of course we can look at the experimental period.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="0mYMvYpTsdf1" outputId="6070762b-c2b5-40f8-f66b-269ec2f33588"
+```python colab={"base_uri": "https://localhost:8080/"} id="0mYMvYpTsdf1" outputId="f4eeb8f1-2bc8-4307-e9a2-518f8da1a42b"
 if data_exists("Experiment"):
   plot_psd(psd_data["Experiment"], psd_periods["Experiment"], psp_threshold=psp_threshold)
 else:
@@ -416,7 +419,7 @@ else:
 Finally, we now update the master spreadsheet with the PSP threshold that will be used to gamma/neutron discrimination.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="d1c52570-ba36-44ec-faf0-8b719f78555f"
+```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="8ec51c0d-a21b-49bb-d067-07e5c107ad3a"
 if psp_threshold is not None and "Calibration" in psd_data:
   # Update the DataFrame with the midpoint value
   if not row.empty:
