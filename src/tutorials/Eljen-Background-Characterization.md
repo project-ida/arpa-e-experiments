@@ -23,19 +23,19 @@ jupyter:
 
 Eljen scintillator detectors work by converting ionizing radiation into visible light. Radiation excites molecules in the plastic; these de-excite and emit photons. The light is detected by a photomultiplier tube (PMT) or Silicon photomultiplier (SiPM), producing an electrical signal proportional to the energy deposited.
 
-### Our Eljen Detectors 
+### Our Eljen Detectors
 
-In the lab, we have access to both a 2" and a 5" Eljen detector. Our goal in this notebook is to set up a precedure for chracterizing the background of one of these detectors from a "long"(~1 month) background measurments. Thus, we would like to characterize the probabilistic distribution of the background counts picked up by an Eljen detector and set up a protocolto use statistical tests to determine whether certain counts or bursts are background or events of significance in our experiments. 
+In the lab, we have access to both a 2" and a 5" Eljen detector. Our goal in this notebook is to set up a precedure for chracterizing the background of one of these detectors from a "long"(~1 month) background measurments. Thus, we would like to characterize the probabilistic distribution of the background counts picked up by an Eljen detector and set up a protocol to use statistical tests to determine whether certain counts or bursts are background or events of significance in our experiments.
 
 In this first notebook, we will begin by analysising our **2" Eljen detector**.
 
 In order to do so, we began by running the Eljen detectors in question throughout December 2024 and January 2025. We will now characterize this background---which will be useful for future analysis.
 
 
-The data panel describing this backgroundmeasurement can be found here: https://lenr.mit.edu/data/load-panel.php?filename=eljen/eljen-2inch-long-term
+The data panel describing this background measurement can be found here: https://lenr.mit.edu/data/load-panel.php?filename=eljen/eljen-2inch-long-term
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="PbnVxkXsE-gX" outputId="061563be-13bd-420d-9806-287065d218b6"
+```python colab={"base_uri": "https://localhost:8080/"} id="PbnVxkXsE-gX" outputId="53baead1-9191-44e7-88cb-949495cf5041"
 # RUN THIS IF YOU ARE USING GOOGLE COLAB
 import sys
 import os
@@ -44,8 +44,8 @@ sys.path.insert(0,'/content/arpa-e-experiments')
 os.chdir('/content/arpa-e-experiments')
 ```
 
-```python
-# RUN THIS IF YOU ARE LOCAL. 
+```python id="1EvRKgjMpBtz"
+# RUN THIS IF YOU ARE LOCAL.
 # It makes sure we can import helpers from libs which is one level up
 
 import sys
@@ -97,14 +97,14 @@ We have collected long-term data on the neutron and gamma counts per sond picked
 
 ```python id="aYBCnu4vFL4D"
 neutron_df = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/eljen-2inch-long-term-1.csv',
+    'http://nucleonics.mit.edu/csv-files/eljen/eljen-2inch-long-term-1f.csv',
     parse_dates=['time'],
     date_format="ISO8601",
     index_col='time'
 )
 
 gamma_df = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/eljen-2inch-long-term-4.csv',
+    'http://nucleonics.mit.edu/csv-files/eljen/eljen-2inch-long-term-3f.csv',
     parse_dates=['time'],
     date_format="ISO8601",
     index_col='time'
@@ -122,7 +122,7 @@ fig_counter = 0
 Now that we have collected the raw data (i.e. electric signal history) that interests us, let us have a look at the measured neutron and gamma counts.
 <!-- #endregion -->
 
-```python
+```python id="Lx8XLpTApBuA" outputId="80899601-83ca-42f2-939b-b1adddb697bf" colab={"base_uri": "https://localhost:8080/", "height": 463}
 from matplotlib.patches import Rectangle
 
 fig_counter += 1
@@ -145,7 +145,7 @@ rect = Rectangle((start, ymin),
                  linewidth=2,
                  edgecolor='red',
                  facecolor='none',
-                 zorder=2)     
+                 zorder=2)
 
 ax.add_patch(rect)
 
@@ -169,7 +169,7 @@ Furthermore, spontaneous fission of ²⁵²Cf is accompanied by prompt [γ-rays 
 This is indeed the case in the following plot.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="mIZOh2-xFwWf" outputId="00d137d9-ec12-4866-8ab2-2c309cd7fe1e"
+```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="mIZOh2-xFwWf" outputId="6066bece-cc5c-4b1a-b21a-ba5f5b852b36"
 fig_counter +=1
 
 plt.figure(figsize=(8, 4))
@@ -190,7 +190,7 @@ rect = Rectangle(
     ymax - ymin,
     linewidth=2,
     edgecolor='red',
-    facecolor='none', 
+    facecolor='none',
     zorder=10
 )
 ax.add_patch(rect)
@@ -235,7 +235,7 @@ Now that we have excluded the time before and when the neutron source was introd
 We will start by building a daily histogram of the background neutron counts per minute. Each line in the plot will represent one day’s worth of 1 minute bins, normalized to form a probability distribution. This lets us see how the shape of the count distribution varies from day to day.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="s9b-zrG1Mue2" outputId="2442d765-95f5-4ad8-e314-44a3424f9647"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="s9b-zrG1Mue2" outputId="20aa04d1-eef6-4b7f-a0e3-e2a0fa2a6730"
 fig_counter +=1
 
 # Ensure the index is datetime
@@ -293,10 +293,10 @@ In the literature, we will typically consider that count is "significantly high"
 
 where $Z = 3$ corresponds to a $3\sigma$ threshold (confidence level ~99.7%)
 
-Let us now have a closer look at how close our background is to this Poisson distribution. 
+Let us now have a closer look at how close our background is to this Poisson distribution.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="HOD0IxyytMPM" outputId="ecbfe010-f42d-48a5-c5dc-3e4cc3ac92de"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="HOD0IxyytMPM" outputId="effabcc4-3d21-4ac9-e02f-f67c0f56fb6e"
 fig_counter += 1
 
 histograms = []
@@ -359,6 +359,7 @@ The grey shaded area shows the spread of day-to-day variation, with upper and lo
 The red dashed line corresponds to the theoretical distribution assuming that neutron counts follow a Poisson process. We plotted this normalized Poisson ditribution assuming the Poisson paramter $\lambda$ to me the mean of our background data i.e. $\lambda \approx 0.63$.
 <!-- #endregion -->
 
+<!-- #region id="cHo5vHCrpBuN" -->
 ### Quantitative goodness-of-fit
 
 In order to test more rigorously whether our background truly follows a Poisson process, we can perform a $χ^2$ (chi-square) goodness-of-fit test comparing the observed mean histogram to the expected Poisson probabilities:
@@ -372,8 +373,9 @@ In order to test more rigorously whether our background truly follows a Poisson 
 3. A large $p$-value $(p>0.05$) implies we cannot reject the Poisson hypothesis at the $5 \%$ level.
 
 In the code below, we conduct this goodness of fit analysis and find a p value of $p = 0.9996229005$ so we cannot reject the null-hypothesis. Hence, for our purposes, we are in a good position to say that background follows a Poisson process.
+<!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="U8k5e80GVa8a" outputId="3e51874e-ba46-43f3-ff8b-69e4ef181e26"
+```python colab={"base_uri": "https://localhost:8080/"} id="U8k5e80GVa8a" outputId="761a4624-def1-4cbd-d803-d5077d0a0965"
 # — Chi-square goodness-of-fit test —
 # Aggregate observed counts across all days
 O_counts = histograms.sum(axis=0)       # observed total counts per bin
@@ -406,7 +408,7 @@ Furthermore, before trusting the aformentioned single global $\lambda$, we shoul
 
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 975} id="NCIVtudYR4nY" outputId="42837b94-ca98-4d12-e8f1-718407601ffc"
+```python colab={"base_uri": "https://localhost:8080/", "height": 428} id="NCIVtudYR4nY" outputId="7dd7e4b8-55dc-4f5b-a658-053ef2044c75"
 # 1. Compute daily means
 daily_means = [group["Counts"].mean() for _, group in grouped_by_day]
 days = list(grouped_by_day.groups.keys())
@@ -431,11 +433,13 @@ plt.legend()
 plt.show()
 ```
 
+<!-- #region id="Np0-tUNepBuQ" -->
 ## Goodness of fit check
 
 The above plot does not shed enough light on how close our mean distribution is to a normal one. In order to determine the goodness of our fit, we may start with a graphical check: the QQ-plot. This plot sample quantiles vs theoretical normal quantiles; and deviations from the straight line highlight non-normality.
+<!-- #endregion -->
 
-```python
+```python id="AtzGpygkpBuR" outputId="b014883e-6c87-426e-804d-98e621e484c8" colab={"base_uri": "https://localhost:8080/", "height": 564}
 # 4. QQ-plot for normality check
 plt.figure(figsize=(6, 6))
 stats.probplot(daily_means, dist="norm", plot=plt)
@@ -443,7 +447,8 @@ plt.title(f'QQ Plot of Daily Means (Fig. {fig_counter+2})')
 plt.show()
 ```
 
-This, however, is not a "quantitative" measure of the goodness of our fit. For this, we will perform the Shapiro-Wilk test. 
+<!-- #region id="kjYeG94wpBuS" -->
+This, however, is not a "quantitative" measure of the goodness of our fit. For this, we will perform the Shapiro-Wilk test.
 
 The Shapiro–Wilk test computes a statistic  
 $$
@@ -458,8 +463,9 @@ In practice, we obtain from `scipy.stats.shapiro(daily_means)` both the test sta
 - If $p > 0.05$, we **fail to reject** the null hypothesis: there is no strong evidence against normality.
 - If $p \le 0.05$, we **reject** the null hypothesis: the daily means significantly deviate from a normal distribution.
 
+<!-- #endregion -->
 
-```python
+```python id="qVbz6hoopBuT" outputId="e05e0977-72b9-47aa-85c7-ee9736bbdd9e" colab={"base_uri": "https://localhost:8080/"}
 # 5. Shapiro–Wilk test for normality
 W, p_value = stats.shapiro(daily_means)
 print(f"Shapiro–Wilk test: W = {W:.4f}, p-value = {p_value:.4f}")
@@ -474,6 +480,277 @@ else:
 By combining the visual Q–Q plot and the Shapiro–Wilk test, we obtain both qualitative and quantitative assurance that our daily means are well-approximated by a normal distribution—bolstering confidence in using a single global $\lambda$ for the background rate.  
 
 So, it is a reasonable assumption to claim that our $\lambda$ is essentially constant over the January-December background collection period.
+<!-- #endregion -->
+
+<!-- #region id="5YF22HxXp7Hy" -->
+## Side-Step 4.3 - Comparing our background rates with the literature.
+
+
+### Reference Neutron Background Flux
+
+For benchmarking our Eljen detector measurements against a well-established baseline, we adopt the sea-level cosmic-ray neutron flux measured by [Gordon et al. (2004)](https://ieeexplore.ieee.org/document/1369506) on the roof of the IBM T. J. Watson Research Center in Yorktown Heights, NY:
+
+> **Φ<sub>ref</sub> = 0.0134 n cm<sup>−2</sup> s<sup>−1</sup>**  
+> _Measured at ∼20 m a.s.l., geomagnetic cutoff ≃ 3 GV, mid-level solar activity_
+
+We will follow the equations given in the paper, to adapt to our experimental conditions, adjusting for location, time, and detector efficiency.
+
+1. **Site Adjustment**  
+   - Apply the altitude-dependence correction (Gordon et al. Eq. (4)) to account for our lab elevation.  
+   - Apply geomagnetic-rigidity and solar-modulation corrections (Gordon et al. Eqs. (3) & (5)) for our latitude and current solar cycle.
+
+<!-- #endregion -->
+
+```python id="Bss56h_7x1Xe" outputId="34eee0bc-cfa1-4c30-cd4f-59d123b0bbb0" colab={"base_uri": "https://localhost:8080/"}
+# --- Reference flux and site parameters (Gordon et al. 2004) ---
+Phi_ref = 0.0134         # Reference total flux [n cm⁻² s⁻¹] at Yorktown Heights
+h_ref = 20.0             # Reference altitude [m a.s.l.]
+Rc_ref = 3.0             # Reference geomagnetic cutoff rigidity [GV]
+phi_ref = 550.0          # Reference solar‐modulation potential [MV]
+
+# --- Our lab’s parameters at MIT Building 13, 3rd floor ---
+# Elevation of MIT main campus: 3 m a.s.l. (77 Massachusetts Ave) : https://elevation.maplogs.com/poi/massachusetts_institute_of_technology_77_massachusetts_ave_cambridge_ma_usa.197544.html
+# + ~10 m for 3rd-floor height → total ≈ 13 m
+h_lab = 13.0             # Lab elevation [m a.s.l.]
+
+# Effective vertical cutoff rigidity for Cambridge, MA ≈ 1.50 GV : https://www.spenvis.oma.be/models.php
+Rc_lab = 1.50            # Lab geomagnetic cutoff rigidity [GV]
+
+# Current solar‐modulation potential (approximate) – Usoskin, I.G., A. Gil, G.A. Kovaltsov, A. Mishev, V.V. Mikhailov (2017) Heliospheric modulation of cosmic rays during the neutron monitor era: Calibration using PAMELA data for 2006-2010, J. Geophys. Res. Space Phys., 122, 3875-3887 doi: 10.1002/2016JA023819
+phi_lab = 881.0          # Lab solar‐modulation potential [MV]
+
+# --- Gordon et al. scaling parameters ---
+H_scale = 1400.0         # Altitude scale height [m] (Eq. 4)
+alpha = 0.8              # Rigidity exponent (Eq. 3)
+beta = 0.005             # Solar‐modulation coefficient [per MV] (Eq. 5)
+
+# 1) Altitude‐dependence correction (Gordon Eq. 4)
+#    Φ(h) = Φ_ref × exp[(h_lab – h_ref) / H_scale]
+Phi_alt = Phi_ref * np.exp((h_lab - h_ref) / H_scale)
+
+# 2) Geomagnetic‐rigidity correction (Gordon Eq. 3)
+#    Φ(Rc) = Φ(h) × (Rc_lab / Rc_ref) ** alpha
+Phi_rig = Phi_alt * (Rc_lab / Rc_ref) ** alpha
+
+# 3) Solar‐modulation correction (Gordon Eq. 5)
+#    Φ_mod = Φ(Rc) × [1 + beta × (phi_lab – phi_ref)]
+Phi_lab = Phi_rig * (1 + beta * (phi_lab - phi_ref))
+
+print(f"Scaled neutron flux at lab: {Phi_lab:.4f} n cm⁻² s⁻¹")
+
+```
+
+<!-- #region id="rLtlAfiXxOI5" -->
+2. **Detector Response ie Efficiency Correction**  
+
+In order to benchmark our background count rates, we need an estimation of the detector's efficiency. In order to do this, we will use the callibration data collected when a Cf-252 source was introduced in the lab, on december 18th.
+
+We know that our source strength was 17.3 nCi on September 4, 2024.  
+Assuming it was introduced on December 18, 2024 at 12:00:00. Given the half-life of our source, Cf-252, which is 2.647 years, we can estimate what our source strength was the day of the experiment: 16.040 nCi. Furthermore, we know that 1 µCi = 3.7×10^4 disintegrations per second = 2.22×10^6 disintegrations per minute (dpm). Hence 1nCi = 37 dps = 2.22*10^3 dpm
+
+Finally, "252Cf disintegrates by α emissions mainly to the 248Cm ground state level, and by spontaneous fission for 3,086%" (https://inis.iaea.org/search/search.aspx?orig_q=RN%3A45014763&utm)
+
+This efficiency calculation is undertaken in the following code cells.
+<!-- #endregion -->
+
+<!-- #region id="3nfQCqHivLQi" -->
+Let's first have a look at when the source was in the lab:
+<!-- #endregion -->
+
+```python id="KiygiGvAxNBy" outputId="aa2031cd-d67c-4c4c-dc56-feee4c7afe50" colab={"base_uri": "https://localhost:8080/", "height": 442}
+# Resample to counts per second
+cps = neutron_df['Counts'].resample('1S').sum()
+
+# Filter for December 17 and 18, 2024
+dec17_18_cps = cps.loc['2024-12-17':'2024-12-18']
+
+# Plot
+fig_counter += 1
+plt.figure(figsize=(10, 4))
+plt.plot(dec17_18_cps.index, dec17_18_cps.values, label='Counts/s')
+plt.xlabel('Time (Dec 17–18, 2024)')
+plt.ylabel('Counts per second')
+plt.xticks(rotation=45)
+plt.title(f"{meta.get('descriptor', 'Eljen Detector')} - Counts per Second on Dec 17 & 18, 2024 (Fig. {fig_counter})")
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+```
+
+<!-- #region id="YTYyishWvQTv" -->
+From the plot above, we will choose our callibration period to be from december 17th 9pm to december 18th 11am.
+<!-- #endregion -->
+
+```python id="-mjzqLR8v-Jr" outputId="31b98ca0-277d-466f-f7f4-bbb0975fb7c7" colab={"base_uri": "https://localhost:8080/"}
+from datetime import datetime
+# Compute neutron emission rate from Cf-252 decay
+def cf252_neutron_emission(A0, date_initial, date_experiment):
+    """
+    Compute neutron source emission rate accounting for Cf-252 decay.
+    """
+    half_life = 2.645  # Years from https://www.nndc.bnl.gov/nudat3/decaysearchdirect.jsp?nuc=252Cf&unc=NDS
+    decay_constant = np.log(2) / half_life
+    #spontaneous_fission_fraction = 0.03086
+    spontaneous_fission_fraction = 0.031
+    #neutrons_per_fission = 3.7573
+    neutrons_per_fission = 3.76
+    conversion_factor = 37  # nCi to disintegrations per second
+
+    # Compute decay over time
+    time_difference = (date_experiment - date_initial).days / 365.25
+    At = A0 * np.exp(-decay_constant * time_difference)
+    dps_t = At * conversion_factor
+
+    # Compute neutron emission rate
+    neutrons_per_second = dps_t * spontaneous_fission_fraction * neutrons_per_fission
+    return neutrons_per_second
+
+# Define source activity and experiment date
+A0 = 17.3  # Initial activity in nCi
+source_date = datetime(2024, 9, 4)
+experiment_date = datetime(2024, 12, 18, hour=1, minute=00)
+
+neutrons_per_second = cf252_neutron_emission(A0, source_date, experiment_date)
+
+print(f"Neutron emission rate: {neutrons_per_second:} n/s")
+```
+
+```python id="dxNLN6mj1mO7" outputId="4d8dcb9b-8c82-4f0a-84b3-899ec97051ff" colab={"base_uri": "https://localhost:8080/"}
+# Define calibration period around Cf-252 measurement
+calib_start =  datetime(2024, 12, 17, hour=21, minute=00)
+calib_end =  datetime(2024, 12, 18, hour=11, minute=00)
+
+# Extract counts and live time
+calib_df = neutron_df.loc[calib_start:calib_end]
+N_detected = calib_df['Counts'].sum()
+measurement_time = calib_df.index[-1] - calib_df.index[0]
+measurement_time_secs = measurement_time.total_seconds()
+
+# Compute absolute efficiency
+measured_rate = N_detected / measurement_time_secs    # counts per second
+efficiency    = measured_rate / neutrons_per_second     # ε₀, spectrally-averaged
+
+# Compute intrinsic efficiency
+d_cm = 1.5 * 2.54         # source-detector distance [cm]
+r_cm = 2.0 / 2 * 2.54        # detector radius [cm]
+
+# Solid angle Ω of a circular face at distance d:
+
+def solid_angle(radius, distance):
+    """
+    Compute the solid angle (steradians) subtended by a circular detector of radius 'radius'
+    at a distance 'distance' from the source.
+    """
+    return 2 * np.pi * (1 - distance / np.sqrt(distance**2 + radius**2))
+
+Omega = solid_angle(r_cm, d_cm)
+
+N_expected = neutrons_per_second * (Omega / (4 * np.pi)) * measurement_time_secs
+
+intrinsic_efficiency = N_detected / N_expected if N_expected > 0 else 0
+
+
+# Geometric efficiency = Ω / 4π
+geom_eff = Omega / (4 * np.pi)
+
+# Intrinsic efficiency = absolute (ε₀) / geometric efficiency
+intrinsic_eff = efficiency / geom_eff
+
+# intr_efficiency = 0.06987170811381051 (from old notebook)
+
+# --- Print extracted calibration metrics ---
+print(f"Calibration period: {calib_start} to {calib_end}")
+print(f"Total counts measured: {N_detected}")
+print(f"Measured rate (cps) : {measured_rate}")
+print(f"Live time: {measurement_time_secs:.1f} seconds")
+print(f"Absolute Efficiency (ε₀)    : {efficiency:.6f}")
+print(f'Computed Intrinsic efficiency: {intrinsic_efficiency}')
+```
+
+<!-- #region id="1mShTW-Ev-nL" -->
+Now, we have $\phi(E)$, the scaled differential flux [n cm<sup>−2</sup> s<sup>−1</sup> MeV<sup>−1</sup>] and ε(E) the Eljen detector efficiency. We can thus now compute the expected count rate:  
+
+$$R_{\rm pred} = \int_{E_{\min}}^{E_{\max}} \Phi(E)\,\epsilon(E)\,dE$$  
+
+For the current purpose of our computations, we will assume our efficiency to be energy independent.
+<!-- #endregion -->
+
+```python id="KcbGefN80mca" outputId="6b12bbda-9c06-46b1-c93a-0e24e44ec190" colab={"base_uri": "https://localhost:8080/"}
+# Let's compute expected background count rate R_pred
+# Energy grid for integration [MeV]
+E_min, E_max, n_pts = 0.1, 1000.0, 5000
+E = np.logspace(np.log10(E_min), np.log10(E_max), n_pts)
+
+# Define differential flux Φ(E) per Gordon et al. Eq. (6)
+gamma = 1.65
+E0 = 0.4  # pivot [MeV]
+A_spectrum = Phi_lab * (gamma - 1) * E0**(gamma - 1)
+Phi_E = np.where(E >= E0, A_spectrum * E**(-gamma), 0.0)  # [n cm⁻² s⁻¹ MeV⁻¹]
+
+# detector efficiency ε(E):
+#eps_E = efficiency
+eps_E = intrinsic_efficiency
+
+# Integrate R_pred = ∫ Φ(E)·ε(E) dE using numpy.trapz
+R_pred = np.trapezoid(Phi_E * eps_E, E)
+print(f"Predicted background rate: {R_pred:.4e} counts·cm⁻²·s⁻¹")
+```
+
+<!-- #region id="3XfqHi8Q3mgC" -->
+Now that we have our corrected predicted background rate: 6.8058e-03 counts·cm⁻²·s⁻¹
+
+Let's compute how many counts we expect to measure on our 2″ Eljen detector.
+<!-- #endregion -->
+
+```python id="Fu90GonD3mAx" outputId="66a89477-af71-4e4c-bc0c-ef37c4dfa221" colab={"base_uri": "https://localhost:8080/"}
+# --- accounting for detector geometry ---
+# we will consider the horizontal cross-section of the detector
+# ie we will consider what one would see of the detector from the top (bird's eye view)
+# ie a 2 inch by 2inch square
+area_cm2 = (2*2.54)**2
+
+# --- expected counts ---
+R_det = R_pred * area_cm2            # counts per second
+
+print(f"Detector area     : {area_cm2:.1f} cm²")
+print(f"Expected rate    : {R_det:.4f} counts/s")
+print(f"Expected counts per min   : {R_det*60} counts/min ")
+```
+
+<!-- #region id="l4bKC4lS_0oG" -->
+From the section above (see figure 4 or 5), we know that the mean number of counts over the period of background characterization is 2.11 counts/min.
+
+Let us briefly comment on this. We observe that the expected count rate from Gordon et al of 8.28 counts/minute is higher than the observed rate, but of the same orer of magnitude.
+
+A possible explanation for this slight discrepency is the fact that we considered the horizontal cross-section of our Eljen detector as the interacting surface.
+<!-- #endregion -->
+
+```python id="PQH3gHdU6GAa" outputId="0203e765-633b-4060-b1a4-01245b03a323" colab={"base_uri": "https://localhost:8080/"}
+# We may also want to take the brute value from the paper to check that we are on the right order of magnitude below
+# without all the corrections just taking 0.0134 as our flux
+
+Phi_simple = 0.0134  # neutron flux [n cm⁻² s⁻¹]
+
+d_inch = 2.0               # diameter in inches
+d_cm = d_inch * 2.54       # convert to cm
+r_cm = d_cm / 2.0          # radius in cm
+area_cm2 = np.pi * r_cm**2 # active face area [cm²]
+
+
+# --- Expected count rate and total counts ---
+R_det = Phi_simple * area_cm2       # counts per second in detector
+R_det_per_min = R_det * 60  # counts per minute to compare
+
+
+print(f"Detector area     : {area_cm2:.1f} cm²")
+#print(f"Expected rate     : {R_det:.4f} counts/s")
+print(f"Expected rate: {R_det_per_min:.1f} counts/min")
+
+```
+
+<!-- #region id="Q0rW0YkXA3rD" -->
+Above, we notice that this "brute force" estimation from the paper is of the same order of magnitude as our previously observed value, so this serves as a sort of sanity check.  
 <!-- #endregion -->
 
 <!-- #region id="qPYffEBsbHsP" -->
@@ -508,7 +785,7 @@ Before each new experimental run, we should perform a short background measureme
 
 1. Compute the short-run mean  
    $$\hat\lambda_{\rm short} = \frac{\text{total counts in check}}{\text{duration in minutes}}$$
-2. Compare to long-term λ 
+2. Compare to long-term λ
 3. Goodness‐of‐fit test (optional)
    - Build a quick histogram of the short-run counts and perform a χ² test against $\mathrm{Poisson}(\lambda)$.  
    - If $p > 0.05$, background is consistent; otherwise investigate.  
@@ -517,7 +794,7 @@ Before each new experimental run, we should perform a short background measureme
    - If anomalous: pause and check for  
      - Instrument issues   
      - Environmental changes
-     - Cosmic‐ray “weather” 
+     - Cosmic‐ray “weather”
 
 By embedding this “quick‐check” step into every experimental workflow, we ensure that our background conditions match the long‐term characterization before any experiment is conducted.
 <!-- #endregion -->
@@ -527,9 +804,9 @@ By embedding this “quick‐check” step into every experimental workflow, we 
 
 In the notebook above, we chose arbitrary time-bins of 1 second and 1 minute. Howvere, ther Eljen detectors do not record counts per minute, but rather record individual waveforms and their timestamps with nano-second precision. Thus, it would be possible to implement a neutron background analysis method independent of binning.
 
-We propose to work instead directly with inter-arrival times (deltas) between successive neutron/ gamma counts. This approach appears rather natural for a Poisson process, where the times ebtween events are exponentially ditributed. 
+We propose to work instead directly with inter-arrival times (deltas) between successive neutron/ gamma counts. This approach appears rather natural for a Poisson process, where the times ebtween events are exponentially ditributed.
 
-Let us propose a temporary outline for this method, which we will elaborate in a future notebook. 
+Let us propose a temporary outline for this method, which we will elaborate in a future notebook.
 
 
 ### 1. Record the inter-arrival times
@@ -578,6 +855,6 @@ $$
 to the exponential distribution with parameter $\hat\lambda = 1/\bar\Delta t$.  In Python:
 <!-- #endregion -->
 
-```python
+```python id="gZuEO5cIpBuX"
 
 ```
