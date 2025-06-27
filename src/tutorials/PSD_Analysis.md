@@ -40,21 +40,13 @@ A PSD plot will be created for the calibration period in order to extract a `psp
 <!-- #region id="WLRzIEVx2E1h" -->
 ## Running this notebook
 
-Go ahead and change the `experiment_id` and `channel_number` and `digitizer` below and then run the whole notebook.
+Go ahead and change the `experiment_id` below and then run the whole notebook.
 
 You will be asked a couple of time to authenticate with your Google account, but after that all the analysis will happen automatically.
 <!-- #endregion -->
 
 ```python id="Fh2oRsfz2EKK"
 experiment_id = 1
-```
-
-```python id="hyorzwNchB5Q"
-channel_number = 0
-```
-
-```python id="R0TgQcF_usyI"
-digitizer = 8
 ```
 
 <!-- #region id="ngm6-Aeq3BBl" -->
@@ -92,7 +84,7 @@ We need to do a few authentication steps:
 -  Authenticate Colab to pull the nuclear particle master sheet using the Drive API.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="7fe0833c-cedb-453d-f33d-0d639d74e280"
+```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="b1e0e90a-b89b-4549-e145-527ca7cb66e1"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -138,11 +130,17 @@ sheet = gc.open_by_key(sheet_id).sheet1
 df = pd.DataFrame(sheet.get_all_records())
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="3f45e558-0813-46f2-fbd0-3f492221eec6"
+```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="8e365f7a-5d5d-430d-ab97-8fb8b162e74b"
 # Find the row where Experiment ID matches
 row = df[df['Experiment ID'] == experiment_id]
 
-# Extract times from columns M, N, O, P, Q, R, S
+# Exract digitizer, either 4 channel or 8
+digitizer = row["Digitizer"].iloc[0]
+
+# Extract the channel number
+channel_number = row["Channel number"].iloc[0]
+
+# Extract times
 times = row[['Setup', 'Calibration', 'Background 1', 'Experiment', 'Background 2', 'End']]
 
 times = times.apply(pd.to_datetime)
@@ -300,7 +298,7 @@ def plot_psd(data, period=None, title="PSD", psp_threshold=None, ax=None):
 We begin with the calibration period for which we have the largest number of events due to the presence of a source of radiation. This PSD plot is what we'll use to extract a simple psp threshold value that can be used to quickly discriminate between gammas (lower psp) and neutrons (higher psp).  
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="34da10d4-3a58-4ddd-fce7-a0731a360979"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="82661b27-ddfe-4f7f-f819-8fb50e62e632"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration")
 else:
@@ -384,7 +382,7 @@ def find_psp_midpoint(data, target_energy=500, prominence=10, energy_range=(0, 4
 In this analysis we'll use Energy  = 500
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 541} id="eq9yNEu9u1WM" outputId="14dddaf7-8e93-47d3-829f-497447713b92"
+```python colab={"base_uri": "https://localhost:8080/", "height": 541} id="eq9yNEu9u1WM" outputId="204c2834-5174-4b51-ac96-9374f5609d62"
 if data_exists("Calibration"):
   target_energy = 500
   psp_threshold = find_psp_midpoint(psd_data["Calibration"], prominence=5)
@@ -398,7 +396,7 @@ else:
 Now that we have our threshold, we can remake the PSD plots to see if there is anything obviously wrong with the analysis.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="1ccd5332-aee0-468b-eabb-80fec6863e43"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="738fa687-59c0-4f92-f857-64cb9a86c7c7"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration", psp_threshold)
 else:
@@ -409,7 +407,7 @@ else:
 It can also be instructive to create the PSD plots for the background periods - we would not expect significant changes between the two. Here, we just eyeball them, but performing a statistical analysis will be the next step.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 582} id="lqeyLIBawd9O" outputId="8945df9c-0f62-4b63-cb07-8be5d069ca11"
+```python colab={"base_uri": "https://localhost:8080/", "height": 582} id="lqeyLIBawd9O" outputId="4771a245-37ae-46e2-97d1-a2e9a843af70"
 if data_exists("Background 1") and data_exists("Background 2"):
   fig, axes = plt.subplots(1, 2, figsize=(14, 5), squeeze=False)
   axes = axes.flatten()  # Flatten for easy indexing
@@ -429,7 +427,7 @@ else:
 And of course we can look at the experimental period.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="0mYMvYpTsdf1" outputId="2a87d342-3f8e-492a-b77c-63b838c9e7d2"
+```python colab={"base_uri": "https://localhost:8080/"} id="0mYMvYpTsdf1" outputId="e82bca4a-5f12-446a-a81a-a3d2c2dec47d"
 if data_exists("Experiment"):
   plot_psd(psd_data["Experiment"], psd_periods["Experiment"], psp_threshold=psp_threshold)
 else:
@@ -440,7 +438,7 @@ else:
 Finally, we now update the master spreadsheet with the PSP threshold that will be used to gamma/neutron discrimination.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="f8d79246-7e52-4676-f33d-d711cbb3d6f2"
+```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="4b9cbbbb-47e2-4e58-ce61-033d5f2e5b95"
 if psp_threshold is not None and "Calibration" in psd_data:
   # Update the DataFrame with the midpoint value
   if not row.empty:
@@ -459,8 +457,4 @@ if psp_threshold is not None and "Calibration" in psd_data:
       print(f"No row found for Experiment ID {experiment_id}")
 else:
   print("‼️ No psp threshold has been calculated. Nothing to upload to master sheet.")
-```
-
-```python id="2N_I_dsD483A"
-
 ```
