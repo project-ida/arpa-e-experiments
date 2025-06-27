@@ -92,7 +92,7 @@ We need to do a few authentication steps:
 -  Authenticate Colab to pull the nuclear particle master sheet using the Drive API.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="a3611364-8c49-43f9-bd5a-959909f547f0"
+```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="11717bde-2fae-4a69-aa62-1bba4dca9608"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -138,7 +138,7 @@ sheet = gc.open_by_key(sheet_id).sheet1
 df = pd.DataFrame(sheet.get_all_records())
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="689d0977-ab53-445e-e30a-587b50059d88"
+```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="2ee937cc-3512-479f-f4c5-897a51cb496e"
 # Find the row where Experiment ID matches
 row = df[df['Experiment ID'] == experiment_id]
 
@@ -283,7 +283,7 @@ def plot_psd(data, period=None, title="PSD", psp_threshold=None, ax=None):
 We begin with the calibration period for which we have the largest number of events due to the presence of a source of radiation. This PSD plot is what we'll use to extract a simple psp threshold value that can be used to quickly discriminate between gammas (lower psp) and neutrons (higher psp).  
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="a5d03609-2652-4220-c57c-c0504d454f4b"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="4b588726-a59e-47c0-bb96-a0cd8250b2cd"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration")
 else:
@@ -303,7 +303,7 @@ In this notebook, we trial a midpoint method.
 <!-- #endregion -->
 
 ```python id="awexRLhIuuFq"
-def find_psp_midpoint(data, target_energy=500, energy_range=(0, 4000), psp_range=(0, 1), energy_bins=512, psp_bins=128):
+def find_psp_midpoint(data, target_energy=500, prominence=10, energy_range=(0, 4000), psp_range=(0, 1), energy_bins=512, psp_bins=128):
     # Step 1: Map target_energy to the closest energy_bin
     bin_width = (energy_range[1] - energy_range[0]) / energy_bins  # 4000 / 512 = 7.8125
     closest_energy_bin = int(round(target_energy / bin_width))
@@ -327,7 +327,7 @@ def find_psp_midpoint(data, target_energy=500, energy_range=(0, 4000), psp_range
             hist[psp_bin] += count
 
     # Find peaks using scipy.signal.find_peaks
-    peaks_indices, _ = find_peaks(hist, height=0, prominence=10)  # Adjust prominence as needed
+    peaks_indices, _ = find_peaks(hist, height=0, prominence=prominence)  # Adjust prominence as needed
     if len(peaks_indices) < 2:
         raise ValueError("Not enough significant peaks detected; adjust prominence or check data.")
 
@@ -367,10 +367,10 @@ def find_psp_midpoint(data, target_energy=500, energy_range=(0, 4000), psp_range
 In this analysis we'll use Energy  = 500
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 539} id="eq9yNEu9u1WM" outputId="a970035c-00da-43bb-9330-5e1b08de9ad8"
+```python colab={"base_uri": "https://localhost:8080/", "height": 541} id="eq9yNEu9u1WM" outputId="ef7a22de-db78-416d-90f1-c87fe57a397a"
 if data_exists("Calibration"):
   target_energy = 500
-  psp_threshold = find_psp_midpoint(psd_data["Calibration"])
+  psp_threshold = find_psp_midpoint(psd_data["Calibration"], prominence=10)
 else:
   psp_threshold = None
   print("‼️ Calibration data does not exist, cannot perform psp thresold analysis ‼️")
@@ -381,7 +381,7 @@ else:
 Now that we have our threshold, we can remake the PSD plots to see if there is anything obviously wrong with the analysis.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="f96ec874-6cb0-46c9-d859-a60e6e3b12b6"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="8e53c9fb-8002-46c3-f972-3eb7c5c0316a"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration", psp_threshold)
 else:
@@ -392,7 +392,7 @@ else:
 It can also be instructive to create the PSD plots for the background periods - we would not expect significant changes between the two. Here, we just eyeball them, but performing a statistical analysis will be the next step.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 581} id="lqeyLIBawd9O" outputId="afa39641-0c30-4e05-a4cd-3e2c96a44380"
+```python colab={"base_uri": "https://localhost:8080/", "height": 582} id="lqeyLIBawd9O" outputId="b6a9a6c4-ecca-4e89-d497-027b0a60ff73"
 if data_exists("Background 1") and data_exists("Background 2"):
   fig, axes = plt.subplots(1, 2, figsize=(14, 5), squeeze=False)
   axes = axes.flatten()  # Flatten for easy indexing
@@ -412,7 +412,7 @@ else:
 And of course we can look at the experimental period.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="0mYMvYpTsdf1" outputId="987451a0-5a03-4d00-d0cb-b1bebf28f930"
+```python colab={"base_uri": "https://localhost:8080/"} id="0mYMvYpTsdf1" outputId="3c69821a-dff1-4200-bf6a-68fe6d254449"
 if data_exists("Experiment"):
   plot_psd(psd_data["Experiment"], psd_periods["Experiment"], psp_threshold=psp_threshold)
 else:
@@ -423,7 +423,7 @@ else:
 Finally, we now update the master spreadsheet with the PSP threshold that will be used to gamma/neutron discrimination.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="24852252-7885-4b78-fa24-00234d58468e"
+```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="22590929-1a82-419c-9486-1a9ee8437b07"
 if psp_threshold is not None and "Calibration" in psd_data:
   # Update the DataFrame with the midpoint value
   if not row.empty:
@@ -442,4 +442,8 @@ if psp_threshold is not None and "Calibration" in psd_data:
       print(f"No row found for Experiment ID {experiment_id}")
 else:
   print("‼️ No psp threshold has been calculated. Nothing to upload to master sheet.")
+```
+
+```python id="2N_I_dsD483A"
+
 ```
