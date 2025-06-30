@@ -896,6 +896,9 @@ $$
 to the exponential distribution with parameter $\hat\lambda = 1/\bar\Delta t$.  In Python:
 <!-- #endregion -->
 
-```python id="gZuEO5cIpBuX"
+<!-- #region id="hlh2TtW3oUOs" -->
+## Conclusion
 
-```
+In this notebook, we have shown that the 2″ Eljen detector’s background count behaves as a stationary Poisson process ($\lambda \approx 2.11$ counts/min), with both the mean and variance remaining stable over long-term measurements.  Our Poisson- and normal-fit tests, together with comparisons to literature values, validate the robustness of this characterization and enable us to define clear detection thresholds for neutron signals.  Looking forward, a bin-independent analysis based on inter-arrival times promises to further refine our understanding of the detector’s intrinsic background.  
+
+<!-- #endregion -->
