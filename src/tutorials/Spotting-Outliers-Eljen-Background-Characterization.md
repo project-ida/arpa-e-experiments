@@ -68,7 +68,7 @@ In a previous notebook, *Eljen-Background-Characterization*, we demonstrated how
    Z_{\rm adj} \;=\;\Phi^{-1}\!\Bigl(1-\tfrac12\,\alpha_{\rm per}\Bigr)\;\approx\;4.0,
    $$
 
-   i.e.\ roughly a $4\alpha$ cut instead of $3\alpha$, which compensates for the extended duration of the measurement.
+   i.e.roughly a $4\alpha$ cut instead of $3\alpha$, which compensates for the extended duration of the measurement.
 <!-- #endregion -->
 
 <!-- #region id="56b5e3f2" -->
@@ -76,7 +76,7 @@ In a previous notebook, *Eljen-Background-Characterization*, we demonstrated how
 
 As in our Eljen background–characterization study, we begin by importing the raw neutron‐count data and extracting its key statistical properties. In this step, we:
 - Load the time‐series dataset of background counts.
-- Visualize the count distribution to confirm its Poisson‐like behavior.
+- Retrieve the count distribution to confirm its Poisson‐like behavior.
 
 With these baseline statistics in hand, we’ll be ready to spot any bursts that deviate from the expected background.
 
