@@ -21,7 +21,7 @@ jupyter:
 
 ### Prequel - What is an Eljen detector ?
 
-Before we jump into background characization, let's recall how these nuclear particle detectors work.
+Before we jump into background characterization, let's recall how these nuclear particle detectors work.
 
 Eljen scintillator detectors work by converting ionizing radiation into visible light. Radiation excites molecules in the plastic; these de-excite and emit photons. The light is detected by a photomultiplier tube (PMT) or Silicon Photomultiplier (SiPM), producing an electrical signal proportional to the energy deposited.
 
