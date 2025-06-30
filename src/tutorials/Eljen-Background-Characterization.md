@@ -240,7 +240,7 @@ Now that we have excluded the time before and when the neutron source was introd
 
 Here are the different steps we will take:
 
-**Side-step 4.1 Expected Poisson Distribution**
+**Side-Step 4.1 Expected Poisson Distribution**
 - *Fitting the experimental data to a Poisson distribution*
 - *Checking quantitatively the goodness of the fit*
 
@@ -291,7 +291,7 @@ Let us quickly comment on how to read this plot:
 <!-- #endregion -->
 
 <!-- #region id="A1mY5FMro8nE" -->
-## Side-step 4.1 Expected Poisson Distribution
+## Side-Step 4.1 Expected Poisson Distribution
 
 In order to conduct a statistical analysis on these background counts, we need to have an idea of what qualifies as a "significant" deviation from background. This will be of interest when trying to determine whether or not we have detected a "significant" number of neutron counts.
 
@@ -386,7 +386,7 @@ The red dashed line corresponds to the theoretical distribution assuming that ne
 <!-- #endregion -->
 
 <!-- #region id="cHo5vHCrpBuN" -->
-## Quantitative goodness-of-fit
+## Quantitative Goodness-of-Fit
 
 In order to test more rigorously whether our background truly follows a Poisson process, we can perform a $χ^2$ (chi-square) goodness-of-fit test comparing the observed mean histogram to the expected Poisson probabilities:
 
@@ -466,7 +466,7 @@ plt.show()
 ```
 
 <!-- #region id="Np0-tUNepBuQ" -->
-## Quantitative goodness-of-fit
+## Quantitative Goodness-of-Fit
 
 The above plot does not shed enough light on how close our mean distribution is to a normal distribution. In order to determine the quantitative goodness of our fit, we may start with a graphical check: the QQ-plot. This plot sample quantiles vs theoretical normal quantiles; and deviations from the straight line highlight non-normality.
 <!-- #endregion -->
