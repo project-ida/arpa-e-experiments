@@ -354,7 +354,7 @@ plt.show()
 ```
 
 <!-- #region id="4b1a8660" -->
-### Interpreting the Log Tail-Probability Plot
+## Step 5 - Interpreting the Log Tail-Probability Plot
 
 Once we’ve computed for each one-minute count $k$ its exact tail probability under $\mathrm{Poisson}(\lambda)$,
 
@@ -385,7 +385,3 @@ Together, these techniques provide a principled, complementary toolkit for spott
 
 In a future notebook, we will want to perform the same analysis for gamma counts.
 <!-- #endregion -->
-
-```python id="d7f36512"
-
-```
