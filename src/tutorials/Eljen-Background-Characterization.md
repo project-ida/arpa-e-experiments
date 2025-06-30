@@ -13,7 +13,7 @@ jupyter:
 ---
 
 <!-- #region id="a360f4c0-baa3-4325-b14d-8bd37958784c" -->
-<a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/neutrons-background-1/tutorials/Eljen-Background-Characterization.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/neutrons-background-1/tutorials/Eljen-Background-Characterization.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
+<a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/tutorials/Eljen-Background-Characterization.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/tutorials/Eljen-Background-Characterization.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
 <!-- #endregion -->
 
 <!-- #region id="Fa_xEG7NE-yB" -->
@@ -126,7 +126,7 @@ fig_counter = 0
 Now that we have collected the raw data (i.e. electric signal history) that interests us, let us have a look at the measured neutron and gamma counts.
 <!-- #endregion -->
 
-```python id="Lx8XLpTApBuA" outputId="73290064-0586-4251-ab9d-0cd23e0c0fce" colab={"base_uri": "https://localhost:8080/", "height": 463}
+```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="Lx8XLpTApBuA" outputId="73290064-0586-4251-ab9d-0cd23e0c0fce"
 from matplotlib.patches import Rectangle
 
 fig_counter += 1
@@ -471,7 +471,7 @@ plt.show()
 The above plot does not shed enough light on how close our mean distribution is to a normal distribution. In order to determine the quantitative goodness of our fit, we may start with a graphical check: the QQ-plot. This plot sample quantiles vs theoretical normal quantiles; and deviations from the straight line highlight non-normality.
 <!-- #endregion -->
 
-```python id="AtzGpygkpBuR" outputId="d22de6c6-f795-48ca-8f99-1bb0aa57ab9a" colab={"base_uri": "https://localhost:8080/", "height": 564}
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="AtzGpygkpBuR" outputId="d22de6c6-f795-48ca-8f99-1bb0aa57ab9a"
 fig_counter += 1
 
 # 4. QQ-plot for normality check
@@ -499,7 +499,7 @@ In practice, we obtain from `scipy.stats.shapiro(daily_means)` both the test sta
 
 <!-- #endregion -->
 
-```python id="qVbz6hoopBuT" outputId="bc68c224-b809-4d92-faf7-fea78ea4b82b" colab={"base_uri": "https://localhost:8080/"}
+```python colab={"base_uri": "https://localhost:8080/"} id="qVbz6hoopBuT" outputId="bc68c224-b809-4d92-faf7-fea78ea4b82b"
 # 5. Shapiro–Wilk test for normality
 W, p_value = stats.shapiro(daily_means)
 print(f"Shapiro–Wilk test: W = {W:.4f}, p-value = {p_value:.4f}")
@@ -539,7 +539,7 @@ NB: *The hyper-links above correspond to references for the sources of the figur
 
 <!-- #endregion -->
 
-```python id="Bss56h_7x1Xe" outputId="24e22ed6-54ad-4631-8ad3-51cb5089ddb2" colab={"base_uri": "https://localhost:8080/"}
+```python colab={"base_uri": "https://localhost:8080/"} id="Bss56h_7x1Xe" outputId="24e22ed6-54ad-4631-8ad3-51cb5089ddb2"
 # --- Reference flux and site parameters (Gordon et al. 2004) ---
 Phi_ref = 0.0134         # Reference total flux [n cm⁻² s⁻¹] at Yorktown Heights
 h_ref = 20.0             # Reference altitude [m a.s.l.]
@@ -596,7 +596,7 @@ This efficiency calculation is undertaken in the following code cells.
 Let's first have a look at when the source was in the lab:
 <!-- #endregion -->
 
-```python id="KiygiGvAxNBy" outputId="b5e9e65b-5508-48d5-b635-a5974b8fe9db" colab={"base_uri": "https://localhost:8080/", "height": 407}
+```python colab={"base_uri": "https://localhost:8080/", "height": 407} id="KiygiGvAxNBy" outputId="b5e9e65b-5508-48d5-b635-a5974b8fe9db"
 # Resample to counts per second
 cps = neutron_df['Counts'].resample('1s').sum()
 
@@ -621,7 +621,7 @@ plt.show()
 From the plot above, we will choose our callibration period to be from december 17th 21:00:00 to december 18th 11:00:00.
 <!-- #endregion -->
 
-```python id="-mjzqLR8v-Jr" outputId="1a1017f1-ac90-46ad-de99-8d962062d6c1" colab={"base_uri": "https://localhost:8080/"}
+```python colab={"base_uri": "https://localhost:8080/"} id="-mjzqLR8v-Jr" outputId="1a1017f1-ac90-46ad-de99-8d962062d6c1"
 from datetime import datetime
 # Compute neutron emission rate from Cf-252 decay
 def cf252_neutron_emission(A0, date_initial, date_experiment):
@@ -655,7 +655,7 @@ neutrons_per_second = cf252_neutron_emission(A0, source_date, experiment_date)
 print(f"Neutron emission rate: {neutrons_per_second:} n/s")
 ```
 
-```python id="dxNLN6mj1mO7" outputId="eaa48308-3988-44bc-9e9a-2cec5bd9c8fa" colab={"base_uri": "https://localhost:8080/"}
+```python colab={"base_uri": "https://localhost:8080/"} id="dxNLN6mj1mO7" outputId="eaa48308-3988-44bc-9e9a-2cec5bd9c8fa"
 # Define calibration period around Cf-252 measurement
 calib_start =  datetime(2024, 12, 17, hour=21, minute=00)
 calib_end =  datetime(2024, 12, 18, hour=11, minute=00)
@@ -715,7 +715,7 @@ $$R_{\rm pred} = \int_{E_{\min}}^{E_{\max}} \Phi(E)\,\epsilon(E)\,dE$$
 For the current purpose of our computations, we will assume our efficiency to be energy independent.
 <!-- #endregion -->
 
-```python id="KcbGefN80mca" outputId="68ca79b2-80f4-4c36-8149-f77b6fa752ae" colab={"base_uri": "https://localhost:8080/"}
+```python colab={"base_uri": "https://localhost:8080/"} id="KcbGefN80mca" outputId="68ca79b2-80f4-4c36-8149-f77b6fa752ae"
 # Let's compute expected background count rate R_pred
 # Energy grid for integration [MeV]
 E_min, E_max, n_pts = 0.1, 1000.0, 5000
@@ -742,7 +742,7 @@ Now that we have our corrected predicted background rate: 6.8058e-03 counts·cm�
 Let's compute how many counts we expect to measure on our 2″ Eljen detector.
 <!-- #endregion -->
 
-```python id="Fu90GonD3mAx" outputId="11d1fdc2-a696-4db6-9b25-3cb88c060845" colab={"base_uri": "https://localhost:8080/"}
+```python colab={"base_uri": "https://localhost:8080/"} id="Fu90GonD3mAx" outputId="11d1fdc2-a696-4db6-9b25-3cb88c060845"
 # --- accounting for detector geometry ---
 # we will consider the horizontal cross-section of the detector
 # ie we will consider what one would see of the detector from the top (bird's eye view)
@@ -765,7 +765,7 @@ Let us briefly comment on this. We observe that the expected count rate from [Go
 A possible explanation for this  discrepency is the fact that we considered the horizontal cross-section of our Eljen detector as the interacting surface.
 <!-- #endregion -->
 
-```python id="PQH3gHdU6GAa" outputId="e7c858e5-ab0a-4a9e-8a60-13b9b1bef4aa" colab={"base_uri": "https://localhost:8080/"}
+```python colab={"base_uri": "https://localhost:8080/"} id="PQH3gHdU6GAa" outputId="e7c858e5-ab0a-4a9e-8a60-13b9b1bef4aa"
 # We may also want to take the brute value from the paper to check that we are on the right order of magnitude below
 # without all the corrections just taking 0.0134 as our flux
 
