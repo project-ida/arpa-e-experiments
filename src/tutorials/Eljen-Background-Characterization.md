@@ -19,23 +19,27 @@ jupyter:
 <!-- #region id="Fa_xEG7NE-yB" -->
 # Eljen Detector Background Characterization
 
-### Prequel - What's an Eljen detector ?
+### Prequel - What is an Eljen detector ?
 
-Eljen scintillator detectors work by converting ionizing radiation into visible light. Radiation excites molecules in the plastic; these de-excite and emit photons. The light is detected by a photomultiplier tube (PMT) or Silicon photomultiplier (SiPM), producing an electrical signal proportional to the energy deposited.
+Before we jump into background characization, let's recall how these nuclear particle detectors work.
 
-### Our Eljen Detectors
+Eljen scintillator detectors work by converting ionizing radiation into visible light. Radiation excites molecules in the plastic; these de-excite and emit photons. The light is detected by a photomultiplier tube (PMT) or Silicon Photomultiplier (SiPM), producing an electrical signal proportional to the energy deposited.
 
-In the lab, we have access to both a 2" and a 5" Eljen detector. Our goal in this notebook is to set up a precedure for chracterizing the background of one of these detectors from a "long"(~1 month) background measurments. Thus, we would like to characterize the probabilistic distribution of the background counts picked up by an Eljen detector and set up a protocol to use statistical tests to determine whether certain counts or bursts are background or events of significance in our experiments.
+### Experimental Setup - Our Eljen Detectors
 
-In this first notebook, we will begin by analysising our **2" Eljen detector**.
+We are running experiments in which we are looking out for the production of neutrons. In order to characterize these bursts, we need to be certain of the background levels against which we are comparing our experimental data.
 
-In order to do so, we began by running the Eljen detectors in question throughout December 2024 and January 2025. We will now characterize this background---which will be useful for future analysis.
+In the lab, we have access to both a 2" and a 5" Eljen detector. In this notebook, our goal is to set up a precedure for chracterizing the background of one of these detectors from a "long" (~1 month) background measurment. More specifically, we would like to characterize the probabilistic distribution of the background counts picked up by our 2" Eljen detector and set up a protocol to use statistical tests to determine whether certain counts or bursts are background or events of significance in our experiments.
+
+Hence, in this first notebook, we will begin by analysising our **2" Eljen detector**.
+
+In order to do so, we began by running the Eljen detector in question throughout December 2024 and January 2025. On December 17th, we introduced a neutron source, ²⁵²Cf to collect some callibration data. We will now characterize this background---which will be useful for future analysis.
 
 
-The data panel describing this background measurement can be found here: https://lenr.mit.edu/data/load-panel.php?filename=eljen/eljen-2inch-long-term
+The data panel describing this background measurement can be found [here](https://lenr.mit.edu/data/load-panel.php?filename=eljen/eljen-2inch-long-term).
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="PbnVxkXsE-gX" outputId="53baead1-9191-44e7-88cb-949495cf5041"
+```python colab={"base_uri": "https://localhost:8080/"} id="PbnVxkXsE-gX" outputId="88c1391e-492b-4575-e6f0-64bf570d18a7"
 # RUN THIS IF YOU ARE USING GOOGLE COLAB
 import sys
 import os
@@ -59,7 +63,7 @@ sys.path.insert(0, project_root)
 ```
 
 ```python id="8blAJNCbE4iU"
-# Libraries and helper functions
+# Libraries and helper functions we will use throughout the notebook
 
 import pandas as pd
 import numpy as np
@@ -90,9 +94,9 @@ meta = {
 <!-- #region id="NvtbW4lhFQFJ" -->
 ## Step 1 - Data Collection
 
-Let's begin by collecting raw data on the Eljen detectors of interest, ie the 2 inch detector to begin.  
+Let us begin by collecting raw data on the Eljen detectors of interest, i.e. the 2" detector.  
 
-We have collected long-term data on the neutron and gamma counts per sond picked up by our Eljen detectors, from December 14th 2024 00:01:01 to January 23rd, 2025 23:58:59. They are defined as dataframes, which we can manipulate using pandas, below.
+We have collected long-term data on the neutron and gamma counts per second picked up by our Eljen detectors, from December 14th 2024 00:01:01 to January 23rd, 2025 23:58:59. They are defined as dataframes, which we can manipulate using the pandas python library, below.
 <!-- #endregion -->
 
 ```python id="aYBCnu4vFL4D"
@@ -112,17 +116,17 @@ gamma_df = pd.read_csv(
 ```
 
 ```python id="NFbBUXQIKQgk"
-# we will also start numbering our figures here for easier reference later in the notebook'
+# We will also begin numbering our figures here for easier reference later in the notebook
 fig_counter = 0
 ```
 
 <!-- #region id="FaFFr2d6FmmZ" -->
-## Step 2 - Visualizing Neutron and Gamma counts
+## Step 2 - Visualizing Neutron and Gamma Counts
 
 Now that we have collected the raw data (i.e. electric signal history) that interests us, let us have a look at the measured neutron and gamma counts.
 <!-- #endregion -->
 
-```python id="Lx8XLpTApBuA" outputId="80899601-83ca-42f2-939b-b1adddb697bf" colab={"base_uri": "https://localhost:8080/", "height": 463}
+```python id="Lx8XLpTApBuA" outputId="5e4bd566-aacd-48e2-9382-2c8c53e188e6" colab={"base_uri": "https://localhost:8080/", "height": 463}
 from matplotlib.patches import Rectangle
 
 fig_counter += 1
@@ -135,8 +139,8 @@ plt.xticks(rotation=45)
 plt.title(f"{meta['descriptor']} - Neutron Counts (Fig. {fig_counter})")
 
 ax = plt.gca()
-start = pd.to_datetime('2024-12-18')
-end   = start + pd.Timedelta(days=1)
+start = pd.to_datetime('2024-12-17')
+end   = start + pd.Timedelta(days=2)
 ymin, ymax = ax.get_ylim()
 
 rect = Rectangle((start, ymin),
@@ -154,9 +158,11 @@ plt.show()
 ```
 
 <!-- #region id="wppSJfQSKnvx" -->
-We notice in the above plot a sharp neutron burst on 18 December (highlighted by the red square in Fig. 1). This spike coincides exactly with the introduction of a ²⁵²Cf source into the laboratory.
+In the above plot, we notice a sharp neutron burst on December 18th (which is highlighted by the red square in Fig. 1). This spike coincides exactly with the introduction of a ²⁵²Cf source into the laboratory.
 
-According to the LNHB decay tables, ²⁵²Cf disintegrates by α-emission almost exclusively to the ground state of ²⁴⁸Cm, and undergoes spontaneous fission with a branching ratio of $3.086 (8)%$ ([LNHB Cf-252 tables](http://www.lnhb.fr/nuclides/Cf-252_tables.pdf)). In each fission event, an average of $3.7675 (40)$ neutrons are emitted, yielding:
+According to the LNHB decay tables, ²⁵²Cf disintegrates by $\alpha$-emission almost exclusively to the ground state of ²⁴⁸Cm, and undergoes spontaneous fission with a branching ratio of $3.086 (8)%$ ([LNHB Cf-252 tables](http://www.lnhb.fr/nuclides/Cf-252_tables.pdf)).
+
+In each fission event, an average of $3.7675 (40)$ neutrons are emitted, yielding:
 
 $$
 n \;=\; 3.086\% \times 3.7675 \;\approx\; 0.11627\ \text{neutrons per decay}
@@ -164,12 +170,12 @@ n \;=\; 3.086\% \times 3.7675 \;\approx\; 0.11627\ \text{neutrons per decay}
 11.627\ \text{neutrons per 100 decays}
 $$
 
-Furthermore, spontaneous fission of ²⁵²Cf is accompanied by prompt [γ-rays emitted within $10^{-14}$–$10^{-12}\,\text{s}$ of fragment formation](https://www.sciencedirect.com/science/article/pii/0375947475904820?utm). The average γ-multiplicity is approximately [10.3 photons per fission](https://link.springer.com/article/10.1007/BF02847802?utm), essentially simultaneous with neutron emission. Therefore, we expect to observe a coincident γ-burst in any detector with sufficient energy threshold and timing resolution, aligned with the neutron spike seen on 18 December.
+Furthermore, spontaneous fission of ²⁵²Cf is accompanied by prompt [$\gamma$-rays emitted within $10^{-14}$–$10^{-12}\,\text{s}$ of fragment formation](https://www.sciencedirect.com/science/article/pii/0375947475904820?utm). The average $\gamma$-multiplicity is approximately [10.3 photons per fission](https://link.springer.com/article/10.1007/BF02847802?utm), essentially simultaneous with neutron emission. Therefore, we expect to observe a coincident $\gamma$-burst in any detector with sufficient energy threshold and timing resolution, aligned with the neutron spike seen on 18 December.
 
 This is indeed the case in the following plot.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="mIZOh2-xFwWf" outputId="6066bece-cc5c-4b1a-b21a-ba5f5b852b36"
+```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="mIZOh2-xFwWf" outputId="731932ec-54ce-46e5-d029-bafc5bffdffe"
 fig_counter +=1
 
 plt.figure(figsize=(8, 4))
@@ -179,10 +185,10 @@ plt.ylabel('Counts')
 plt.xticks(rotation=45)
 plt.title(f"{meta['descriptor']} - Gamma counts (Fig. {fig_counter})")
 
-# highlight December 18th with a red square
+# highlight December 17th - 18th with a red square
 ax = plt.gca()
-start = pd.to_datetime('2024-12-18')      # adjust year if needed
-end   = start + pd.Timedelta(days=1)
+start = pd.to_datetime('2024-12-17')
+end   = start + pd.Timedelta(days=2)
 ymin, ymax = ax.get_ylim()
 rect = Rectangle(
     (start, ymin),
@@ -201,18 +207,18 @@ plt.show()
 ```
 
 <!-- #region id="14r4zapRF3kO" -->
-## Step 3 - Resampling data and Removing Neutron burst
+## Step 3 - Resampling Data and Removing Neutron Burst from Background Data
 
 The current data is taken about once per second. We'll now aggregate this data to present counts in 1 minute intervals.
-This is an arbitrary choice, but will allow us to develop wom intuition about count binning. Indeed, larger time itnervals will necessarily include more counts, so it will be easier to distinguish by eye any significant events. This is not nessecarily the method we will keep for further analysis, but it remains useful in our intuition builing. In the future, we hope to remove the arbitrarity of binning all together (see later notebook explained in last section of this notebook).
 
-Furthermore, we noticed above a neutron and gamma burst on December 18th. This corresponded to a time-period in which we brought a Cf-252 neutron source into the lab (ie the bursts that the detectors are picking up). Hence, in order to define a clear background time, we will start collecting data from December 19th.
+This is an arbitrary choice, but will allow us to develop some intuition about count binning. Indeed, larger time intervals will necessarily include more counts, so it will be easier to distinguish by eye any significant events. This is not nessecarily the method we will keep for further analysis, given its dependence on an arbitrary bin choice, but it remains useful in our intuition building. In the future, we hope to remove the arbitrarity of binning all together (see later notebook introduced in last section of this notebook).
 
-So, in sum, the next step is to :
+Furthermore, we noticed above a neutron and gamma burst begining on December 17th. This corresponded to a time-period in which we brought a ²⁵²Cf neutron source into the lab (i.e. the bursts that the detectors are picking up). Hence, in order to define a clear background time, we will start collecting data from December 19th.
 
+So, in sum, our next step is to :
 
 1. **Aggregate** the raw second-by-second counts into 1 minute bins.  
-2. **Exclude** the burst period when the ²⁵²Cf source was in the lab (i.e. December 18), and begin our background analysis on December 19.
+2. **Exclude** the burst period when the ²⁵²Cf source was in the lab, and begin our background analysis on December 19.
 <!-- #endregion -->
 
 ```python id="Lh2pD8EAF2Ei"
@@ -228,15 +234,29 @@ gamma_df_1_minute_background = gamma_df_1_minute[start_time:end_time]
 ```
 
 <!-- #region id="1iEt9M38MwN4" -->
-## Step 4 - Analyzing the Bakground Counts
+## Step 4 - Analyzing the Measured Background Counts
 
-Now that we have excluded the time before and when the neutron source was introduced, let us have a closer look at our background neutron counts.
+Now that we have excluded the time before and when the neutron source was introduced, let us take a closer look at our background neutron counts.
+
+Here are the different steps we will take:
+
+**Side-step 4.1 Expected Poisson Distribution**
+- *Fitting the experimental data to a Poisson distribution*
+- *Checking quantitatively the goodness of the fit*
+
+**Side-Step 4.2 Stability of the Background Rate and Normality of Daily Means**
+- *Fitting the experimental data to a Normal distribution*
+- *Checking quantitatively the goodness of the fit*
+
+**Side-Step 4.3 Comparing our Background Rates with the Literature**
+- *Reference Neutron Background Flux*
+
 
 We will start by building a daily histogram of the background neutron counts per minute. Each line in the plot will represent one day’s worth of 1 minute bins, normalized to form a probability distribution. This lets us see how the shape of the count distribution varies from day to day.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="s9b-zrG1Mue2" outputId="20aa04d1-eef6-4b7f-a0e3-e2a0fa2a6730"
-fig_counter +=1
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="s9b-zrG1Mue2" outputId="f55d9e60-2b54-4c59-a2bf-a397f9b76a7c"
+fig_counter += 1
 
 # Ensure the index is datetime
 neutron_df_1_minute_background.index = pd.to_datetime(neutron_df_1_minute_background.index)
@@ -262,41 +282,47 @@ plt.show()
 ```
 
 <!-- #region id="Xjp6H0zJQYmC" -->
-Quick comment on how to read this plot:
+Let us quickly comment on how to read this plot:
 
-- Each line corresponds to one calendar day’s distribution of 1 minute neutron counts.
-- Horizontal axis: number of counts detected in a 1 min bin.
+- Each colored line corresponds to one calendar day’s distribution of 1 minute neutron counts.
+- Horizontal axis: number of counts detected in a 1 min bin (i.e. n counts per minute, with n the numbers on the x-axis).
 - Vertical axis: normalized frequency (so that areas under each curve sum to 1).
 - The shading/transparency helps you see where multiple days’ distributions overlap. Each color corresponds to the data from a different day.
 <!-- #endregion -->
 
 <!-- #region id="A1mY5FMro8nE" -->
-In order to conduct a statistical analysis on these background counts, we need to have an idea of what qualifies as a "significant" deviation from background. This will be of interest when trying to determine whether or not we have detected an abnormal number of neutron counts.
-
 ## Side-step 4.1 Expected Poisson Distribution
 
-Neutron background counts are typically modeled by a Poisson distribution because they arise from random, independent events which occur at a constant average rate over time. This aligns with the conditions under which the Poisson distribution is valid:
+In order to conduct a statistical analysis on these background counts, we need to have an idea of what qualifies as a "significant" deviation from background. This will be of interest when trying to determine whether or not we have detected a "significant" number of neutron counts.
 
-- Rare Events: Background neutrons are detected infrequently and individually—each detection is a discrete event.
+
+<!-- #endregion -->
+
+<!-- #region id="GLe8jn-6coKa" -->
+## Fitting to a Poisson distribution
+
+Neutron background counts are typically modeled by a Poisson distribution because they arise from random, independent events which occur at a constant average rate over time. Our experimental setup aligns with the conditions under which the Poisson distribution is valid:
+
+- Rare Events: Background neutrons are detected infrequently and individually; each detection is a discrete event.
 
 - Statistical Independence: The arrival of one neutron does not affect the probability of another arriving.
 
 - Constant Rate: Over short timescales (like 1-minute bins), the average background rate is approximately constant.
 
-- Fixed Observation Interval: Counts are measured over uniform time intervals (ie counted over fixed 1 minute intervals).
+- Fixed Observation Interval: Counts are measured over uniform time intervals (i.e. counted over fixed 1 minute intervals).
 
-Under these conditions, the number of neutrons detected in a fixed time interval follows a Poisson distribution with mean λ, where λ is the expected number of events (neutrons) per interval.
+Under these conditions, the number of neutrons detected in a fixed time interval should follow a Poisson distribution with mean λ, where λ is the expected number of events (neutrons) per interval.
 
-The standard deviation is thus $\sigma = \sqrt{λ}$
+The standard deviation would thus be $\sigma = \sqrt{λ}$
 
-In the literature, we will typically consider that count is "significantly high" if it exceeds $\lambda + \sqrt{\lambda}\cdot Z$
+Furthermore, in the literature, we will typically consider that count is "significantly high" if it exceeds $\lambda + \sqrt{\lambda}\cdot Z$
 
 where $Z = 3$ corresponds to a $3\sigma$ threshold (confidence level ~99.7%)
 
-Let us now have a closer look at how close our background is to this Poisson distribution.
+Let us now have a closer look at how close our experimental background measurements are to a Poisson distribution, and extract its key statistical features.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="HOD0IxyytMPM" outputId="effabcc4-3d21-4ac9-e02f-f67c0f56fb6e"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="HOD0IxyytMPM" outputId="916e2779-0c86-4b9c-a623-d1681b22b2c0"
 fig_counter += 1
 
 histograms = []
@@ -350,17 +376,17 @@ plt.show()
 ```
 
 <!-- #region id="cS7-EQ-OunRY" -->
-Let's take a step back to understand what we are looking at here.
+Let's take a step back to understand the graph we are looking at above.
 
 The black line corresponds to the average distribution of neutron counts across all days.
 
 The grey shaded area shows the spread of day-to-day variation, with upper and lower bounds at 3 standard deviations above and below the mean. Days that would lie outside this band would be statistically rare under normal conditions (probability < 0.3%). Hence, we may identify neutron bursts in future runs by looking at "outliers" of this grey shaded area.
 
-The red dashed line corresponds to the theoretical distribution assuming that neutron counts follow a Poisson process. We plotted this normalized Poisson ditribution assuming the Poisson paramter $\lambda$ to me the mean of our background data i.e. $\lambda \approx 0.63$.
+The red dashed line corresponds to the theoretical distribution assuming that neutron counts follow a Poisson process. We plotted this normalized Poisson ditribution assuming the Poisson paramter $\lambda$ to me the mean of our background data i.e. $\lambda \approx 2.11$.
 <!-- #endregion -->
 
 <!-- #region id="cHo5vHCrpBuN" -->
-### Quantitative goodness-of-fit
+## Quantitative goodness-of-fit
 
 In order to test more rigorously whether our background truly follows a Poisson process, we can perform a $χ^2$ (chi-square) goodness-of-fit test comparing the observed mean histogram to the expected Poisson probabilities:
 
@@ -375,7 +401,7 @@ In order to test more rigorously whether our background truly follows a Poisson 
 In the code below, we conduct this goodness of fit analysis and find a p value of $p = 0.9996229005$ so we cannot reject the null-hypothesis. Hence, for our purposes, we are in a good position to say that background follows a Poisson process.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="U8k5e80GVa8a" outputId="761a4624-def1-4cbd-d803-d5077d0a0965"
+```python colab={"base_uri": "https://localhost:8080/"} id="U8k5e80GVa8a" outputId="982603f9-5840-4554-eeae-accd81fbb47d"
 # — Chi-square goodness-of-fit test —
 # Aggregate observed counts across all days
 O_counts = histograms.sum(axis=0)       # observed total counts per bin
@@ -402,13 +428,19 @@ else:
 ```
 
 <!-- #region id="5oIuVt7mR_6y" -->
-## Side-Step 4.2 – Stability of the Background Rate and Normality of Daily Means
+## Side-Step 4.2 Stability of the Background Rate and Normality of Daily Means
+<!-- #endregion -->
+
+<!-- #region id="BGtKfDUEc6AN" -->
+## Fitting to a Normal Distribution
 
 Furthermore, before trusting the aformentioned single global $\lambda$, we should check how much the daily average neutron count per minute varies over our measurement period, and whether those daily means themselves follow an approximately normal distribution (by the Central Limit Theorem, if $\lambda$ is truly constant).
 
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 428} id="NCIVtudYR4nY" outputId="7dd7e4b8-55dc-4f5b-a658-053ef2044c75"
+```python colab={"base_uri": "https://localhost:8080/", "height": 428} id="NCIVtudYR4nY" outputId="71d108a3-afc9-419a-dd40-14446f56608b"
+fig_counter += 1
+
 # 1. Compute daily means
 daily_means = [group["Counts"].mean() for _, group in grouped_by_day]
 days = list(grouped_by_day.groups.keys())
@@ -428,27 +460,29 @@ pdf = stats.norm.pdf(x, loc=mu_daily, scale=sigma_daily)
 plt.plot(x, pdf, 'r--', label=f'Normal fit\nμ={mu_daily:.2f}, σ={sigma_daily:.2f}')
 plt.xlabel('Daily Mean Counts per Minute')
 plt.ylabel('Density')
-plt.title(f'Distribution of Daily Means (Fig. {fig_counter+1})')
+plt.title(f'Distribution of Daily Means (Fig. {fig_counter})')
 plt.legend()
 plt.show()
 ```
 
 <!-- #region id="Np0-tUNepBuQ" -->
-## Goodness of fit check
+## Quantitative goodness-of-fit
 
-The above plot does not shed enough light on how close our mean distribution is to a normal one. In order to determine the goodness of our fit, we may start with a graphical check: the QQ-plot. This plot sample quantiles vs theoretical normal quantiles; and deviations from the straight line highlight non-normality.
+The above plot does not shed enough light on how close our mean distribution is to a normal distribution. In order to determine the quantitative goodness of our fit, we may start with a graphical check: the QQ-plot. This plot sample quantiles vs theoretical normal quantiles; and deviations from the straight line highlight non-normality.
 <!-- #endregion -->
 
-```python id="AtzGpygkpBuR" outputId="b014883e-6c87-426e-804d-98e621e484c8" colab={"base_uri": "https://localhost:8080/", "height": 564}
+```python id="AtzGpygkpBuR" outputId="31650202-79c0-462e-e9e4-a8338b24bd73" colab={"base_uri": "https://localhost:8080/", "height": 564}
+fig_counter += 1
+
 # 4. QQ-plot for normality check
 plt.figure(figsize=(6, 6))
 stats.probplot(daily_means, dist="norm", plot=plt)
-plt.title(f'QQ Plot of Daily Means (Fig. {fig_counter+2})')
+plt.title(f'QQ Plot of Daily Means (Fig. {fig_counter})')
 plt.show()
 ```
 
 <!-- #region id="kjYeG94wpBuS" -->
-This, however, is not a "quantitative" measure of the goodness of our fit. For this, we will perform the Shapiro-Wilk test.
+The plot above shows us that the experimental distribution is fairly "linear", i.e. close to a normal distribution. However, is not a good enough "quantitative" measure of the goodness of our fit. For this, we will perform the Shapiro-Wilk test.
 
 The Shapiro–Wilk test computes a statistic  
 $$
@@ -465,7 +499,7 @@ In practice, we obtain from `scipy.stats.shapiro(daily_means)` both the test sta
 
 <!-- #endregion -->
 
-```python id="qVbz6hoopBuT" outputId="e05e0977-72b9-47aa-85c7-ee9736bbdd9e" colab={"base_uri": "https://localhost:8080/"}
+```python id="qVbz6hoopBuT" outputId="fa0153d2-a543-42af-e26b-ce4d18b8e194" colab={"base_uri": "https://localhost:8080/"}
 # 5. Shapiro–Wilk test for normality
 W, p_value = stats.shapiro(daily_means)
 print(f"Shapiro–Wilk test: W = {W:.4f}, p-value = {p_value:.4f}")
@@ -477,31 +511,35 @@ else:
 ```
 
 <!-- #region id="Ck9s6nzRS0JR" -->
-By combining the visual Q–Q plot and the Shapiro–Wilk test, we obtain both qualitative and quantitative assurance that our daily means are well-approximated by a normal distribution—bolstering confidence in using a single global $\lambda$ for the background rate.  
+By combining the visual Q–Q plot and the Shapiro–Wilk test, we obtain both qualitative and quantitative assurance that our daily means are well-approximated by a normal distribution. Hence, we may me confident in using a single global $\lambda$ for the background rate.  
 
 So, it is a reasonable assumption to claim that our $\lambda$ is essentially constant over the January-December background collection period.
 <!-- #endregion -->
 
 <!-- #region id="5YF22HxXp7Hy" -->
-## Side-Step 4.3 - Comparing our background rates with the literature.
+## Side-Step 4.3 Comparing our Background Rates with the Literature
 
 
 ### Reference Neutron Background Flux
 
-For benchmarking our Eljen detector measurements against a well-established baseline, we adopt the sea-level cosmic-ray neutron flux measured by [Gordon et al. (2004)](https://ieeexplore.ieee.org/document/1369506) on the roof of the IBM T. J. Watson Research Center in Yorktown Heights, NY:
+For benchmarking our Eljen detector measurements against a well-established baseline, we will start by adopting the sea-level cosmic-ray neutron flux measured by [Gordon et al. (2004)](https://ieeexplore.ieee.org/document/1369506) on the roof of the IBM T. J. Watson Research Center in Yorktown Heights, NY:
 
 > **Φ<sub>ref</sub> = 0.0134 n cm<sup>−2</sup> s<sup>−1</sup>**  
-> _Measured at ∼20 m a.s.l., geomagnetic cutoff ≃ 3 GV, mid-level solar activity_
 
-We will follow the equations given in the paper, to adapt to our experimental conditions, adjusting for location, time, and detector efficiency.
+This value was Measured at ∼20 m a.s.l., geomagnetic cutoff ≃ 3 GV, and mid-level solar activity. In their paper, Gordon et al. provided corrections for different coordinates, altitudes, geomagnetic cutoffs and solar activity.
 
-1. **Site Adjustment**  
-   - Apply the altitude-dependence correction (Gordon et al. Eq. (4)) to account for our lab elevation.  
-   - Apply geomagnetic-rigidity and solar-modulation corrections (Gordon et al. Eqs. (3) & (5)) for our latitude and current solar cycle.
+Hence, we will follow the equations given in the paper, and adapt to our experimental conditions, adjusting for location, time, and detector efficiency in order to define a value for the expected background neutron flux from cosmic-rays.
+
+Let us begin by applying a site-adjustment,  i.e.
+   - Apply the altitude-dependence correction ([Gordon et al. (2004)](https://ieeexplore.ieee.org/document/1369506) Eq. (4)) to account for our [lab elevation]( https://elevation.maplogs.com/poi/massachusetts_institute_of_technology_77_massachusetts_ave_cambridge_ma_usa.197544.html).  
+   - Apply [geomagnetic-rigidity](https://www.spenvis.oma.be/models.php) and [solar-modulation](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1002/2016JA023819) corrections ([Gordon et al. (2004)](https://ieeexplore.ieee.org/document/1369506) Eqs. (3) & (5)) for our latitude and current solar cycle.
+
+
+NB: *The hyper-links above correspond to references for the sources of the figures we will use for adaptiation to our specific experimental environment.*
 
 <!-- #endregion -->
 
-```python id="Bss56h_7x1Xe" outputId="34eee0bc-cfa1-4c30-cd4f-59d123b0bbb0" colab={"base_uri": "https://localhost:8080/"}
+```python id="Bss56h_7x1Xe" outputId="89c8ecb3-49de-498b-9c39-da4186258228" colab={"base_uri": "https://localhost:8080/"}
 # --- Reference flux and site parameters (Gordon et al. 2004) ---
 Phi_ref = 0.0134         # Reference total flux [n cm⁻² s⁻¹] at Yorktown Heights
 h_ref = 20.0             # Reference altitude [m a.s.l.]
@@ -541,14 +579,15 @@ print(f"Scaled neutron flux at lab: {Phi_lab:.4f} n cm⁻² s⁻¹")
 ```
 
 <!-- #region id="rLtlAfiXxOI5" -->
-2. **Detector Response ie Efficiency Correction**  
+Let us now move on to correcting for **Detector Response**, i.e. perform and **Efficiency Correction**.   
 
-In order to benchmark our background count rates, we need an estimation of the detector's efficiency. In order to do this, we will use the callibration data collected when a Cf-252 source was introduced in the lab, on december 18th.
+In order to benchmark our background count rates, we need an estimation of the detector's efficiency. In order to do this, we will use the callibration data collected when a ²⁵²Cf source was introduced in the lab, on December 17th.
 
-We know that our source strength was 17.3 nCi on September 4, 2024.  
-Assuming it was introduced on December 18, 2024 at 12:00:00. Given the half-life of our source, Cf-252, which is 2.647 years, we can estimate what our source strength was the day of the experiment: 16.040 nCi. Furthermore, we know that 1 µCi = 3.7×10^4 disintegrations per second = 2.22×10^6 disintegrations per minute (dpm). Hence 1nCi = 37 dps = 2.22*10^3 dpm
+Let us first determine the activity of our source at the time of the callibration experiment.
 
-Finally, "252Cf disintegrates by α emissions mainly to the 248Cm ground state level, and by spontaneous fission for 3,086%" (https://inis.iaea.org/search/search.aspx?orig_q=RN%3A45014763&utm)
+We know that our source strength was $17.3$ nCi on September 4th, 2024.  Let us assume it was introduced on December 18th, 2024 at 12:00:00. Given the half-life of our source, ²⁵²Cf, which is $2.647$ years, we can estimate what our source strength was the day of the experiment: $16.040$ nCi. Furthermore, we know that $1$ µCi = $3.7×10^4$ disintegrations per second = $2.22×10^6$ disintegrations per minute (dpm). Hence $1$ nCi = $37$ dps = $2.22*10^3$ dpm
+
+Finally, "*Cf-252 disintegrates by $\alpha$ emissions mainly to the Cm-248 ground state level, and by spontaneous fission for $3,086%$*" (cf [Be et al. (2013)](https://inis.iaea.org/search/search.aspx?orig_q=RN%3A45014763&utm)
 
 This efficiency calculation is undertaken in the following code cells.
 <!-- #endregion -->
@@ -557,7 +596,7 @@ This efficiency calculation is undertaken in the following code cells.
 Let's first have a look at when the source was in the lab:
 <!-- #endregion -->
 
-```python id="KiygiGvAxNBy" outputId="aa2031cd-d67c-4c4c-dc56-feee4c7afe50" colab={"base_uri": "https://localhost:8080/", "height": 442}
+```python id="KiygiGvAxNBy" outputId="dd04ecf0-2559-4ca2-d528-8d7e23aed655" colab={"base_uri": "https://localhost:8080/", "height": 442}
 # Resample to counts per second
 cps = neutron_df['Counts'].resample('1S').sum()
 
@@ -579,10 +618,10 @@ plt.show()
 ```
 
 <!-- #region id="YTYyishWvQTv" -->
-From the plot above, we will choose our callibration period to be from december 17th 9pm to december 18th 11am.
+From the plot above, we will choose our callibration period to be from december 17th 21:00:00 to december 18th 11:00:00.
 <!-- #endregion -->
 
-```python id="-mjzqLR8v-Jr" outputId="31b98ca0-277d-466f-f7f4-bbb0975fb7c7" colab={"base_uri": "https://localhost:8080/"}
+```python id="-mjzqLR8v-Jr" outputId="a6f78f04-2db5-41df-e5b4-497ec34283eb" colab={"base_uri": "https://localhost:8080/"}
 from datetime import datetime
 # Compute neutron emission rate from Cf-252 decay
 def cf252_neutron_emission(A0, date_initial, date_experiment):
@@ -616,7 +655,7 @@ neutrons_per_second = cf252_neutron_emission(A0, source_date, experiment_date)
 print(f"Neutron emission rate: {neutrons_per_second:} n/s")
 ```
 
-```python id="dxNLN6mj1mO7" outputId="4d8dcb9b-8c82-4f0a-84b3-899ec97051ff" colab={"base_uri": "https://localhost:8080/"}
+```python id="dxNLN6mj1mO7" outputId="930eea70-6c5b-4cca-d1c3-151dddf9d5f8" colab={"base_uri": "https://localhost:8080/"}
 # Define calibration period around Cf-252 measurement
 calib_start =  datetime(2024, 12, 17, hour=21, minute=00)
 calib_end =  datetime(2024, 12, 18, hour=11, minute=00)
@@ -669,14 +708,14 @@ print(f'Computed Intrinsic efficiency: {intrinsic_efficiency}')
 ```
 
 <!-- #region id="1mShTW-Ev-nL" -->
-Now, we have $\phi(E)$, the scaled differential flux [n cm<sup>−2</sup> s<sup>−1</sup> MeV<sup>−1</sup>] and ε(E) the Eljen detector efficiency. We can thus now compute the expected count rate:  
+Now, we have $\phi(E)$, the scaled differential flux [n cm<sup>−2</sup> s<sup>−1</sup> MeV<sup>−1</sup>] and $\epsilon$(E) the Eljen detector efficiency. We can thus now compute the expected count rate:  
 
 $$R_{\rm pred} = \int_{E_{\min}}^{E_{\max}} \Phi(E)\,\epsilon(E)\,dE$$  
 
 For the current purpose of our computations, we will assume our efficiency to be energy independent.
 <!-- #endregion -->
 
-```python id="KcbGefN80mca" outputId="6b12bbda-9c06-46b1-c93a-0e24e44ec190" colab={"base_uri": "https://localhost:8080/"}
+```python id="KcbGefN80mca" outputId="596d1633-f423-41e7-df8b-89e084970005" colab={"base_uri": "https://localhost:8080/"}
 # Let's compute expected background count rate R_pred
 # Energy grid for integration [MeV]
 E_min, E_max, n_pts = 0.1, 1000.0, 5000
@@ -721,12 +760,12 @@ print(f"Expected counts per min   : {R_det*60} counts/min ")
 <!-- #region id="l4bKC4lS_0oG" -->
 From the section above (see figure 4 or 5), we know that the mean number of counts over the period of background characterization is 2.11 counts/min.
 
-Let us briefly comment on this. We observe that the expected count rate from Gordon et al of 8.28 counts/minute is higher than the observed rate, but of the same orer of magnitude.
+Let us briefly comment on this. We observe that the expected count rate from [Gordon et al. (2004)](https://ieeexplore.ieee.org/document/1369506) of $10.54$ counts/minute is higher than the observed rate, but of the same order of magnitude.
 
-A possible explanation for this slight discrepency is the fact that we considered the horizontal cross-section of our Eljen detector as the interacting surface.
+A possible explanation for this  discrepency is the fact that we considered the horizontal cross-section of our Eljen detector as the interacting surface.
 <!-- #endregion -->
 
-```python id="PQH3gHdU6GAa" outputId="0203e765-633b-4060-b1a4-01245b03a323" colab={"base_uri": "https://localhost:8080/"}
+```python id="PQH3gHdU6GAa" outputId="7e84f4ae-026a-4394-cdc7-9f213b4e7e31" colab={"base_uri": "https://localhost:8080/"}
 # We may also want to take the brute value from the paper to check that we are on the right order of magnitude below
 # without all the corrections just taking 0.0134 as our flux
 
@@ -761,21 +800,26 @@ Above, we notice that this "brute force" estimation from the paper is of the sam
 Let's take a quick break to see what we have established so far:
 
 **Poisson behavior confirmed.**  
-- Chi-square test on the aggregated daily histograms yielded $\chi^2 = 0.66$, $dof = 8$, $p = 0.9996229005$, so we cannot reject that our long-term background follows $\mathrm{Poisson}(\lambda)$.  
+- Chi-square test on the aggregated daily histograms yielded $\chi^2 = 0.01$, dof = $9$, $p = 1$, so we cannot reject that our long-term background follows $\mathrm{Poisson}(\lambda$ at the $5\%$ significance level.  
+
 
 **Mean and variance stability.**  
   - Global background rate  
     $$
-      \lambda = 0.63 \;\text{counts/min},
-      \quad \sigma_{\rm bkg} = \sqrt{\lambda} \approx 0.79.
+      \lambda = 2.11 \;\text{counts/min},
+      \quad \sigma_{\rm bkg} = \sqrt{\lambda} \approx 1.45.
     $$  
   - Daily‐mean distribution was nearly Gaussian with  
-    $$\mu_{\rm daily}=0.63, \sigma_{\rm daily}=0.04$$
+    $$\mu_{\rm daily}=2.11, \sigma_{\rm daily}=0.05$$
 
-Together, these results show that over weeks of data our detector background is  
+**Investigation of known background literature.**  
+  - Expected background neutron counts from cosmic-rays of $10.54$ counts per minute.  
+
+Together, these results show that over weeks of data our detector background is:
 
 - Well described by a Poisson process with mean $\lambda$
 - Highly stable
+- Reliable as it is of the same order of magnitude as expected background from cosmic-rays
 
 ### 2. Protocol for Pre-Experiment “Quick Check”  
 
@@ -794,17 +838,17 @@ Before each new experimental run, we should perform a short background measureme
    - If anomalous: pause and check for  
      - Instrument issues   
      - Environmental changes
-     - Cosmic‐ray “weather”
+     - Anomalies in cosmic‐ray “weather”
 
 By embedding this “quick‐check” step into every experimental workflow, we ensure that our background conditions match the long‐term characterization before any experiment is conducted.
 <!-- #endregion -->
 
 <!-- #region id="SZ6BNXIuNxKg" -->
-# Next Steps - Bin-Independent distributions.
+# Looking Forward - Bin-Independent Distributions
 
-In the notebook above, we chose arbitrary time-bins of 1 second and 1 minute. Howvere, ther Eljen detectors do not record counts per minute, but rather record individual waveforms and their timestamps with nano-second precision. Thus, it would be possible to implement a neutron background analysis method independent of binning.
+In the notebook above, we chose arbitrary time-bins of 1 second and 1 minute. However, our Eljen detectors do not record counts per minute, but rather record individual waveforms and their timestamps with nano-second precision. Thus, it would be possible to implement a neutron background analysis method independent of binning.
 
-We propose to work instead directly with inter-arrival times (deltas) between successive neutron/ gamma counts. This approach appears rather natural for a Poisson process, where the times ebtween events are exponentially ditributed.
+We propose to work instead directly with inter-arrival times (deltas) between successive neutron/ gamma counts. This approach appears rather natural for a Poisson process, where the times between events follow and exponentional ditribution.
 
 Let us propose a temporary outline for this method, which we will elaborate in a future notebook.
 
