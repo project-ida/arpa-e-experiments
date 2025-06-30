@@ -39,7 +39,7 @@ In order to do so, we began by running the Eljen detector in question throughout
 The data panel describing this background measurement can be found [here](https://lenr.mit.edu/data/load-panel.php?filename=eljen/eljen-2inch-long-term).
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="PbnVxkXsE-gX" outputId="88c1391e-492b-4575-e6f0-64bf570d18a7"
+```python colab={"base_uri": "https://localhost:8080/"} id="PbnVxkXsE-gX" outputId="383684a6-1ebc-47f9-8c57-69ef6fb86ff5"
 # RUN THIS IF YOU ARE USING GOOGLE COLAB
 import sys
 import os
@@ -126,7 +126,7 @@ fig_counter = 0
 Now that we have collected the raw data (i.e. electric signal history) that interests us, let us have a look at the measured neutron and gamma counts.
 <!-- #endregion -->
 
-```python id="Lx8XLpTApBuA" outputId="5e4bd566-aacd-48e2-9382-2c8c53e188e6" colab={"base_uri": "https://localhost:8080/", "height": 463}
+```python id="Lx8XLpTApBuA" outputId="73290064-0586-4251-ab9d-0cd23e0c0fce" colab={"base_uri": "https://localhost:8080/", "height": 463}
 from matplotlib.patches import Rectangle
 
 fig_counter += 1
@@ -175,7 +175,7 @@ Furthermore, spontaneous fission of ²⁵²Cf is accompanied by prompt [$\gamma$
 This is indeed the case in the following plot.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="mIZOh2-xFwWf" outputId="731932ec-54ce-46e5-d029-bafc5bffdffe"
+```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="mIZOh2-xFwWf" outputId="7ad76174-83b5-4347-869c-65b967e49d3c"
 fig_counter +=1
 
 plt.figure(figsize=(8, 4))
@@ -240,7 +240,7 @@ Now that we have excluded the time before and when the neutron source was introd
 
 Here are the different steps we will take:
 
-**Side-Step 4.1 Expected Poisson Distribution**
+**Side-step 4.1 Expected Poisson Distribution**
 - *Fitting the experimental data to a Poisson distribution*
 - *Checking quantitatively the goodness of the fit*
 
@@ -255,7 +255,7 @@ Here are the different steps we will take:
 We will start by building a daily histogram of the background neutron counts per minute. Each line in the plot will represent one day’s worth of 1 minute bins, normalized to form a probability distribution. This lets us see how the shape of the count distribution varies from day to day.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="s9b-zrG1Mue2" outputId="f55d9e60-2b54-4c59-a2bf-a397f9b76a7c"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="s9b-zrG1Mue2" outputId="6c50f86c-d176-4f0f-9caf-fb731bc0ff29"
 fig_counter += 1
 
 # Ensure the index is datetime
@@ -291,7 +291,7 @@ Let us quickly comment on how to read this plot:
 <!-- #endregion -->
 
 <!-- #region id="A1mY5FMro8nE" -->
-## Side-Step 4.1 Expected Poisson Distribution
+## Side-step 4.1 Expected Poisson Distribution
 
 In order to conduct a statistical analysis on these background counts, we need to have an idea of what qualifies as a "significant" deviation from background. This will be of interest when trying to determine whether or not we have detected a "significant" number of neutron counts.
 
@@ -322,7 +322,7 @@ where $Z = 3$ corresponds to a $3\sigma$ threshold (confidence level ~$99.7\%$)
 Let us now have a closer look at how close our experimental background measurements are to a Poisson distribution, and extract its key statistical features.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="HOD0IxyytMPM" outputId="916e2779-0c86-4b9c-a623-d1681b22b2c0"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="HOD0IxyytMPM" outputId="a4ea5cde-dc5f-4e52-fe45-d9c8f1b0d3ba"
 fig_counter += 1
 
 histograms = []
@@ -386,7 +386,7 @@ The red dashed line corresponds to the theoretical distribution assuming that ne
 <!-- #endregion -->
 
 <!-- #region id="cHo5vHCrpBuN" -->
-## Quantitative Goodness-of-Fit
+## Quantitative goodness-of-fit
 
 In order to test more rigorously whether our background truly follows a Poisson process, we can perform a $χ^2$ (chi-square) goodness-of-fit test comparing the observed mean histogram to the expected Poisson probabilities:
 
@@ -401,7 +401,7 @@ In order to test more rigorously whether our background truly follows a Poisson 
 In the code below, we conduct this goodness of fit analysis and find a p value of $p = 1$ so we cannot reject the null-hypothesis. Hence, for our purposes, we are in a good position to say that background follows a Poisson process.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="U8k5e80GVa8a" outputId="982603f9-5840-4554-eeae-accd81fbb47d"
+```python colab={"base_uri": "https://localhost:8080/"} id="U8k5e80GVa8a" outputId="2fca0c7f-9d3e-470b-c9cb-6492f53f5346"
 # — Chi-square goodness-of-fit test —
 # Aggregate observed counts across all days
 O_counts = histograms.sum(axis=0)       # observed total counts per bin
@@ -438,7 +438,7 @@ Furthermore, before trusting the aformentioned single global $\lambda$, we shoul
 
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 428} id="NCIVtudYR4nY" outputId="71d108a3-afc9-419a-dd40-14446f56608b"
+```python colab={"base_uri": "https://localhost:8080/", "height": 428} id="NCIVtudYR4nY" outputId="6db9cfa5-023e-4e7c-9b8c-e7de466e40e2"
 fig_counter += 1
 
 # 1. Compute daily means
@@ -466,12 +466,12 @@ plt.show()
 ```
 
 <!-- #region id="Np0-tUNepBuQ" -->
-## Quantitative Goodness-of-Fit
+## Quantitative goodness-of-fit
 
 The above plot does not shed enough light on how close our mean distribution is to a normal distribution. In order to determine the quantitative goodness of our fit, we may start with a graphical check: the QQ-plot. This plot sample quantiles vs theoretical normal quantiles; and deviations from the straight line highlight non-normality.
 <!-- #endregion -->
 
-```python id="AtzGpygkpBuR" outputId="31650202-79c0-462e-e9e4-a8338b24bd73" colab={"base_uri": "https://localhost:8080/", "height": 564}
+```python id="AtzGpygkpBuR" outputId="d22de6c6-f795-48ca-8f99-1bb0aa57ab9a" colab={"base_uri": "https://localhost:8080/", "height": 564}
 fig_counter += 1
 
 # 4. QQ-plot for normality check
@@ -499,7 +499,7 @@ In practice, we obtain from `scipy.stats.shapiro(daily_means)` both the test sta
 
 <!-- #endregion -->
 
-```python id="qVbz6hoopBuT" outputId="fa0153d2-a543-42af-e26b-ce4d18b8e194" colab={"base_uri": "https://localhost:8080/"}
+```python id="qVbz6hoopBuT" outputId="bc68c224-b809-4d92-faf7-fea78ea4b82b" colab={"base_uri": "https://localhost:8080/"}
 # 5. Shapiro–Wilk test for normality
 W, p_value = stats.shapiro(daily_means)
 print(f"Shapiro–Wilk test: W = {W:.4f}, p-value = {p_value:.4f}")
@@ -539,7 +539,7 @@ NB: *The hyper-links above correspond to references for the sources of the figur
 
 <!-- #endregion -->
 
-```python id="Bss56h_7x1Xe" outputId="89c8ecb3-49de-498b-9c39-da4186258228" colab={"base_uri": "https://localhost:8080/"}
+```python id="Bss56h_7x1Xe" outputId="24e22ed6-54ad-4631-8ad3-51cb5089ddb2" colab={"base_uri": "https://localhost:8080/"}
 # --- Reference flux and site parameters (Gordon et al. 2004) ---
 Phi_ref = 0.0134         # Reference total flux [n cm⁻² s⁻¹] at Yorktown Heights
 h_ref = 20.0             # Reference altitude [m a.s.l.]
@@ -596,9 +596,9 @@ This efficiency calculation is undertaken in the following code cells.
 Let's first have a look at when the source was in the lab:
 <!-- #endregion -->
 
-```python id="KiygiGvAxNBy" outputId="dd04ecf0-2559-4ca2-d528-8d7e23aed655" colab={"base_uri": "https://localhost:8080/", "height": 442}
+```python id="KiygiGvAxNBy" outputId="b5e9e65b-5508-48d5-b635-a5974b8fe9db" colab={"base_uri": "https://localhost:8080/", "height": 407}
 # Resample to counts per second
-cps = neutron_df['Counts'].resample('1S').sum()
+cps = neutron_df['Counts'].resample('1s').sum()
 
 # Filter for December 17 and 18, 2024
 dec17_18_cps = cps.loc['2024-12-17':'2024-12-18']
@@ -621,7 +621,7 @@ plt.show()
 From the plot above, we will choose our callibration period to be from december 17th 21:00:00 to december 18th 11:00:00.
 <!-- #endregion -->
 
-```python id="-mjzqLR8v-Jr" outputId="a6f78f04-2db5-41df-e5b4-497ec34283eb" colab={"base_uri": "https://localhost:8080/"}
+```python id="-mjzqLR8v-Jr" outputId="1a1017f1-ac90-46ad-de99-8d962062d6c1" colab={"base_uri": "https://localhost:8080/"}
 from datetime import datetime
 # Compute neutron emission rate from Cf-252 decay
 def cf252_neutron_emission(A0, date_initial, date_experiment):
@@ -655,7 +655,7 @@ neutrons_per_second = cf252_neutron_emission(A0, source_date, experiment_date)
 print(f"Neutron emission rate: {neutrons_per_second:} n/s")
 ```
 
-```python id="dxNLN6mj1mO7" outputId="930eea70-6c5b-4cca-d1c3-151dddf9d5f8" colab={"base_uri": "https://localhost:8080/"}
+```python id="dxNLN6mj1mO7" outputId="eaa48308-3988-44bc-9e9a-2cec5bd9c8fa" colab={"base_uri": "https://localhost:8080/"}
 # Define calibration period around Cf-252 measurement
 calib_start =  datetime(2024, 12, 17, hour=21, minute=00)
 calib_end =  datetime(2024, 12, 18, hour=11, minute=00)
@@ -715,7 +715,7 @@ $$R_{\rm pred} = \int_{E_{\min}}^{E_{\max}} \Phi(E)\,\epsilon(E)\,dE$$
 For the current purpose of our computations, we will assume our efficiency to be energy independent.
 <!-- #endregion -->
 
-```python id="KcbGefN80mca" outputId="596d1633-f423-41e7-df8b-89e084970005" colab={"base_uri": "https://localhost:8080/"}
+```python id="KcbGefN80mca" outputId="68ca79b2-80f4-4c36-8149-f77b6fa752ae" colab={"base_uri": "https://localhost:8080/"}
 # Let's compute expected background count rate R_pred
 # Energy grid for integration [MeV]
 E_min, E_max, n_pts = 0.1, 1000.0, 5000
@@ -742,7 +742,7 @@ Now that we have our corrected predicted background rate: 6.8058e-03 counts·cm�
 Let's compute how many counts we expect to measure on our 2″ Eljen detector.
 <!-- #endregion -->
 
-```python id="Fu90GonD3mAx" outputId="66a89477-af71-4e4c-bc0c-ef37c4dfa221" colab={"base_uri": "https://localhost:8080/"}
+```python id="Fu90GonD3mAx" outputId="11d1fdc2-a696-4db6-9b25-3cb88c060845" colab={"base_uri": "https://localhost:8080/"}
 # --- accounting for detector geometry ---
 # we will consider the horizontal cross-section of the detector
 # ie we will consider what one would see of the detector from the top (bird's eye view)
@@ -765,7 +765,7 @@ Let us briefly comment on this. We observe that the expected count rate from [Go
 A possible explanation for this  discrepency is the fact that we considered the horizontal cross-section of our Eljen detector as the interacting surface.
 <!-- #endregion -->
 
-```python id="PQH3gHdU6GAa" outputId="6f4c80d9-a3fd-4c31-b721-0e500d89bd8c" colab={"base_uri": "https://localhost:8080/"}
+```python id="PQH3gHdU6GAa" outputId="e7c858e5-ab0a-4a9e-8a60-13b9b1bef4aa" colab={"base_uri": "https://localhost:8080/"}
 # We may also want to take the brute value from the paper to check that we are on the right order of magnitude below
 # without all the corrections just taking 0.0134 as our flux
 
