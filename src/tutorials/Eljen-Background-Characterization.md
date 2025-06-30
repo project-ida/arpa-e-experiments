@@ -33,7 +33,7 @@ In the lab, we have access to both a 2" and a 5" Eljen detector. In this noteboo
 
 Hence, in this first notebook, we will begin by analysising our **2" Eljen detector**.
 
-In order to do so, we began by running the Eljen detector in question throughout December 2024 and January 2025. On December 17th, we introduced a neutron source, ²⁵²Cf to collect some callibration data. We will now characterize this background---which will be useful for future analysis.
+In order to do so, we began by running the Eljen detector in question throughout December 2024 and January 2025. On December 17th, we introduced a neutron source, ²⁵²Cf to collect some callibration data. We will now characterize this background, which will be useful for future analysis.
 
 
 The data panel describing this background measurement can be found [here](https://lenr.mit.edu/data/load-panel.php?filename=eljen/eljen-2inch-long-term).
@@ -94,7 +94,7 @@ meta = {
 <!-- #region id="NvtbW4lhFQFJ" -->
 ## Step 1 - Data Collection
 
-Let us begin by collecting raw data on the Eljen detectors of interest, i.e. the 2" detector.  
+Let us begin by collecting raw data on the Eljen detector of interest, i.e. the 2" detector.  
 
 We have collected long-term data on the neutron and gamma counts per second picked up by our Eljen detectors, from December 14th 2024 00:01:01 to January 23rd, 2025 23:58:59. They are defined as dataframes, which we can manipulate using the pandas python library, below.
 <!-- #endregion -->
@@ -170,7 +170,7 @@ n \;=\; 3.086\% \times 3.7675 \;\approx\; 0.11627\ \text{neutrons per decay}
 11.627\ \text{neutrons per 100 decays}
 $$
 
-Furthermore, spontaneous fission of ²⁵²Cf is accompanied by prompt [$\gamma$-rays emitted within $10^{-14}$–$10^{-12}\,\text{s}$ of fragment formation](https://www.sciencedirect.com/science/article/pii/0375947475904820?utm). The average $\gamma$-multiplicity is approximately [10.3 photons per fission](https://link.springer.com/article/10.1007/BF02847802?utm), essentially simultaneous with neutron emission. Therefore, we expect to observe a coincident $\gamma$-burst in any detector with sufficient energy threshold and timing resolution, aligned with the neutron spike seen on 18 December.
+Furthermore, spontaneous fission of ²⁵²Cf is accompanied by prompt [$\gamma$-rays emitted within $10^{-14}$–$10^{-12}\,\text{s}$ of fragment formation](https://www.sciencedirect.com/science/article/pii/0375947475904820?utm). The average $\gamma$-multiplicity is approximately [10.3 photons per fission](https://link.springer.com/article/10.1007/BF02847802?utm), essentially simultaneous with neutron emission. Therefore, we expect to observe a coincident $\gamma$-burst in any detector with sufficient energy threshold and timing resolution, aligned with the neutron spike seen on December 18th.
 
 This is indeed the case in the following plot.
 <!-- #endregion -->
@@ -218,7 +218,7 @@ Furthermore, we noticed above a neutron and gamma burst begining on December 17t
 So, in sum, our next step is to :
 
 1. **Aggregate** the raw second-by-second counts into 1 minute bins.  
-2. **Exclude** the burst period when the ²⁵²Cf source was in the lab, and begin our background analysis on December 19.
+2. **Exclude** the burst period when the ²⁵²Cf source was in the lab, and begin our background analysis on December 19th.
 <!-- #endregion -->
 
 ```python id="Lh2pD8EAF2Ei"
@@ -284,8 +284,8 @@ plt.show()
 <!-- #region id="Xjp6H0zJQYmC" -->
 Let us quickly comment on how to read this plot:
 
-- Each colored line corresponds to one calendar day’s distribution of 1 minute neutron counts.
-- Horizontal axis: number of counts detected in a 1 min bin (i.e. n counts per minute, with n the numbers on the x-axis).
+- Each colored line corresponds to one calendar day’s distribution of neutron counts per minute.
+- Horizontal axis: number of counts detected in a 1 min bin (i.e. $n$ counts per minute, with $n$ the numbers on the horizontal axis).
 - Vertical axis: normalized frequency (so that areas under each curve sum to 1).
 - The shading/transparency helps you see where multiple days’ distributions overlap. Each color corresponds to the data from a different day.
 <!-- #endregion -->
@@ -311,13 +311,13 @@ Neutron background counts are typically modeled by a Poisson distribution becaus
 
 - Fixed Observation Interval: Counts are measured over uniform time intervals (i.e. counted over fixed 1 minute intervals).
 
-Under these conditions, the number of neutrons detected in a fixed time interval should follow a Poisson distribution with mean λ, where λ is the expected number of events (neutrons) per interval.
+Under these conditions, the number of neutrons detected in a fixed time interval should follow a Poisson distribution with mean $\lambda$, where $\lambda$ is the expected number of events (neutrons) per interval.
 
-The standard deviation would thus be $\sigma = \sqrt{λ}$
+The standard deviation of the ditribution would thus be $\sigma = \sqrt{λ}$.
 
 Furthermore, in the literature, we will typically consider that count is "significantly high" if it exceeds $\lambda + \sqrt{\lambda}\cdot Z$
 
-where $Z = 3$ corresponds to a $3\sigma$ threshold (confidence level ~99.7%)
+where $Z = 3$ corresponds to a $3\sigma$ threshold (confidence level ~$99.7\%$)
 
 Let us now have a closer look at how close our experimental background measurements are to a Poisson distribution, and extract its key statistical features.
 <!-- #endregion -->
@@ -380,7 +380,7 @@ Let's take a step back to understand the graph we are looking at above.
 
 The black line corresponds to the average distribution of neutron counts across all days.
 
-The grey shaded area shows the spread of day-to-day variation, with upper and lower bounds at 3 standard deviations above and below the mean. Days that would lie outside this band would be statistically rare under normal conditions (probability < 0.3%). Hence, we may identify neutron bursts in future runs by looking at "outliers" of this grey shaded area.
+The grey shaded area shows the spread of day-to-day variation, with upper and lower bounds at $3$ standard deviations above and below the mean. Days that would lie outside this band would be statistically rare under normal conditions (probability < $0.3\%$). Hence, we may identify neutron bursts in future runs by looking at "outliers" of this grey shaded area.
 
 The red dashed line corresponds to the theoretical distribution assuming that neutron counts follow a Poisson process. We plotted this normalized Poisson ditribution assuming the Poisson paramter $\lambda$ to me the mean of our background data i.e. $\lambda \approx 2.11$.
 <!-- #endregion -->
@@ -398,7 +398,7 @@ In order to test more rigorously whether our background truly follows a Poisson 
 2. Under the null hypothesis (data ∼ Poisson\($\lambda)$, $\chi^2$ follows a $\chi^2$ distribution with $\text{Degrees of Freedom} = \text{number of bins} - 1 - 1$ (subtracting one for the estimated $\lambda$ and 1 for normalization).  
 3. A large $p$-value $(p>0.05$) implies we cannot reject the Poisson hypothesis at the $5 \%$ level.
 
-In the code below, we conduct this goodness of fit analysis and find a p value of $p = 0.9996229005$ so we cannot reject the null-hypothesis. Hence, for our purposes, we are in a good position to say that background follows a Poisson process.
+In the code below, we conduct this goodness of fit analysis and find a p value of $p = 1$ so we cannot reject the null-hypothesis. Hence, for our purposes, we are in a good position to say that background follows a Poisson process.
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="U8k5e80GVa8a" outputId="982603f9-5840-4554-eeae-accd81fbb47d"
@@ -482,7 +482,7 @@ plt.show()
 ```
 
 <!-- #region id="kjYeG94wpBuS" -->
-The plot above shows us that the experimental distribution is fairly "linear", i.e. close to a normal distribution. However, is not a good enough "quantitative" measure of the goodness of our fit. For this, we will perform the Shapiro-Wilk test.
+The plot above shows us that the experimental distribution is fairly "linearly" close to a normal distribution. However, is not a good enough "quantitative" measure of the goodness of our fit. For this, we will perform the Shapiro-Wilk test.
 
 The Shapiro–Wilk test computes a statistic  
 $$
@@ -528,7 +528,7 @@ For benchmarking our Eljen detector measurements against a well-established base
 
 This value was Measured at ∼20 m a.s.l., geomagnetic cutoff ≃ 3 GV, and mid-level solar activity. In their paper, Gordon et al. provided corrections for different coordinates, altitudes, geomagnetic cutoffs and solar activity.
 
-Hence, we will follow the equations given in the paper, and adapt to our experimental conditions, adjusting for location, time, and detector efficiency in order to define a value for the expected background neutron flux from cosmic-rays.
+Hence, we will follow the equations given in the paper, and adapt to our experimental conditions, adjusting for location, environmental parameters, and detector efficiency in order to define a value for the expected background neutron flux from cosmic-rays.
 
 Let us begin by applying a site-adjustment,  i.e.
    - Apply the altitude-dependence correction ([Gordon et al. (2004)](https://ieeexplore.ieee.org/document/1369506) Eq. (4)) to account for our [lab elevation]( https://elevation.maplogs.com/poi/massachusetts_institute_of_technology_77_massachusetts_ave_cambridge_ma_usa.197544.html).  
@@ -585,7 +585,7 @@ In order to benchmark our background count rates, we need an estimation of the d
 
 Let us first determine the activity of our source at the time of the callibration experiment.
 
-We know that our source strength was $17.3$ nCi on September 4th, 2024.  Let us assume it was introduced on December 18th, 2024 at 12:00:00. Given the half-life of our source, ²⁵²Cf, which is $2.647$ years, we can estimate what our source strength was the day of the experiment: $16.040$ nCi. Furthermore, we know that $1$ µCi = $3.7×10^4$ disintegrations per second = $2.22×10^6$ disintegrations per minute (dpm). Hence $1$ nCi = $37$ dps = $2.22*10^3$ dpm
+We know that our source strength was $17.3$ nCi on September 4th, 2024.  Let us assume it was introduced on December 18th, 2024 at 12:00:00. Given the half-life of our source, ²⁵²Cf, which is $2.647$ years, we can estimate what our source strength was the day of the experiment: $16.040$ nCi. Furthermore, we know that $1$ µCi = $3.7×10^4$ disintegrations per second = $2.22×10^6$ disintegrations per minute (dpm). Hence $1$ nCi = $37$ dps = $2.22×10^3$ dpm
 
 Finally, "*Cf-252 disintegrates by $\alpha$ emissions mainly to the Cm-248 ground state level, and by spontaneous fission for $3,086%$*" (cf [Be et al. (2013)](https://inis.iaea.org/search/search.aspx?orig_q=RN%3A45014763&utm)
 
@@ -758,23 +758,20 @@ print(f"Expected counts per min   : {R_det*60} counts/min ")
 ```
 
 <!-- #region id="l4bKC4lS_0oG" -->
-From the section above (see figure 4 or 5), we know that the mean number of counts over the period of background characterization is 2.11 counts/min.
+From the section above (see figure 4 or 5), we know that the mean number of counts over the period of background characterization is $2.11$ counts per minute.
 
-Let us briefly comment on this. We observe that the expected count rate from [Gordon et al. (2004)](https://ieeexplore.ieee.org/document/1369506) of $10.54$ counts/minute is higher than the observed rate, but of the same order of magnitude.
+Let us briefly comment on this. We observe that the expected count rate from [Gordon et al. (2004)](https://ieeexplore.ieee.org/document/1369506) of $10.54$ counts per minute is higher than the observed rate, but of the same order of magnitude.
 
 A possible explanation for this  discrepency is the fact that we considered the horizontal cross-section of our Eljen detector as the interacting surface.
 <!-- #endregion -->
 
-```python id="PQH3gHdU6GAa" outputId="7e84f4ae-026a-4394-cdc7-9f213b4e7e31" colab={"base_uri": "https://localhost:8080/"}
+```python id="PQH3gHdU6GAa" outputId="6f4c80d9-a3fd-4c31-b721-0e500d89bd8c" colab={"base_uri": "https://localhost:8080/"}
 # We may also want to take the brute value from the paper to check that we are on the right order of magnitude below
 # without all the corrections just taking 0.0134 as our flux
 
 Phi_simple = 0.0134  # neutron flux [n cm⁻² s⁻¹]
 
-d_inch = 2.0               # diameter in inches
-d_cm = d_inch * 2.54       # convert to cm
-r_cm = d_cm / 2.0          # radius in cm
-area_cm2 = np.pi * r_cm**2 # active face area [cm²]
+area_cm2 = (2*2.54)**2
 
 
 # --- Expected count rate and total counts ---
@@ -783,7 +780,7 @@ R_det_per_min = R_det * 60  # counts per minute to compare
 
 
 print(f"Detector area     : {area_cm2:.1f} cm²")
-#print(f"Expected rate     : {R_det:.4f} counts/s")
+print(f"Expected rate     : {R_det:.4f} counts/s")
 print(f"Expected rate: {R_det_per_min:.1f} counts/min")
 
 ```
