@@ -11,7 +11,9 @@ jupyter:
     name: python3
 ---
 
+<!-- #region id="2a9ece45-8fed-412c-b192-4fb1145b4d1b" -->
 <a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/radiation-bin-indepedent/tutorials/Radiation-pulse-analysis.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/radiation-bin-indepedent/tutorials/Radiation-pulse-analysis.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
+<!-- #endregion -->
 
 <!-- #region id="msqsXp7mp85M" -->
 
@@ -342,20 +344,6 @@ Visually, the level of agreement is superb. Let's be more quantitative.
 
 **TODO: Statistical test**
 <!-- #endregion -->
-
-<!-- #region id="vZ5l_hCiTb6a" -->
-# Run KS test against an exponential distribution with estimated lambda
-ks_stat, p_value = kstest(synthetic_deltas_sorted, 'expon', args=(0, 1/lam))
-
-ks_stat, p_value
-<!-- #endregion -->
-
-```python id="x-xLJnC9Tbf-"
-# Run KS test against an exponential distribution with estimated lambda
-ks_stat, p_value = kstest(synthetic_deltas_sorted, 'expon', args=(0, 1/lam))
-
-ks_stat, p_value
-```
 
 <!-- #region id="eJ5bN8PjCQga" -->
 It's instructive to look at the cumulative pulses alonside the counts per minute.
