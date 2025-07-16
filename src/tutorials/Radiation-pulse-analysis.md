@@ -48,7 +48,7 @@ channel_number = 0
 ## Libraries
 <!-- #endregion -->
 
-```python id="rnTZ6HBjrySX"
+```python id="rnTZ6HBjrySX" colab={"base_uri": "https://localhost:8080/", "height": 17} outputId="3b933027-0356-4ef0-cf22-bb39eceab8c1"
 # Auth
 import sys, os
 import shutil
@@ -72,6 +72,11 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import plotly.graph_objects as go
 from IPython.display import HTML
+
+from plotly.offline import init_notebook_mode
+
+# Initialize offline mode for notebooks
+init_notebook_mode(connected=True)
 ```
 
 <!-- #region id="3AaQ35teouCo" -->
@@ -374,10 +379,11 @@ Visually, the level of agreement is superb. We can be more quantitative using a 
 It's instructive to look at the cumulative pulses alongside the counts per minute.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="iPSuT_3dJ5kp" outputId="0833ccee-6965-422f-e72c-fee8909a3fa7"
+```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="iPSuT_3dJ5kp" outputId="cc4b0f07-8555-45b3-fa11-180e1bc94db8"
 background_cpm = background.resample("60s").size().rename("counts").to_frame()
 fig = go.Figure(layout=dict(yaxis_title="Counts per min", showlegend=False, height=600, width=800))
 fig.add_trace(go.Scattergl(name="Counts per min", x=background_cpm.index, y=background_cpm.counts))
+HTML(fig.to_html())
 ```
 
 <!-- #region id="B8ZzYbhLlMNV" -->
