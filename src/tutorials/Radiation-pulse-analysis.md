@@ -32,6 +32,8 @@ The aim is to develop techniques to characterise the background and detect anoma
 <!-- #endregion -->
 
 <!-- #region id="nLIVEAOxqQYw" -->
+## Running this notebook
+
 Go ahead and change the `experiment_id` and `channel_number` below and then run the whole notebook.
 
 You will be asked a couple of time to authenticate with your Google account, but after that all the analysis will happen automatically.
@@ -156,7 +158,7 @@ df = pd.DataFrame(sheet.get_all_records())
 df = fill_experiment_id(df)
 ```
 
-```python id="3Umn0vQM0nzf" outputId="42586342-8551-4890-f2e9-d005e99448b8" colab={"base_uri": "https://localhost:8080/", "height": 81}
+```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="3Umn0vQM0nzf" outputId="42586342-8551-4890-f2e9-d005e99448b8"
 # Find the rows where Experiment ID matches
 rows = df[df['Experiment ID'] == experiment_id]
 
