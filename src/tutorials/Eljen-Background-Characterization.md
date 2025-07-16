@@ -899,6 +899,22 @@ to the exponential distribution with parameter $\hat\lambda = 1/\bar\Delta t$.  
 <!-- #region id="hlh2TtW3oUOs" -->
 ## Conclusion
 
-In this notebook, we have shown that the 2″ Eljen detector’s background count behaves as a stationary Poisson process ($\lambda \approx 2.11$ counts/min), with both the mean and variance remaining stable over long-term measurements.  Our Poisson- and normal-fit tests, together with comparisons to literature values, validate the robustness of this characterization and enable us to define clear detection thresholds for neutron signals.  Looking forward, a bin-independent analysis based on inter-arrival times promises to further refine our understanding of the detector’s intrinsic background.  
+
+In this tutorial, we characterized the background signal of the Eljen EJ-309 liquid scintillator detector using data from multiple background runs. We performed the following key steps:
+
+- Loaded and visualized background data using ROOT and `uproot`.
+- Applied basic selection cuts to isolate genuine background events.
+- Analyzed PSD (Pulse Shape Discrimination) distributions to distinguish neutron-like and gamma-like signals.
+- Quantified background rates across energy and PSD space.
+- Evaluated detector stability and noise characteristics over time.
+
+As a result, we have shown that the 2″ Eljen detector’s background count behaves as a stationary Poisson process ($\lambda \approx 2.11$ counts/min), with both the mean and variance remaining stable over long-term measurements.  Our Poisson- and normal-fit tests, together with comparisons to literature values, validate the robustness of this characterization and enable us to define clear detection thresholds for neutron signals.  
+
+This background characterization establishes a crucial baseline for future experimental runs involving neutron sources or potential LENR signals. Accurate background understanding is essential for validating signal excesses and improving event selection criteria in subsequent analyses. Looking forward, a bin-independent analysis based on inter-arrival times promises to further refine our understanding of the detector’s intrinsic background.  
+
+
+
 
 <!-- #endregion -->
+
+
