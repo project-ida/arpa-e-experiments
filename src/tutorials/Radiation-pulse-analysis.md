@@ -83,7 +83,7 @@ We need to do a few authentication steps:
 -  Authenticate Colab to pull the nuclear particle master sheet using the Drive API.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="XK6IM7v-hnag" outputId="a23df59f-9ed1-48ea-c11b-1b568aad27aa"
+```python colab={"base_uri": "https://localhost:8080/"} id="XK6IM7v-hnag" outputId="fc034709-a534-4680-c4c0-56013ed8352f"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -149,7 +149,7 @@ df = pd.DataFrame(sheet.get_all_records())
 df = fill_experiment_id(df)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="3Umn0vQM0nzf" outputId="3d315239-a30d-42c7-c4c9-cea0fca02e00"
+```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="3Umn0vQM0nzf" outputId="779a265d-e18e-4279-cb5c-8ee8ef72d0ca"
 # Find the rows where Experiment ID matches
 rows = df[df['Experiment ID'] == experiment_id]
 
@@ -237,7 +237,7 @@ We're going to look at the neutron events during the background phase of the exp
 We can extract only the neutron events by using the psp values stored in the master spreadsheet.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="XW3JZibgWexj" outputId="a4e247e5-bba2-4a7c-9c7e-281081fbd567"
+```python colab={"base_uri": "https://localhost:8080/"} id="XW3JZibgWexj" outputId="90136064-2b5d-429b-a855-2db2f8bd9a03"
 psp
 ```
 
@@ -253,7 +253,7 @@ neutron_data, neutron_periods = get_all_event_data(times, f">{psp}")
 Let's see what the pulse data looks like for the background.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 238} id="Q3hFn5Z5tXyv" outputId="b7069a6b-a10b-44f6-9014-dd939aa3ef39"
+```python colab={"base_uri": "https://localhost:8080/", "height": 238} id="Q3hFn5Z5tXyv" outputId="8015b276-66e7-4a55-ef60-4d0cc6021a9d"
 neutron_data["Background 1"].head()
 ```
 
@@ -351,7 +351,7 @@ P_exp = np.arange(1, len(delta_sorted) + 1) / len(delta_sorted)
 Let's see how the Poisson distribution compares to the experimental one.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="qlhkMPk9s-F_" outputId="d925776c-8ea0-4177-e977-78ffd23ff3b0"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="qlhkMPk9s-F_" outputId="afb158ae-429f-4d85-89f7-8fde21df9bdd"
 plt.figure(figsize=(8, 5))
 plt.plot(delta_sorted, P_exp, label="Empirical")
 plt.plot(delta_sorted, P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {lam:.2f}/s)")
@@ -374,12 +374,10 @@ Visually, the level of agreement is superb. We can be more quantitative using a 
 It's instructive to look at the cumulative pulses alongside the counts per minute.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="iPSuT_3dJ5kp" outputId="3080cb56-4cc0-4076-8984-61a78fc23b90"
+```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="iPSuT_3dJ5kp" outputId="9ecc96b0-3eb5-49d2-c179-ef4fdd2055ee"
 background_cpm = background.resample("60s").size().rename("counts").to_frame()
 fig = go.Figure(layout=dict(yaxis_title="Counts per min", showlegend=False, height=600, width=800))
 fig.add_trace(go.Scattergl(name="Counts per min", x=background_cpm.index, y=background_cpm.counts))
-
-HTML(fig.to_html(include_plotlyjs=True))  # Ensures plot shows in nbviewer
 ```
 
 <!-- #region id="B8ZzYbhLlMNV" -->
@@ -392,11 +390,11 @@ We can use the inter-pulse cumulative probability to detect deviations from norm
 Support for third party widgets will remain active for the duration of the session. To disable support:
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="3caxZrbEpInb" outputId="d33c8697-f036-4f15-b004-53a5f23b6c07"
+```python colab={"base_uri": "https://localhost:8080/"} id="3caxZrbEpInb" outputId="a6690ffd-6b20-468b-944f-14b64d08e447"
 neutron_periods["Calibration"]
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="M1BAZ4z5pPeL" outputId="45fdc509-ac78-487a-e591-bb3fb27a119b"
+```python colab={"base_uri": "https://localhost:8080/"} id="M1BAZ4z5pPeL" outputId="4b906b1a-043f-4855-a74c-8a5ae952f5c7"
 neutron_periods["Background 1"]
 ```
 
@@ -414,7 +412,7 @@ delta_sorted_with_source = np.sort(deltas_with_source)
 cdf_with_source = np.arange(1, len(delta_sorted_with_source) + 1) / len(delta_sorted_with_source)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="pK3mugXcVZ14" outputId="95fe480e-7fb9-4ae6-932c-556dcd1361ee"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="pK3mugXcVZ14" outputId="a2e3f581-7cbb-44b6-fb35-ce326c017cef"
 plt.figure(figsize=(8, 5))
 plt.plot(delta_sorted, P_exp, label="Empirical")
 plt.plot(delta_sorted, P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {lam:.2f}/s)")
@@ -437,12 +435,10 @@ The reason for the inital jump in the empirical plot with a source is that the s
 Let's again look at the counts per minute associated with this plot.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="9nebqMxqMJwN" outputId="8c000026-c971-4f83-a6f8-ee8eca5affb0"
+```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="9nebqMxqMJwN" outputId="bf574f31-ca3c-439e-f9a1-667fe102af8c"
 neutrons_with_source_cpm = neutrons_with_source.resample("60s").size().rename("counts").to_frame()
 fig = go.Figure(layout=dict(yaxis_title="Counts per min", showlegend=False, height=600, width=800))
 fig.add_trace(go.Scattergl(name="Counts per min", x=neutrons_with_source_cpm.index, y=neutrons_with_source_cpm.counts))
-
-# HTML(fig.to_html(include_plotlyjs='cdn'))  # Ensures plot shows in nbviewer
 ```
 
 <!-- #region id="3yFox81KrMOq" -->
@@ -509,12 +505,10 @@ neutrons_synthetic = inject_poisson_bursts(background,n_bursts=5, burst_duration
 We'll first look at the counts per minute associated with the this synthetic pulse data:
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="UobrS_ukM1xM" outputId="6bb9e0ce-1bc6-4a2a-b037-c6901bdb8712"
+```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="UobrS_ukM1xM" outputId="73260c50-eb73-482a-bd3b-b189ccb0aa14"
 neutrons_synthetic_cpm = neutrons_synthetic.resample("60s").size().rename("counts").to_frame()
 fig = go.Figure(layout=dict(yaxis_title="Counts per min", showlegend=False, height=600, width=800))
 fig.add_trace(go.Scattergl(name="Counts per min", x=neutrons_synthetic_cpm.index, y=neutrons_synthetic_cpm.counts))
-
-# HTML(fig.to_html(include_plotlyjs='cdn'))  # Ensures plot shows in nbviewer
 ```
 
 <!-- #region id="C6dCbWHpinQM" -->
@@ -535,7 +529,7 @@ Instead of plotting just the cumulative probabilities, we're now going to add so
 We're going to plot a confidence band around the theoretical Poisson distribution based on [Kolmogorov-Smirnov analysis](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test).
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="fehl9N_aMwOE" outputId="ece6a9e4-3498-4b5c-a325-dcb0d722f82a"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="fehl9N_aMwOE" outputId="f8fe2d96-303d-49d4-d8db-1c052a60984c"
 # Number of samples (n)
 n = len(delta_sorted)
 
@@ -592,7 +586,7 @@ While it is helpful to get a visual sense of how the cumulative inter-pulse prob
 For this we can perform a [Kolmogorov-Smirnov test](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test).
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="dMc45lIj-lo-" outputId="4387a806-126c-4c97-e5b0-18bbb3ba2ca6"
+```python colab={"base_uri": "https://localhost:8080/"} id="dMc45lIj-lo-" outputId="4219e992-2495-4d7f-f0b7-767530e02adf"
 # Run KS test against an exponential distribution with estimated lambda
 ks_stat, p_value = kstest(synthetic_deltas_sorted, 'expon', args=(0, 1/lam))
 
