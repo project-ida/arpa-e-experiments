@@ -32,22 +32,21 @@ The aim is to develop techniques to characterise the background and detect anoma
 <!-- #endregion -->
 
 <!-- #region id="nLIVEAOxqQYw" -->
-## Running this notebook
+Go ahead and change the `experiment_id` and `channel_number` below and then run the whole notebook.
 
-Go ahead and change the `experiment_id` below and then run the whole notebook.
-
-You will be asked a couple of times to authenticate with your Google account, but after that all the analysis will happen automatically.
+You will be asked a couple of time to authenticate with your Google account, but after that all the analysis will happen automatically.
 <!-- #endregion -->
 
 ```python id="n_BC5wa_rq9S"
 experiment_id = 1
+channel_number = 0
 ```
 
 <!-- #region id="gqHlPSyYrxDU" -->
 ## Libraries
 <!-- #endregion -->
 
-```python id="rnTZ6HBjrySX"
+```python id="rnTZ6HBjrySX" colab={"base_uri": "https://localhost:8080/", "height": 17} outputId="7ef62db0-1443-4604-f34f-382f13b0ff5d"
 # Auth
 import sys, os
 import shutil
@@ -67,9 +66,19 @@ from scipy.stats import kstest
 
 
 #Plotting
+import sys
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import plotly.graph_objects as go
+from plotly.offline import init_notebook_mode
+import plotly.io as pio
+
+# Initialize notebook mode to embed JavaScript for nbviewer
+init_notebook_mode(connected=True)
+
+# Set renderer for Colab if running there
+if 'google.colab' in sys.modules:
+    pio.renderers.default = 'colab'
 ```
 
 <!-- #region id="3AaQ35teouCo" -->
@@ -81,7 +90,7 @@ We need to do a few authentication steps:
 -  Authenticate Colab to pull the nuclear particle master sheet using the Drive API.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="XK6IM7v-hnag" outputId="43c4a0f4-83e5-473b-8fa7-465e1844d5c4"
+```python colab={"base_uri": "https://localhost:8080/"} id="XK6IM7v-hnag" outputId="d74f3e34-95d2-4398-c43f-6112def2fbce"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -118,32 +127,57 @@ We need to
 - Open the master sheet
 - Find the row corresponding with the experiment
 - Extract the timestamp columns
+
+Because the master sheet is organised in blocks that share an experiment ID (to avoid visual overload) we'll need to "fill in" the experiment ID for all rows once the sheet is brought into a pandas dataframe.
 <!-- #endregion -->
+
+```python id="awvSNY0p0dXk"
+# Fill experiment IDs based on the block organisation of the master sheet
+def fill_experiment_id(df):
+    experiment_id = None
+    updated_ids = []
+
+    for index, row in df.iterrows():
+        if pd.notna(row['Experiment ID']) and row['Experiment ID'] != '':
+            experiment_id = row['Experiment ID']
+        updated_ids.append(experiment_id)
+
+    df['Experiment ID'] = updated_ids
+    return df
+```
 
 ```python id="IOwzthb8s-Mz"
 sheet = gc.open_by_key(sheet_id).sheet1
 
 # Read the sheet into a pandas DataFrame
 df = pd.DataFrame(sheet.get_all_records())
+
+# Fill the experiment IDs based on the block organisation of the master sheet
+df = fill_experiment_id(df)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="RndMn9Zos-LC" outputId="c8396f3d-ca5a-4ec1-9e24-e23ca61a2258"
-# Find the row where Experiment ID matches
-row = df[df['Experiment ID'] == experiment_id]
+```python id="3Umn0vQM0nzf" outputId="42586342-8551-4890-f2e9-d005e99448b8" colab={"base_uri": "https://localhost:8080/", "height": 81}
+# Find the rows where Experiment ID matches
+rows = df[df['Experiment ID'] == experiment_id]
 
-# Exract digitizer, either 4 channel or 8
-digitizer = row["Digitizer"].iloc[0]
+if len(rows) == 0:
+  raise ValueError(f"No matser sheet entry for 'Experiment ID' = {experiment_id}")
 
-# Extract the channel number
-channel_number = row["Channel number"].iloc[0]
+# Exract digitizer for SQL table identification
+digitizer = rows.iloc[0]["Digitizer"]
+
+# Extract times
+times = rows.iloc[[0]][['Setup', 'Calibration', 'Background 1', 'Experiment', 'Background 2', 'End']]
+times = times.apply(pd.to_datetime)
+
+# Extract the row corresponding to the specified channel number
+row = rows[rows["Digitizer channel number"] == channel_number]
+
+if len(row) == 0:
+  raise ValueError(f"No matser sheet entry for 'Experiment ID' = {experiment_id}, 'Digitizer channel number' = {channel_number}")
 
 # Extract the psp neutron/gamma discriminator
 psp = row["psp threshold"].iloc[0]
-
-# Extract times
-times = row[['Setup', 'Calibration', 'Background 1', 'Experiment', 'Background 2', 'End']]
-
-times = times.apply(pd.to_datetime)
 
 # Display the extracted times
 times.head()
@@ -162,7 +196,7 @@ We can then query the database to pull only the events that match our PSD analys
 ```python id="JBq3UOFO5R5U"
 def get_event_data(start_time, end_time, psp=">0", energy=">0"):
   query = f"""
-  SELECT * FROM caen{digitizer}ch_ch{channel_number}
+  SELECT * FROM {digitizer}_ch{channel_number}
   WHERE channels[1] {psp} AND channels[2] {energy}
   AND time BETWEEN '{start_time}' AND '{end_time}'
   ORDER BY time;
@@ -210,7 +244,7 @@ We're going to look at the neutron events during the background phase of the exp
 We can extract only the neutron events by using the psp values stored in the master spreadsheet.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="XW3JZibgWexj" outputId="da368a50-0965-4149-9686-bbb63082a5a2"
+```python colab={"base_uri": "https://localhost:8080/"} id="XW3JZibgWexj" outputId="4bc23ec6-dda1-4458-c9d1-b6fe478ec8c7"
 psp
 ```
 
@@ -226,7 +260,7 @@ neutron_data, neutron_periods = get_all_event_data(times, f">{psp}")
 Let's see what the pulse data looks like for the background.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 238} id="Q3hFn5Z5tXyv" outputId="565ae2a9-8f60-49fb-a244-8e031bc7c22a"
+```python colab={"base_uri": "https://localhost:8080/", "height": 238} id="Q3hFn5Z5tXyv" outputId="b4426a3d-f2c4-4a85-d452-5cdb46fb3135"
 neutron_data["Background 1"].head()
 ```
 
@@ -274,7 +308,7 @@ for key, value in neutron_data.items():
 <!-- #region id="RvySypWgXW-i" -->
 ### Inter-pulse distribution
 
-During the background phase of the experiment, we expect to measure radiation pulses randomly over time - following a Poisson distribution.
+During the background phase of the experiment, we expect to measure radiation pulses randomly over time - following a Poisson distribution. This distribution can be studied by looking at count rates - as we do in the [Eljen Detector Background Characterization](https://github.com/project-ida/arpa-e-experiments/blob/main/tutorials/Eljen-Background-Characterization.ipynb) notebook. Here, we will study the distribution by instead looking at the times between individual events.
 
 For a Poisson process occuring at an average rate of $\lambda$, the probability that the time between events $\Delta t$ is less than some time $t$ is given by:
 
@@ -324,7 +358,7 @@ P_exp = np.arange(1, len(delta_sorted) + 1) / len(delta_sorted)
 Let's see how the Poisson distribution compares to the experimental one.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="qlhkMPk9s-F_" outputId="68c8122c-4c6b-4762-807d-744b25be281e"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="qlhkMPk9s-F_" outputId="275f3fc9-0235-44c5-9e58-29104b11e469"
 plt.figure(figsize=(8, 5))
 plt.plot(delta_sorted, P_exp, label="Empirical")
 plt.plot(delta_sorted, P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {lam:.2f}/s)")
@@ -340,16 +374,14 @@ plt.show()
 ```
 
 <!-- #region id="jt_FGND9ky3u" -->
-Visually, the level of agreement is superb. Let's be more quantitative.
-
-**TODO: Statistical test**
+Visually, the level of agreement is superb. We can be more quantitative using a [Kolmogorov-Smirnov test](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test), but we'll save this analysis for later in the notebook when we look at how to test for anomalies.
 <!-- #endregion -->
 
 <!-- #region id="eJ5bN8PjCQga" -->
 It's instructive to look at the cumulative pulses alongside the counts per minute.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="iPSuT_3dJ5kp" outputId="ac93e5a9-c985-494c-9c3a-b7e12df57a3e"
+```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="iPSuT_3dJ5kp" outputId="401117e5-7030-4c3c-ad46-de1bb196ed1e"
 background_cpm = background.resample("60s").size().rename("counts").to_frame()
 fig = go.Figure(layout=dict(yaxis_title="Counts per min", showlegend=False, height=600, width=800))
 fig.add_trace(go.Scattergl(name="Counts per min", x=background_cpm.index, y=background_cpm.counts))
@@ -358,18 +390,18 @@ fig.add_trace(go.Scattergl(name="Counts per min", x=background_cpm.index, y=back
 <!-- #region id="B8ZzYbhLlMNV" -->
 ## Anomaly detection
 
-We can use the inter-pulse cumulative probability to detect deviations from normal background, aka anomalies. To demonstrate this, we'll combine the background period with a calibration period in which a strong neutron source is present.
+We can use the inter-pulse cumulative probability to detect deviations from normal background, aka anomalies. To demonstrate this, we'll combine the background period with a calibration period (where we had a californium neutron source present).
 <!-- #endregion -->
 
 <!-- #region id="lZyl5Rf1D5GD" -->
 Support for third party widgets will remain active for the duration of the session. To disable support:
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="3caxZrbEpInb" outputId="ed9a0ccb-e5eb-41c7-c57b-d6d6701d5c24"
+```python colab={"base_uri": "https://localhost:8080/"} id="3caxZrbEpInb" outputId="d1a60574-2dec-40e0-87cd-bf526499311e"
 neutron_periods["Calibration"]
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="M1BAZ4z5pPeL" outputId="24657e4e-f86e-4eba-c73e-f40da1039674"
+```python colab={"base_uri": "https://localhost:8080/"} id="M1BAZ4z5pPeL" outputId="7535f527-037a-43a9-8a8a-79cf7c3633b5"
 neutron_periods["Background 1"]
 ```
 
@@ -387,7 +419,7 @@ delta_sorted_with_source = np.sort(deltas_with_source)
 cdf_with_source = np.arange(1, len(delta_sorted_with_source) + 1) / len(delta_sorted_with_source)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="pK3mugXcVZ14" outputId="7ec6526e-8e6d-4acf-da43-f332f6b89d05"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="pK3mugXcVZ14" outputId="99dfdb8e-5c76-4220-b636-34e672eb0199"
 plt.figure(figsize=(8, 5))
 plt.plot(delta_sorted, P_exp, label="Empirical")
 plt.plot(delta_sorted, P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {lam:.2f}/s)")
@@ -410,7 +442,7 @@ The reason for the inital jump in the empirical plot with a source is that the s
 Let's again look at the counts per minute associated with this plot.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="9nebqMxqMJwN" outputId="971b7a21-65ec-4d52-9e72-ed027c1db49c"
+```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="9nebqMxqMJwN" outputId="be8b89be-32ee-4fe3-90be-6211abaa0371"
 neutrons_with_source_cpm = neutrons_with_source.resample("60s").size().rename("counts").to_frame()
 fig = go.Figure(layout=dict(yaxis_title="Counts per min", showlegend=False, height=600, width=800))
 fig.add_trace(go.Scattergl(name="Counts per min", x=neutrons_with_source_cpm.index, y=neutrons_with_source_cpm.counts))
@@ -469,12 +501,28 @@ def inject_poisson_bursts(df, n_bursts=3, burst_duration_s=1.0, burst_multiplier
 ```
 
 <!-- #region id="5nX-L8qCuQ5u" -->
-Let's create 10 bursts, with a strength 100 times that of the background and let's make them last for 10 mins each.
+Let's create 5 bursts, with a strength 20 times that of the background and let's make them last for 10 mins each.
 <!-- #endregion -->
 
 ```python id="IczdqmZ3p5Hn"
 neutrons_synthetic = inject_poisson_bursts(background,n_bursts=5, burst_duration_s=600, burst_multiplier=20)
 ```
+
+<!-- #region id="wM2zwA3CMxhr" -->
+We'll first look at the counts per minute associated with the this synthetic pulse data:
+<!-- #endregion -->
+
+```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="UobrS_ukM1xM" outputId="de7c749b-bfa7-481e-840b-b3f4fb98f480"
+neutrons_synthetic_cpm = neutrons_synthetic.resample("60s").size().rename("counts").to_frame()
+fig = go.Figure(layout=dict(yaxis_title="Counts per min", showlegend=False, height=600, width=800))
+fig.add_trace(go.Scattergl(name="Counts per min", x=neutrons_synthetic_cpm.index, y=neutrons_synthetic_cpm.counts))
+```
+
+<!-- #region id="C6dCbWHpinQM" -->
+Although the synthetic pulses look obviously anomalous in this case, we still want to be able to go through the process of measuring just how anomalous the pulses are.
+
+Let's now perform the inter-pulse analysis on this synthetic data.
+<!-- #endregion -->
 
 ```python id="Y8K5OP2cp27n"
 synthetic_deltas = np.diff(neutrons_synthetic.index.values).astype("timedelta64[ns]") / np.timedelta64(1, "s")
@@ -482,45 +530,13 @@ synthetic_deltas_sorted = np.sort(synthetic_deltas)
 cdf_with_synthetic_neutrons = np.arange(1, len(synthetic_deltas_sorted) + 1) / len(synthetic_deltas_sorted)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="1QqaBSlwt0bZ" outputId="b4545369-ad27-4b01-b0c0-dbe2e357c3e4"
-plt.figure(figsize=(8, 5))
-plt.plot(delta_sorted, P_exp, label="Empirical")
-plt.plot(delta_sorted, P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {lam:.2f}/s)")
-plt.plot(synthetic_deltas_sorted, cdf_with_synthetic_neutrons, label="Empirical with synthetic bursts")
-
-plt.xlabel("t (seconds)")
-plt.ylabel("P(Δt ≤ t)")
-plt.xlim([0,5])
-plt.ylim([0,0.2])
-plt.title("Cumulative inter-pulse time probability")
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.show()
-```
-
-<!-- #region id="wM2zwA3CMxhr" -->
-Let's again look at the counts per minute that go along with this
-<!-- #endregion -->
-
-```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="UobrS_ukM1xM" outputId="242e6c08-a667-4fc6-88de-4be7e24effde"
-neutrons_synthetic_cpm = neutrons_synthetic.resample("60s").size().rename("counts").to_frame()
-fig = go.Figure(layout=dict(yaxis_title="Counts per min", showlegend=False, height=600, width=800))
-fig.add_trace(go.Scattergl(name="Counts per min", x=neutrons_synthetic_cpm.index, y=neutrons_synthetic_cpm.counts))
-```
-
 <!-- #region id="K9D02SUvv78g" -->
-The next step is to use some statistical analysis of these synthetic bursts in order to understand what kind of anomalies we might be able to detect within a given degree of certainty.
+Instead of plotting just the cumulative probabilities, we're now going to add some statistical information so that we can be more quantitative.
+
+We're going to plot a confidence band around the theoretical Poisson distribution based on [Kolmogorov-Smirnov analysis](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test).
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="dMc45lIj-lo-" outputId="e3520a54-fd82-454e-f4e4-f1e6ef96bbe1"
-# Run KS test against an exponential distribution with estimated lambda
-ks_stat, p_value = kstest(synthetic_deltas_sorted, 'expon', args=(0, 1/lam))
-
-ks_stat, p_value
-```
-
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="fehl9N_aMwOE" outputId="3522b934-98e8-4c07-aa01-dcb3e2cb94dd"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="fehl9N_aMwOE" outputId="f0114d9e-70ae-406b-8270-e5238d3f2d1c"
 # Number of samples (n)
 n = len(delta_sorted)
 
@@ -540,15 +556,6 @@ plt.plot(delta_sorted, P_exp, label="Empirical")
 plt.plot(delta_sorted, P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {lam:.2f}/s)")
 plt.plot(synthetic_deltas_sorted, cdf_with_synthetic_neutrons, label="Empirical with synthetic bursts")
 plt.fill_between(delta_sorted, lower_bound, upper_bound, color='gray', alpha=0.3, label="~3σ Confidence Band", zorder=1)
-
-# # Max deviation marker and vertical line
-# plt.plot(t_max_dev, cdf_with_synthetic_neutrons[max_index], 'ko', label="KS Statistic (D)")
-# plt.vlines(t_max_dev, P_theory_at_synth[max_index], cdf_with_synthetic_neutrons[max_index], color='k', linestyles='dotted')
-
-# # Annotate
-# plt.annotate(f"D = {ks_statistic:.4f}", xy=(t_max_dev, cdf_with_synthetic_neutrons[max_index]),
-#              xytext=(t_max_dev + 0.2, cdf_with_synthetic_neutrons[max_index] + 0.01),
-#              arrowprops=dict(arrowstyle="->", lw=1), fontsize=9)
 
 # Recompute bounds for synthetic burst dataset
 n_synth = len(synthetic_deltas_sorted)
@@ -576,6 +583,19 @@ plt.tight_layout()
 plt.show()
 ```
 
-```python id="Z2Ova3eyUA8P"
+<!-- #region id="wOrw2J02kjif" -->
+In the plot above, we see that the "Empirical with synthetic bursts" (orange) is  significantly different (determined by the grey region) to the theoretical Poisson distribution (red). We chose a $3\sigma$ threshold which means that there is less than 0.3% chance that the deviation happened due to chance.
 
+We can also see that without the synthetic bursts, the Empirical (blue) is not significantly different from the theoretical Poisson distribution (red). This is of course what one would expect from random background events.
+
+While it is helpful to get a visual sense of how the cumulative inter-pulse probabilities differ from a theoretical Poisson, it's also helpful to get a number that tells us what is the probability that our data happened by chance. We have seen it's less than 0.3%, but what is the exact number?
+
+For this we can perform a [Kolmogorov-Smirnov test](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test).
+<!-- #endregion -->
+
+```python colab={"base_uri": "https://localhost:8080/"} id="dMc45lIj-lo-" outputId="ab163552-30e6-49e3-bfe1-54576713ecf5"
+# Run KS test against an exponential distribution with estimated lambda
+ks_stat, p_value = kstest(synthetic_deltas_sorted, 'expon', args=(0, 1/lam))
+
+print(f"There is probability of {p_value} that our synthetic pulses happened by chance.")
 ```
