@@ -36,7 +36,7 @@ The aim is to develop techniques to characterise the background and detect anoma
 
 Go ahead and change the `experiment_id` below and then run the whole notebook.
 
-You will be asked a couple of time to authenticate with your Google account, but after that all the analysis will happen automatically.
+You will be asked a couple of times to authenticate with your Google account, but after that all the analysis will happen automatically.
 <!-- #endregion -->
 
 ```python id="n_BC5wa_rq9S"
@@ -77,7 +77,7 @@ import plotly.graph_objects as go
 
 We need to do a few authentication steps:
 - Bring in the database credentials from Google drive so that we can pull data from the live database.
-- Bring in the nuclear particle master sheet ID
+- Bring in the nuclear particle master sheet ID.
 -  Authenticate Colab to pull the nuclear particle master sheet using the Drive API.
 <!-- #endregion -->
 
@@ -154,7 +154,7 @@ times.head()
 
 We store each individual radiation pulse in our database. These pulses are characterised by an energy and a psp value. The radiation pulses contain a mixture of gamma and neutron events which can be distinguised through PSD analysis at different levels of sophistication.
 
-The [simplest PSD analysis](https://github.com/project-ida/arpa-e-experiments/blob/main/tutorials/PSD_Analysis.ipynb) is to use a PSP discriminator value above which the pulses are considered to be neutrons, below are gammas. We can also combine this with an similar energy discriminator.
+The [simplest PSD analysis](https://github.com/project-ida/arpa-e-experiments/blob/main/tutorials/PSD_Analysis.ipynb) is to use a constant PSP discriminator value above which the pulses are considered to be neutrons, below are gammas. We can also combine this with an similar energy discriminator.
 
 We can then query the database to pull only the events that match our PSD analysis requirements.
 <!-- #endregion -->
@@ -173,7 +173,7 @@ def get_event_data(start_time, end_time, psp=">0", energy=">0"):
 ```
 
 <!-- #region id="tc1gXIIV5_en" -->
-We'll can now get all the event data for the different periods in the experiement.
+We can now get all the event data for the different periods in the experiement.
 <!-- #endregion -->
 
 ```python id="kOyHsrTcs-IY"
@@ -282,7 +282,7 @@ $$
 P_{\rm Poisson}(\Delta t \le t) = 1 - e^{-\lambda t}
 $$
 
-We can estimate the $\lambda$ from the experimetnally derived average inter-pulse time $\overline{\Delta t}$ via:
+We can estimate the $\lambda$ from the experimentally derived average inter-pulse time $\overline{\Delta t}$ via:
 
 $$
 \lambda = \frac{1}{\overline{\Delta t}}
@@ -346,7 +346,7 @@ Visually, the level of agreement is superb. Let's be more quantitative.
 <!-- #endregion -->
 
 <!-- #region id="eJ5bN8PjCQga" -->
-It's instructive to look at the cumulative pulses alonside the counts per minute.
+It's instructive to look at the cumulative pulses alongside the counts per minute.
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="iPSuT_3dJ5kp" outputId="ac93e5a9-c985-494c-9c3a-b7e12df57a3e"
@@ -419,7 +419,7 @@ fig.add_trace(go.Scattergl(name="Counts per min", x=neutrons_with_source_cpm.ind
 <!-- #region id="3yFox81KrMOq" -->
 ### Synthetic anomalies
 
-Although statistical analysis is the most robust way of determining anomalies, it's important to consider how easiy it is to visually discern changes in the distribution because we often lean on visuals in an initial analysis.
+Although statistical analysis is the most robust way of determining anomalies, it's important to consider how easy it is to visually discern changes in the distribution because we often lean on visuals in an initial analysis.
 
 For this exercise, we'll simulate the appearance of random short bursts of neutrons and look at the changes to the inter-pulse cumulative distribution.
 
@@ -469,7 +469,7 @@ def inject_poisson_bursts(df, n_bursts=3, burst_duration_s=1.0, burst_multiplier
 ```
 
 <!-- #region id="5nX-L8qCuQ5u" -->
-Let's create 10 bursts, with a stregnth 100 times that of the background and let's make them last for 10 mins each.
+Let's create 10 bursts, with a strength 100 times that of the background and let's make them last for 10 mins each.
 <!-- #endregion -->
 
 ```python id="IczdqmZ3p5Hn"
@@ -500,7 +500,7 @@ plt.show()
 ```
 
 <!-- #region id="wM2zwA3CMxhr" -->
-Let's again look at the counts per minute that goes along with this
+Let's again look at the counts per minute that go along with this
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="UobrS_ukM1xM" outputId="242e6c08-a667-4fc6-88de-4be7e24effde"
@@ -510,7 +510,7 @@ fig.add_trace(go.Scattergl(name="Counts per min", x=neutrons_synthetic_cpm.index
 ```
 
 <!-- #region id="K9D02SUvv78g" -->
-The next step is to use some statistical analysis of these synthetic bursts in order to undertand what kind of anomalies we might be able to detect within a given degree of certainty.
+The next step is to use some statistical analysis of these synthetic bursts in order to understand what kind of anomalies we might be able to detect within a given degree of certainty.
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="dMc45lIj-lo-" outputId="e3520a54-fd82-454e-f4e4-f1e6ef96bbe1"
