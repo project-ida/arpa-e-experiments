@@ -379,7 +379,7 @@ background_cpm = background.resample("60s").size().rename("counts").to_frame()
 fig = go.Figure(layout=dict(yaxis_title="Counts per min", showlegend=False, height=600, width=800))
 fig.add_trace(go.Scattergl(name="Counts per min", x=background_cpm.index, y=background_cpm.counts))
 
-# HTML(fig.to_html(include_plotlyjs='cdn'))  # Ensures plot shows in nbviewer
+HTML(fig.to_html(include_plotlyjs='cdn'))  # Ensures plot shows in nbviewer
 ```
 
 <!-- #region id="B8ZzYbhLlMNV" -->
