@@ -379,11 +379,11 @@ Visually, the level of agreement is superb. We can be more quantitative using a 
 It's instructive to look at the cumulative pulses alongside the counts per minute.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="iPSuT_3dJ5kp" outputId="cc4b0f07-8555-45b3-fa11-180e1bc94db8"
+```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="iPSuT_3dJ5kp" outputId="8897257d-3d4c-4f6e-dd29-8c63efaaffd3"
 background_cpm = background.resample("60s").size().rename("counts").to_frame()
 fig = go.Figure(layout=dict(yaxis_title="Counts per min", showlegend=False, height=600, width=800))
 fig.add_trace(go.Scattergl(name="Counts per min", x=background_cpm.index, y=background_cpm.counts))
-HTML(fig.to_html())
+HTML(fig.to_html(full_html=False, include_plotlyjs="cdn"))
 ```
 
 <!-- #region id="B8ZzYbhLlMNV" -->
