@@ -386,17 +386,13 @@ Visually, the level of agreement is superb. We can be more quantitative using a 
 It's instructive to look at the cumulative pulses alongside the counts per minute.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 1000} id="iPSuT_3dJ5kp" outputId="5642e808-9937-4431-b66b-6abfb0f0ad3e"
+```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="iPSuT_3dJ5kp" outputId="0dd14d50-9acf-49ad-bd8d-e5db9796d048"
 background_cpm = background.resample("60s").size().rename("counts").to_frame()
 fig = go.Figure(layout=dict(yaxis_title="Counts per min", showlegend=False, height=600, width=800))
 fig.add_trace(go.Scattergl(name="Counts per min", x=background_cpm.index, y=background_cpm.counts))
 fig.show()
 
-# Export and display HTML for nbviewer with require.js
-html_content = fig.to_html(include_plotlyjs=False, full_html=False, include_mathjax=False)
-html_content = html_content.replace('Plotly.newPlot', 'require(["plotly"], function(Plotly) { Plotly.newPlot')
-html_content += '; })'
-HTML(html_content)
+
 ```
 
 <!-- #region id="B8ZzYbhLlMNV" -->
