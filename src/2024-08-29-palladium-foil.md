@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.17.1
+      jupytext_version: 1.17.2
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -24,7 +24,7 @@ jupyter:
 A xy mg Palladium foil is gas loaded with deuterium, in a 0.19L chamber.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="6e5640a1-12da-4157-a5e8-5f73f882e6a7" outputId="7c01eff9-1def-4d03-aea8-523bf386a20b"
+```python colab={"base_uri": "https://localhost:8080/"} id="6e5640a1-12da-4157-a5e8-5f73f882e6a7" outputId="bf75fb4a-26f6-48fe-b313-a61ae63a8488"
 # RUN THIS IF YOU ARE USING GOOGLE COLAB
 import sys
 import os
@@ -72,12 +72,12 @@ meta = {
 ### Temperature
 <!-- #endregion -->
 
-```python id="fde663ef-7691-4c50-8a21-df4e77c67d25"
+```python id="fde663ef-7691-4c50-8a21-df4e77c67d25" outputId="5d812bae-3d89-4fb8-c821-6ca333f15ba3" colab={"base_uri": "https://localhost:8080/"}
 # Read the tempearture data
-temperature_df = load_data('http://nucleonics.mit.edu/csv-files/loading%20deloading%20runs/thermocouples_september-1.csv')
+temperature_df = load_data('http://nucleonics.mit.edu/data/csv-files/loading%20deloading%20runs/thermocouples_september/thermocouples_september-1-fullres.csv')
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="686ac467-0ef2-48a8-9598-a80f357130a8" outputId="908f4588-e22f-4b8c-cf8c-4ab4f58149f0"
+```python colab={"base_uri": "https://localhost:8080/"} id="686ac467-0ef2-48a8-9598-a80f357130a8" outputId="3f8f8e2c-7edb-45c9-f476-ceb910698b59"
 # Print out basic description of the data, including any NaNs
 print_info(temperature_df)
 ```
@@ -103,7 +103,7 @@ Since we'll only be interested in `Thermocouple1Ch1`, we'll rename it to make pl
 temperature_df.rename(columns={'Thermocouple1Ch1': 'Temperature (C)'}, inplace=True)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="e3fd770c-4082-432d-85c6-676c0ffdb901" outputId="bf4d27a1-dd24-42a5-a0f7-8cb4e9ce85db"
+```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="e3fd770c-4082-432d-85c6-676c0ffdb901" outputId="c2572a98-26e2-4189-8b6c-e7681bd3d1f6"
 plt.figure(figsize=(8, 4))
 plt.plot(temperature_df['Temperature (C)'])
 plt.xlabel('Time')
@@ -117,17 +117,17 @@ plt.show()
 ### Heating power
 <!-- #endregion -->
 
-```python id="3a6692b1-462c-43de-83de-d31864a847b3"
+```python id="3a6692b1-462c-43de-83de-d31864a847b3" outputId="73ef8b90-3a47-4fe2-f0ba-86fc18c44bf6" colab={"base_uri": "https://localhost:8080/"}
 # Read the heating power data
-heating_df = load_data('http://nucleonics.mit.edu/csv-files/loading%20deloading%20runs/thermocouples_september-2.csv')
+heating_df = load_data('http://nucleonics.mit.edu/data/csv-files/loading%20deloading%20runs/thermocouples_september/thermocouples_september-2-fullres.csv')
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="81174345-4f9b-4095-ab2e-3dfd172ea8a2" outputId="b24189d5-f0ed-4350-c709-1178d5b90893"
+```python colab={"base_uri": "https://localhost:8080/"} id="81174345-4f9b-4095-ab2e-3dfd172ea8a2" outputId="ef6627a3-712b-4bb4-a46e-4399366243dc"
 # Print out basic description of the data, including any NaNs
 print_info(heating_df)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="f72ac15c-1a1f-4855-b3ea-eff6979553ce" outputId="dcebcccf-6a4b-48c8-bac8-e07c55572712"
+```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="f72ac15c-1a1f-4855-b3ea-eff6979553ce" outputId="85028959-d03e-4422-cfdf-64545663dc10"
 plt.figure(figsize=(8, 4))
 plt.plot(heating_df['Voltage'], label="Voltage (V)")
 plt.plot(heating_df['Current'], label="Current (A)")
@@ -165,16 +165,16 @@ pressure_df_2 = pd.read_csv(
 pressure_df = pd.concat([pressure_df_1, pressure_df_2])
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="5a016413-224d-4ffd-bdd5-1e403830f278" outputId="04d83ba0-4bd8-4604-84b7-dd59ee2a7fd6"
+```python colab={"base_uri": "https://localhost:8080/"} id="5a016413-224d-4ffd-bdd5-1e403830f278" outputId="0d985e1f-a237-4a58-9e56-a76479883c53"
 # Print out basic description of the data, including any NaNs
 print_info(pressure_df)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 238} id="a2c863e9-5058-4f25-841e-3a1d0f9bb292" outputId="6184bf22-9e90-4592-f2ff-4a46088c59ca"
+```python colab={"base_uri": "https://localhost:8080/", "height": 238} id="a2c863e9-5058-4f25-841e-3a1d0f9bb292" outputId="47aa8366-f0bb-4142-ee2a-6c987d139f75"
 pressure_df.head()
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 450} id="hmG1mduzeawm" outputId="4c711e43-bbdd-47cf-bb3d-7f256ba1f5a9"
+```python colab={"base_uri": "https://localhost:8080/", "height": 450} id="hmG1mduzeawm" outputId="2a43cf07-cb25-4242-f63d-9f2e643c884a"
 plt.figure(figsize=(8, 4))
 plt.plot(pressure_df['Voltage1'])
 plt.xlabel('Time')
@@ -194,7 +194,7 @@ plt.show()
 There is a large spike in the temperature data about half way through 2024-09-01. We can identify the precise time be seeing where the temperature changes by more than 10C over a single measurement.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 175} id="6b38008a-9cd4-4de3-a3cf-141803421fea" outputId="5b134925-48e9-403d-fa40-b8e078b5848e"
+```python colab={"base_uri": "https://localhost:8080/", "height": 143} id="6b38008a-9cd4-4de3-a3cf-141803421fea" outputId="c4ab041c-e1a4-4da5-a4fd-ff2314ab8830"
 temperature_df[temperature_df['Temperature (C)'].diff().abs() > 10]
 ```
 
@@ -202,7 +202,7 @@ temperature_df[temperature_df['Temperature (C)'].diff().abs() > 10]
 Looks like the time that `Thermocouple1Ch1` changed a lot was also the time when `Thermocouple1Ch2` - this suggests an error in the data logging. Let's zoom into this region to see a bit more detail.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 435} id="ba18696a-97ae-454f-914a-8e690c903984" outputId="113d3783-1b5d-4278-f439-d8fd59d59037"
+```python colab={"base_uri": "https://localhost:8080/", "height": 435} id="ba18696a-97ae-454f-914a-8e690c903984" outputId="59a4e3c5-7030-46ec-a27a-40c09faecfbe"
 temperature_df['Temperature (C)']['2024-09-01 12:12':'2024-09-01 12:14'].plot();
 ```
 
@@ -229,11 +229,11 @@ pressure_df['Voltage1'] = pressure_df['Voltage1'].rolling(window=200, center=Tru
 temperature_df['Temperature (C)'] = temperature_df['Temperature (C)'].rolling(window=200, center=True).mean()
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 435} id="2513e948-38c5-436d-b8a0-5b51f58c1b7a" outputId="7708d700-3f9d-4d0d-9bff-4eab8f0acbb3"
+```python colab={"base_uri": "https://localhost:8080/", "height": 435} id="2513e948-38c5-436d-b8a0-5b51f58c1b7a" outputId="9ec5babe-c41b-47c9-fc33-e35650044aac"
 pressure_df['Voltage1'].plot().set_ylabel("Voltage (V)");
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 444} id="0089c93d-6545-4dc8-9b3b-e1cd8975dd91" outputId="2766f842-7b14-4434-8200-f223d71e8661"
+```python colab={"base_uri": "https://localhost:8080/", "height": 444} id="0089c93d-6545-4dc8-9b3b-e1cd8975dd91" outputId="160cb8c6-a910-41de-def0-0b8f4bf4db22"
 temperature_df['Temperature (C)'].plot().set_ylabel("Temperature (C)");
 ```
 
@@ -252,7 +252,7 @@ To derive physical quantities from several diagnostics, we need to have simultan
 combined_df = process_data([temperature_df, pressure_df,heating_df], meta)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 238} id="ASNKpZWVlcFR" outputId="7d109bb5-6c23-4f3a-bb14-1a8ec00a4ae0"
+```python colab={"base_uri": "https://localhost:8080/", "height": 238} id="ASNKpZWVlcFR" outputId="835aaaa1-3a4e-448d-d4b9-7a50b96a5123"
 combined_df.head()
 ```
 
@@ -317,7 +317,7 @@ combined_df['$D_2$ molecules'] = (combined_df['Pressure (Bar)']*1e5 * V) / (kB *
 combined_df['D/Pd Loading'] = 2*(combined_df.iloc[0]['$D_2$ molecules'] - combined_df['$D_2$ molecules']) / N_lattice
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 450} id="6d44a2b5-ddd6-4024-b281-dbd293f6c85c" outputId="b9c76c13-badf-4bd1-849d-abcf2e01cd81"
+```python colab={"base_uri": "https://localhost:8080/", "height": 450} id="6d44a2b5-ddd6-4024-b281-dbd293f6c85c" outputId="ba23a3aa-838f-4d3b-8c13-ab0f77d319e8"
 plt.figure(figsize=(8, 4))
 plt.plot(combined_df['$D_2$ molecules'])
 plt.xlabel('Time')
@@ -327,7 +327,7 @@ plt.title(f"{meta['descriptor']} {combined_df.index[0].date()}")
 plt.show()
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 450} id="6abfec40-461f-46e7-a987-00218be5b56f" outputId="2014fd9a-0499-4342-d111-f3e80a1001bf"
+```python colab={"base_uri": "https://localhost:8080/", "height": 450} id="6abfec40-461f-46e7-a987-00218be5b56f" outputId="7ab8ede6-1031-4d76-af44-dee95d5fa28b"
 plt.figure(figsize=(8, 4))
 plt.plot(combined_df['D/Pd Loading'])
 plt.xlabel('Time')
@@ -345,7 +345,7 @@ plt.show()
 Let's look at the whole data range first
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 805} id="4022b73b-c6d1-4bf8-b8f1-9529f35f23dc" outputId="7f5871dc-9e51-4f9d-8f98-11237d4a846c"
+```python colab={"base_uri": "https://localhost:8080/", "height": 805} id="4022b73b-c6d1-4bf8-b8f1-9529f35f23dc" outputId="73c128b3-7c94-4646-f332-9e08b2727b05"
 fig, axes = plot_panels(combined_df, ['Power (W)','Temperature (C)', 'Pressure (Bar)', 'D/Pd Loading'],
                         colors=['orange','blue', 'green', 'red'])
 ```
@@ -358,7 +358,7 @@ $$10^{5}P(atm) = \frac{N_{D_2}k_BT(C)}{V} + \frac{273.15N_{D_2}k_B}{V}$$
 Because the number of gas molecules $N_{D_2}$ appears in both the gradient term and offset term, the motion around phase space can look quite complicated. Let's see.
 <!-- #endregion -->
 
-```python id="fc34463a-1e17-45db-a3e1-daee61c25494" outputId="f06c4724-3d26-4076-ebc7-ac0e41dc16a1"
+```python id="fc34463a-1e17-45db-a3e1-daee61c25494" outputId="f2d01612-adb2-445d-c3d3-830ecad4e2dd" colab={"base_uri": "https://localhost:8080/", "height": 564}
 # Create a scatter plot of pressure vs. temperature
 plt.figure(figsize=(6, 6))
 plt.scatter(combined_df['Temperature (C)'], combined_df['Pressure (Bar)'], marker=".", color='orange', alpha=0.7)
@@ -378,7 +378,7 @@ plt.show()
 If we down-sample the data a bit, we can get a bit more sense of the dynamics from the scatter plot. It also allows us to see potentially interesting points that we'd like to pay more attention to. For example:
 <!-- #endregion -->
 
-```python id="5e5cf7e2-194f-4b33-a2d2-ae574249e6ca" outputId="09ee5513-a125-4c8f-bebd-f6eb4a262f01"
+```python id="5e5cf7e2-194f-4b33-a2d2-ae574249e6ca" outputId="8efd4151-7481-4757-fba8-0da8d90f2ad5" colab={"base_uri": "https://localhost:8080/", "height": 805}
 fig, panel_axes, scatter_axes = plot_panels_with_scatter(combined_df, ['Power (W)','Temperature (C)', 'Pressure (Bar)', 'D/Pd Loading'],
                    "Temperature (C)", "Pressure (Bar)",
                         colors=['orange','blue', 'green', 'red'], downsample=100, marker="2024-08-31 21:00")
@@ -388,13 +388,13 @@ fig, panel_axes, scatter_axes = plot_panels_with_scatter(combined_df, ['Power (W
 And by far the best way to get a feeling for the dynamics is to animate everything.
 <!-- #endregion -->
 
-```python id="4c5714c1-3d50-492c-9917-1e4fe372f7a2" outputId="98df3c08-972b-4975-92bd-e5aab2db1fb9"
+```python id="4c5714c1-3d50-492c-9917-1e4fe372f7a2" outputId="f0cb23ea-c593-4f99-f84e-1b92b4eefb4b" colab={"base_uri": "https://localhost:8080/"}
 fig, panel_axes, scatter_axes = plot_panels_with_scatter(combined_df, ['Power (W)','Temperature (C)', 'Pressure (Bar)', 'D/Pd Loading'],
                   "Temperature (C)", "Pressure (Bar)",
                         colors=['orange','blue', 'green', 'red'], downsample=100, animate=True)
 ```
 
-```python id="5eb55ab2-4fde-4f5b-a059-769b411e465e" outputId="8ebd7f54-fbd9-4722-85bb-5dfcef074c64"
+```python id="5eb55ab2-4fde-4f5b-a059-769b411e465e" outputId="938e4568-b101-4e18-ee03-2776bf2c28ec" colab={"resources": {"http://localhost:8080/media/Palladium%20foil%202024-08-29.mp4": {"data": "", "ok": false, "headers": [["content-length", "0"]], "status": 404, "status_text": ""}}, "base_uri": "https://localhost:8080/", "height": 421}
 # If working in colab, then set embed=True
 Video("media/Palladium foil 2024-08-29.mp4", embed=False, width=800)
 ```
@@ -403,7 +403,7 @@ Video("media/Palladium foil 2024-08-29.mp4", embed=False, width=800)
 Let's now revisit the P-T phase diagram and this time overlay what we would expect from the ideal gas law.
 <!-- #endregion -->
 
-```python id="7c1101f9-0ed9-423a-941f-cfdc98f3154b" outputId="77b3be9c-0a65-44b7-d139-534e54eaa61f"
+```python id="7c1101f9-0ed9-423a-941f-cfdc98f3154b" outputId="7dfe3491-43b4-42e6-cbb6-5847e235851b" colab={"base_uri": "https://localhost:8080/", "height": 564}
 downsample = 100
 
 # Downsample the data
@@ -455,8 +455,4 @@ plt.legend(title='Ideal Gas Lines')
 
 # Display the plot
 plt.show()
-```
-
-```python id="67ad6c06-13e7-405a-847e-fbf50d1c26ce"
-
 ```
