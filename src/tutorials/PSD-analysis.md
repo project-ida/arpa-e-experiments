@@ -68,10 +68,11 @@ import gspread
 # Data analysis
 import numpy as np
 import pandas as pd
+from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 from sqlalchemy import create_engine, text
 
-#Plotting
+# Plotting
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 ```
@@ -85,7 +86,7 @@ We need to do a few authentication steps:
 -  Authenticate Colab to pull the nuclear particle master sheet using the Drive API.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="13a57e64-b6a8-4d54-e8e3-c964e74cbfd7"
+```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="fed2a5f3-7c2d-4ded-fb11-23c1943735ba"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -154,7 +155,7 @@ df = pd.DataFrame(sheet.get_all_records())
 df = fill_experiment_id(df)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="062b85f3-9849-4532-9295-bc01fc2c16bf"
+```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="99896b0f-9e20-407f-bd42-6d40e77acf09"
 # Find the rows where Experiment ID matches
 rows = df[df['Experiment ID'] == experiment_id]
 
@@ -331,7 +332,7 @@ def plot_psd(data, period=None, title="PSD", psp_threshold=None, ax=None):
 We begin with the calibration period for which we have the largest number of events due to the presence of a source of radiation. This PSD plot is what we'll use to extract a simple psp threshold value that can be used to quickly discriminate between gammas (lower psp) and neutrons (higher psp).  
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="fdbae05f-fd70-40bc-8238-d3c0c9adcfda"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="e0e5bbc2-cc3d-44ed-aea5-ba46acc72b9f"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration")
 else:
@@ -344,10 +345,20 @@ else:
 
 The most accurate way to discriminate between gammas and neutrons is to create a fiducial lines. For the purpose of eyeballing neutron/gamma counts during a live experiment, a simple threshold psp value can be a good enough.
 
-In this notebook, we trial a midpoint method.
+In this notebook, we'll trial two methods
+- midpoint method
+- Guassaian drop method
+
+For the midpoint method
 - Choose an energy value
 - Determine the psp locations of the gamma and neutron peaks
 - Take the half way point between the two values.
+
+For the Guassaian drop method
+- Fit the signals with Guassians
+- Find the psp value at which the gammas drop to some fraction of their peak, e.g. 0.1%
+
+We'll attempt the midpoint first and then if that fails, then we'll fallback to the Guassaian drop method.
 <!-- #endregion -->
 
 ```python id="awexRLhIuuFq"
@@ -411,14 +422,114 @@ def find_psp_midpoint(data, target_energy=500, prominence=10, energy_range=(0, 4
     return midpoint
 ```
 
+```python id="cOUD_wT1i3ac"
+# --- Gaussian definitions ---
+def gaussian(x, amp, mu, sigma):
+    return amp * np.exp(-(x - mu)**2 / (2 * sigma**2))
+
+def double_gaussian(x, amp1, mu1, sigma1, amp2, mu2, sigma2):
+    return (gaussian(x, amp1, mu1, sigma1) +
+            gaussian(x, amp2, mu2, sigma2))
+
+def find_psp_threshold_gaussian(data, target_energy=500,
+                                     energy_range=(0, 4000), psp_range=(0, 1),
+                                     energy_bins=512, psp_bins=128,
+                                     plot=True, mean_tol=0.02, amp_ratio_tol=0.1,
+                                     drop_fraction=0.001):
+    """
+    Fits Gaussian(s) to PSP distribution at a given energy and finds PSP threshold
+    where the lower Gaussian drops to 0.1% of its peak.
+    Falls back to single Gaussian if fitted Gaussians are too similar.
+    """
+
+    # Step 1: Map energy to closest bin
+    bin_width_e = (energy_range[1] - energy_range[0]) / energy_bins
+    closest_energy_bin = int(round(target_energy / bin_width_e))
+    closest_energy_bin = max(1, min(closest_energy_bin, energy_bins))
+
+    # Step 2: Filter data for that energy bin
+    filtered = data[data['energy_bin'] == closest_energy_bin]
+    if filtered.empty:
+        raise ValueError(f"No data for bin {closest_energy_bin} (~{target_energy})")
+
+    # Step 3: Build histogram
+    psp_bin_width = (psp_range[1] - psp_range[0]) / psp_bins
+    hist = np.zeros(psp_bins)
+    for _, row in filtered.iterrows():
+        idx = row['psp_bin'] - 1
+        if 0 <= idx < psp_bins:
+            hist[idx] += row['count']
+
+    psp_centres = np.arange(psp_bins) * psp_bin_width + psp_bin_width / 2
+
+    # Step 4: Try to detect peaks
+    peaks, _ = find_peaks(hist, height=np.max(hist) * 0.05)
+    use_double = len(peaks) >= 2
+
+    if use_double:
+        # Initial guess: amplitudes, means, sigmas
+        p0 = [hist[peaks[0]], psp_centres[peaks[0]], 0.05,
+              hist[peaks[1]], psp_centres[peaks[1]], 0.05]
+        bounds = (0, [np.inf, 1, np.inf, np.inf, 1, np.inf])
+        popt, _ = curve_fit(double_gaussian, psp_centres, hist, p0=p0, bounds=bounds)
+        params = [(popt[0], popt[1], popt[2]), (popt[3], popt[4], popt[5])]
+
+        # Check if we should fall back to single Gaussian
+        mu_diff = abs(params[0][1] - params[1][1])
+        amp_ratio = min(params[0][0], params[1][0]) / max(params[0][0], params[1][0])
+        if mu_diff < mean_tol or amp_ratio < amp_ratio_tol:
+            use_double = False
+
+    if not use_double:
+        # Fit single Gaussian
+        p0 = [np.max(hist), psp_centres[np.argmax(hist)], 0.05]
+        bounds = (0, [np.inf, 1, np.inf])
+        popt, _ = curve_fit(gaussian, psp_centres, hist, p0=p0, bounds=bounds)
+        params = [tuple(popt)]
+
+    # Step 5: Select lower Gaussian (smallest mean)
+    lower_gauss = min(params, key=lambda p: p[1])
+    amp, mu, sigma = lower_gauss
+
+    # Step 6: Compute PSP threshold at 1% of peak
+    delta = np.sqrt(-2 * sigma**2 * np.log(drop_fraction))
+    psp_threshold = mu + delta  # right-side cutoff
+
+    # Step 7: Plot
+    if plot:
+        plt.figure(figsize=(8, 5))
+        plt.bar(psp_centres, hist, width=psp_bin_width, alpha=0.6, label="Data")
+        if use_double:
+            plt.plot(psp_centres, double_gaussian(psp_centres, *popt), 'k-', label="Double Gaussian fit")
+            for amp_i, mu_i, sigma_i in params:
+                plt.plot(psp_centres, gaussian(psp_centres, amp_i, mu_i, sigma_i), '--', label=f"Gaussian μ={mu_i:.3f}")
+        else:
+            plt.plot(psp_centres, gaussian(psp_centres, *params[0]), 'k-', label="Single Gaussian fit")
+        plt.axvline(psp_threshold, color='r', linestyle='--', label=f"Threshold={psp_threshold:.3f}")
+        plt.xlabel('PSP')
+        plt.ylabel('Count')
+        plt.title(f'PSP Gaussian Fit at Energy ~{target_energy}')
+        plt.legend()
+        plt.show()
+
+    return psp_threshold
+
+```
+
 <!-- #region id="t3i4sq1N5oUB" -->
-In this analysis we'll use Energy  = 500
+For this tutorial, we'll experiment with different energies for determining a rough psp thresold value:
+- Energy = 500 for the midpoint method
+- Energy = 100 for the Gaussian drop method
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 539} id="eq9yNEu9u1WM" outputId="fc9e9a94-6467-4891-c13e-f114c476e6f7"
+```python id="COo7DxuTi7x1" outputId="706a7d31-e267-4996-bfda-fc941e25c7e1" colab={"base_uri": "https://localhost:8080/", "height": 541}
+
 if data_exists("Calibration"):
-  target_energy = 500
-  psp_threshold = find_psp_midpoint(psd_data["Calibration"], prominence=5)
+  try:
+    psp_threshold = find_psp_midpoint(psd_data["Calibration"], target_energy = 500, prominence=10)
+  except:
+    print("find_psp_midpoint failed, attemping find_psp_threshold_gaussian")
+    psp_threshold = find_psp_threshold_gaussian(psd_data["Calibration"], target_energy=100, drop_fraction=0.001)
 else:
   psp_threshold = None
   print("‼️ Calibration data does not exist, cannot perform psp thresold analysis ‼️")
@@ -429,7 +540,7 @@ else:
 Now that we have our threshold, we can remake the PSD plots to see if there is anything obviously wrong with the analysis.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="4539c72e-11de-45ec-e121-048c40f49b16"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="9aafc75c-cf3b-4d45-83b2-935870974c54"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration", psp_threshold)
 else:
@@ -440,7 +551,7 @@ else:
 It can also be instructive to create the PSD plots for the background periods - we would not expect significant changes between the two. Here, we just eyeball them, but performing a statistical analysis will be the next step.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 581} id="lqeyLIBawd9O" outputId="7a744f79-9cd8-45cc-a1f1-0ee42ab7371a"
+```python colab={"base_uri": "https://localhost:8080/", "height": 582} id="lqeyLIBawd9O" outputId="4518da09-cae9-4f52-9acd-5d005909156e"
 if data_exists("Background 1") and data_exists("Background 2"):
   fig, axes = plt.subplots(1, 2, figsize=(14, 5), squeeze=False)
   axes = axes.flatten()  # Flatten for easy indexing
@@ -460,7 +571,7 @@ else:
 And of course we can look at the experimental period.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="0mYMvYpTsdf1" outputId="6a30563c-312f-4dc6-9b36-afe3eb7ea402"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="0mYMvYpTsdf1" outputId="11f3b391-5805-4858-eac4-fd2edd3eac44"
 if data_exists("Experiment"):
   plot_psd(psd_data["Experiment"], psd_periods["Experiment"], psp_threshold=psp_threshold)
 else:
@@ -471,7 +582,7 @@ else:
 Finally, we now update the master spreadsheet with the PSP threshold that will be used to gamma/neutron discrimination.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="f18f6e85-ec5b-4da6-ea77-3065a3fb0e28"
+```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="77a505f8-74df-4169-d15e-cb8264150d09"
 if psp_threshold is not None and "Calibration" in psd_data:
   # Calculate the row number (adjusting for header row)
 
