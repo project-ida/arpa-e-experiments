@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.17.1
+      jupytext_version: 1.17.2
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -24,7 +24,7 @@ jupyter:
 A 136 mg Palladium foil is gas loaded with deuterium, in a 0.59L chamber.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="6e5640a1-12da-4157-a5e8-5f73f882e6a7" outputId="f21ce9f3-6dfd-4ee5-cc0a-125ee6fe063a"
+```python colab={"base_uri": "https://localhost:8080/"} id="6e5640a1-12da-4157-a5e8-5f73f882e6a7" outputId="aeceab32-afae-4d4d-9a13-6d6ce3775c05"
 # RUN THIS IF YOU ARE USING GOOGLE COLAB
 import sys
 import os
@@ -72,12 +72,12 @@ meta = {
 ### Temperature
 <!-- #endregion -->
 
-```python id="fde663ef-7691-4c50-8a21-df4e77c67d25"
+```python id="fde663ef-7691-4c50-8a21-df4e77c67d25" outputId="a4927bc1-943a-4cf7-8cad-e955b3befa5d" colab={"base_uri": "https://localhost:8080/"}
 # Read the tempearture data
-temperature_df = load_data('http://nucleonics.mit.edu/csv-files/new-chamber-first-pd-5.csv')
+temperature_df = load_data('http://nucleonics.mit.edu/data/csv-files/loading%20deloading%20runs/new-chamber-first-pd/new-chamber-first-pd-5-fullres.csv')
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="686ac467-0ef2-48a8-9598-a80f357130a8" outputId="b03de5ed-5e32-4199-d9dd-c6a9d562b24d"
+```python colab={"base_uri": "https://localhost:8080/"} id="686ac467-0ef2-48a8-9598-a80f357130a8" outputId="7f1414dc-75fb-4b91-8a10-9cc552de4d1a"
 # Print out basic description of the data, including any NaNs
 print_info(temperature_df)
 ```
@@ -86,7 +86,7 @@ print_info(temperature_df)
 We're interested in using `chamber-RTD1` and `chamber-RTD2` to get a sense of the tempreature near the sample. Let's see how close they are to one another.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="xW-mQwpYrzIn" outputId="437af5f2-edc5-47f8-83af-443b8a1bc839"
+```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="xW-mQwpYrzIn" outputId="d7d90428-2894-4ba4-9247-4e11dcdbfe84"
 plt.figure(figsize=(8, 4))
 plt.plot(temperature_df['chamber-RTD1'], label="RTD1")
 plt.plot(temperature_df['chamber-RTD2'], label="RTD2")
@@ -128,12 +128,12 @@ temperature_df['Inferred mean T (C)'] = temperature_df['Temperature (C)'].iloc[0
 ### Heating power
 <!-- #endregion -->
 
-```python id="3a6692b1-462c-43de-83de-d31864a847b3"
+```python id="3a6692b1-462c-43de-83de-d31864a847b3" outputId="fbe701cf-4f51-4d27-aee3-fff00e5fe052" colab={"base_uri": "https://localhost:8080/"}
 # Read the heating power data
-heating_df = load_data('http://nucleonics.mit.edu/csv-files/new-chamber-first-pd-1.csv')
+heating_df = load_data('http://nucleonics.mit.edu/data/csv-files/loading%20deloading%20runs/new-chamber-first-pd/new-chamber-first-pd-1-fullres.csv')
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="81174345-4f9b-4095-ab2e-3dfd172ea8a2" outputId="33b619a3-b277-4ffc-eaac-2d694f0dce6c"
+```python colab={"base_uri": "https://localhost:8080/"} id="81174345-4f9b-4095-ab2e-3dfd172ea8a2" outputId="bae08997-892b-4e7b-d1b5-3cac8cc1b494"
 # Print out basic description of the data, including any NaNs
 print_info(heating_df)
 ```
@@ -146,7 +146,7 @@ We'll rename "Output power" to just "Power" convenience in plotting
 heating_df.rename(columns={'Output power (W)': 'Power (W)'}, inplace=True)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="f72ac15c-1a1f-4855-b3ea-eff6979553ce" outputId="26cb4358-5f20-4de2-be9c-158bdc7f1ae1"
+```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="f72ac15c-1a1f-4855-b3ea-eff6979553ce" outputId="d03fedf0-3953-4838-d064-80909472607a"
 plt.figure(figsize=(8, 4))
 plt.plot(heating_df['Power (W)'], label="Power (W)")
 plt.xlabel('Time')
@@ -160,12 +160,12 @@ plt.show()
 ### Pressure
 <!-- #endregion -->
 
-```python id="D8kU4YY7b3W7"
+```python id="D8kU4YY7b3W7" outputId="6e1a4fa8-19e9-41f3-d192-c9a6c7a73f47" colab={"base_uri": "https://localhost:8080/"}
 # Read the pressure data
-pressure_df = pd.read_csv('http://nucleonics.mit.edu/csv-files/new-chamber-first-pd-3.csv')
+pressure_df = load_data('http://nucleonics.mit.edu/data/csv-files/loading%20deloading%20runs/new-chamber-first-pd/new-chamber-first-pd-3-fullres.csv')
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="5a016413-224d-4ffd-bdd5-1e403830f278" outputId="65d2d7c9-9b2e-4b38-b978-89e017f04787"
+```python colab={"base_uri": "https://localhost:8080/"} id="5a016413-224d-4ffd-bdd5-1e403830f278" outputId="b134888e-69e9-4e61-a827-9d4bc7cd7594"
 # Print out basic description of the data, including any NaNs
 print_info(pressure_df)
 ```
@@ -178,7 +178,7 @@ We'll rename the pressure and remove the Ch3 for convenience in plotting.
 pressure_df.rename(columns={'Pressure Ch3 (bar)': 'Pressure (Bar)'}, inplace=True)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="hmG1mduzeawm" outputId="dce24daf-23e0-4bdc-bb69-79f8c98ed37c"
+```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="hmG1mduzeawm" outputId="c6b1e8fd-fc90-4eaf-d34c-ebc5a2659965"
 plt.figure(figsize=(8, 4))
 plt.plot(pressure_df['Pressure (Bar)'])
 plt.xlabel('Time')
@@ -217,7 +217,7 @@ To derive physical quantities from several diagnostics, we need to have simultan
 combined_df = process_data([temperature_df, pressure_df,heating_df], meta)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 342} id="ASNKpZWVlcFR" outputId="fc95a333-6419-400f-fb31-30656e0ab382"
+```python colab={"base_uri": "https://localhost:8080/", "height": 446} id="ASNKpZWVlcFR" outputId="64821e3c-e30a-48d2-bf9e-53d0e783cc7e"
 combined_df.head()
 ```
 
@@ -261,7 +261,7 @@ combined_df['$D_2$ molecules'] = ((combined_df['Pressure (Bar)'])*1e5 * V) / (kB
 combined_df['D/Pd Loading'] = 2*(combined_df.iloc[0]['$D_2$ molecules'] - combined_df['$D_2$ molecules']) / N_lattice
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="6d44a2b5-ddd6-4024-b281-dbd293f6c85c" outputId="6d97d7a0-e912-4b66-b176-44e9cd6efe02"
+```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="6d44a2b5-ddd6-4024-b281-dbd293f6c85c" outputId="92fecd5c-7662-4a6c-bfd0-a8a636b1c69a"
 plt.figure(figsize=(8, 4))
 plt.plot(combined_df['$D_2$ molecules'])
 plt.xlabel('Time')
@@ -271,7 +271,7 @@ plt.title(f"{meta['descriptor']} {combined_df.index[0].date()}")
 plt.show()
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="6abfec40-461f-46e7-a987-00218be5b56f" outputId="d6899f74-ed6d-440d-a3e3-d2eb57580a07"
+```python colab={"base_uri": "https://localhost:8080/", "height": 463} id="6abfec40-461f-46e7-a987-00218be5b56f" outputId="415ea24c-d14f-4a9c-bb4e-53c0dadad78e"
 plt.figure(figsize=(8, 4))
 plt.plot(combined_df['D/Pd Loading'])
 plt.xlabel('Time')
@@ -289,7 +289,7 @@ plt.show()
 Let's look at the whole data range first
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 805} id="4022b73b-c6d1-4bf8-b8f1-9529f35f23dc" outputId="60389ef6-0fc0-47eb-f8f2-f66010c360d5"
+```python colab={"base_uri": "https://localhost:8080/", "height": 805} id="4022b73b-c6d1-4bf8-b8f1-9529f35f23dc" outputId="27b67e2f-4d9d-4670-bb94-e1e43e81ff1c"
 fig, axes = plot_panels(combined_df, ['Power (W)','Inferred mean T (C)', 'Pressure (Bar)', 'D/Pd Loading'],
                         colors=['orange','blue', 'green', 'red'])
 ```
@@ -302,7 +302,7 @@ $$10^{5}P(atm) = \frac{N_{D_2}k_BT(C)}{V} + \frac{273.15N_{D_2}k_B}{V}$$
 Because the number of gas molecules $N_{D_2}$ appears in both the gradient term and offset term, the motion around phase space can look quite complicated. Let's see.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="fc34463a-1e17-45db-a3e1-daee61c25494" outputId="3c06387b-a81e-4ff1-a0e5-8b1fec840ff8"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="fc34463a-1e17-45db-a3e1-daee61c25494" outputId="6330a79c-da3d-403e-ff06-2a1ad051a000"
 # Create a scatter plot of pressure vs. temperature
 plt.figure(figsize=(6, 6))
 plt.scatter(combined_df['Inferred mean T (C)'], combined_df['Pressure (Bar)'], marker=".", color='orange', alpha=0.7)
