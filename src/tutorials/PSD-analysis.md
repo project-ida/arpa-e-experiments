@@ -468,8 +468,8 @@ def find_psp_threshold_gaussian(data, target_energy=500,
 
     if use_double:
         # Initial guess: amplitudes, means, sigmas
-        p0 = [hist[peaks[0]], psp_centres[peaks[0]], 0.05,
-              hist[peaks[1]], psp_centres[peaks[1]], 0.05]
+        p0 = [hist[peaks[0]], psp_centres[peaks[0]], 0.01,
+              hist[peaks[1]], psp_centres[peaks[1]], 0.01]
         bounds = (0, [np.inf, 1, np.inf, np.inf, 1, np.inf])
         popt, _ = curve_fit(double_gaussian, psp_centres, hist, p0=p0, bounds=bounds)
         params = [(popt[0], popt[1], popt[2]), (popt[3], popt[4], popt[5])]
@@ -482,7 +482,7 @@ def find_psp_threshold_gaussian(data, target_energy=500,
 
     if not use_double:
         # Fit single Gaussian
-        p0 = [np.max(hist), psp_centres[np.argmax(hist)], 0.05]
+        p0 = [np.max(hist), psp_centres[np.argmax(hist)], 0.01]
         bounds = (0, [np.inf, 1, np.inf])
         popt, _ = curve_fit(gaussian, psp_centres, hist, p0=p0, bounds=bounds)
         params = [tuple(popt)]
@@ -491,7 +491,7 @@ def find_psp_threshold_gaussian(data, target_energy=500,
     lower_gauss = min(params, key=lambda p: p[1])
     amp, mu, sigma = lower_gauss
 
-    # Step 6: Compute PSP threshold at 1% of peak
+    # Step 6: Compute PSP threshold at 0.1% of peak
     delta = np.sqrt(-2 * sigma**2 * np.log(drop_fraction))
     psp_threshold = mu + delta  # right-side cutoff
 
