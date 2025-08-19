@@ -11,7 +11,9 @@ jupyter:
     name: python3
 ---
 
+<!-- #region id="29329440-d034-411c-9774-8bd97d89b397" -->
 <a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/templates/PSD_analysis_starter.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/templates/PSD_analysis_starter.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
+<!-- #endregion -->
 
 <!-- #region id="neGoRBKDw1ad" -->
 
@@ -58,12 +60,12 @@ import matplotlib.colors as mcolors
 We need to authenticate in order to bring in the database credentials from Google drive so that we can pull data from the live database.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 53} id="QXkHkX4BwyVM" outputId="f581ac43-2b97-4fca-f850-1063a3a9789c"
+```python colab={"base_uri": "https://localhost:8080/", "height": 53} id="QXkHkX4BwyVM" outputId="96e9e3d3-5677-47a5-cadb-9e2d5c248419"
 # Mount Drive
 drive.mount('/content/drive')
 
 # Copy SQL credentials from Google drive
-shutil.copy("/content/drive/MyDrive/Nucleonics/.env/psql_credentials.py", "psql_credentials.py")
+shutil.copy("/content/drive/MyDrive/Nucleonics/.env/psql_credentials_readonly.py", "psql_credentials.py")
 ```
 
 ```python id="NrwixMX_xV4U"
@@ -114,7 +116,7 @@ channel_number = 0
 df_psd = get_psd_data(start_time, end_time, digitizer, channel_number)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 206} id="9YHIBfWlyufZ" outputId="10458c5e-e7cf-4094-c0a3-265213cb786e"
+```python colab={"base_uri": "https://localhost:8080/", "height": 206} id="9YHIBfWlyufZ" outputId="37a8eef3-5cc1-4d56-c6bc-0bfff15d0100"
 df_psd.head()
 ```
 
@@ -163,7 +165,7 @@ def plot_psd(data, period=None, title="PSD", psp_threshold=None, ax=None):
         plt.show()
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="7G7_o79ex6oK" outputId="b0b0f91a-6c89-40cd-9960-889cf806fe83"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="7G7_o79ex6oK" outputId="429f97cf-3e86-47b8-f846-8619f4d302a4"
 plot_psd(df_psd)
 ```
 
@@ -271,7 +273,7 @@ def find_psp_threshold_gaussian(data, target_energy=500,
 
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 487} id="s1ooJrmqzotu" outputId="64422d7c-7fdd-4fd7-bfa6-f529c7cfd371"
+```python colab={"base_uri": "https://localhost:8080/", "height": 487} id="s1ooJrmqzotu" outputId="5371601e-19c6-4c6a-ee9d-d991f5e813a8"
 psp_threshold = find_psp_threshold_gaussian(df_psd, target_energy=100, drop_fraction=0.001)
 ```
 
@@ -279,7 +281,7 @@ psp_threshold = find_psp_threshold_gaussian(df_psd, target_energy=100, drop_frac
 We can now plot this threshold back onto the PSD plot.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="2lsPPDJlz2wz" outputId="adb1d53b-04e5-47e4-f1aa-a06d81f3d1cb"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="2lsPPDJlz2wz" outputId="af4178cc-9a9a-4dba-f92f-15fa987e0b2c"
 plot_psd(df_psd, psp_threshold=psp_threshold)
 ```
 
@@ -389,7 +391,7 @@ Let's break apart the data into 10 segement and see how stable the psp threshold
 n_segments = 10
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 686} id="UnEl8i2v1FLW" outputId="99ead0ea-ac6f-4749-c5b8-b69d37dbb8bc"
+```python colab={"base_uri": "https://localhost:8080/", "height": 681} id="UnEl8i2v1FLW" outputId="8a12551f-df6a-477a-d282-6dbcc1802700"
 thresholds = psp_threshold_over_time(start_time, end_time, n_segments, digitizer, channel_number, show_psd_plots=False)
 
 ```
