@@ -88,7 +88,7 @@ import plotly.graph_objects as go
 ## Authentication
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="FhhgoaA3A0-Z" outputId="0ff16d17-bce7-4b9f-b6e3-3f70dcd71f35"
+```python colab={"base_uri": "https://localhost:8080/"} id="FhhgoaA3A0-Z" outputId="f0977ad5-f105-4c7d-8b82-5af1456d985f"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -99,7 +99,7 @@ creds, _ = default()
 gc = gspread.authorize(creds)
 
 # Copy SQL credentials from Google drive
-shutil.copy("/content/drive/MyDrive/Nucleonics/.env/psql_credentials.py", "psql_credentials.py")
+shutil.copy("/content/drive/MyDrive/Nucleonics/.env/psql_credentials_readonly.py", "psql_credentials.py")
 
 # Copy sheet ID file from Google drive
 shutil.copy("/content/drive/MyDrive/Nucleonics/.env/sheet_ids.py", "sheet_ids.py");
@@ -154,7 +154,7 @@ df_sheet = pd.DataFrame(sheet.get_all_records())
 df_sheet = fill_experiment_id(df_sheet)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="rjajUnhCHBoO" outputId="448e822e-ef2a-4106-e779-9837fe18302e"
+```python colab={"base_uri": "https://localhost:8080/"} id="rjajUnhCHBoO" outputId="ac9a0670-98b3-4919-a270-c35fe009b27c"
 # Find the row where Experiment ID and channel number match
 row = df_sheet[(df_sheet['Experiment ID'] == experiment_id) & (df_sheet['Digitizer channel number'] == channel_number)]
 
@@ -198,7 +198,7 @@ def find_root_file(event_time, channel_number):
 
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 112} id="MULgCJIACxWN" outputId="7542895c-413c-4134-9550-c81fa80f9430"
+```python colab={"base_uri": "https://localhost:8080/", "height": 112} id="MULgCJIACxWN" outputId="73a93295-c3ba-4832-942a-07606a59fb97"
 df_root = find_root_file(burst_time, channel_number)
 df_root
 ```
@@ -244,7 +244,7 @@ file_path = construct_file_path(closest_root_file)
 file_id = get_file_id(file_path)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="EgO6zwoTMlzN" outputId="2dc3bedd-f58b-434a-9edd-318961d9b6c9"
+```python colab={"base_uri": "https://localhost:8080/"} id="EgO6zwoTMlzN" outputId="893896e8-a7b6-4df0-961d-acd799da56af"
 filename = closest_root_file["file"]
 download_file_from_drive(file_id, filename)
 ```
@@ -275,7 +275,7 @@ time_abs = start_time + pd.to_timedelta((ts - ts[0])/1e12, unit='s')
 df_pulses = pd.DataFrame({'Energy': e, 'EnergyShort': es, 'Waveform': wf}, index=pd.to_datetime(time_abs))
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 206} id="k-Q12sRwptwP" outputId="3d756100-ca39-4f54-9c4b-857a07753c94"
+```python colab={"base_uri": "https://localhost:8080/", "height": 206} id="k-Q12sRwptwP" outputId="7bc2ffa4-05b6-420c-ff69-d778f58d6f2b"
 df_pulses.head()
 ```
 
@@ -312,12 +312,12 @@ Let's now do a sanity check and visualise the counts per second over the entire 
 We'll also mark the burst time:
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="_erVbBxS9Bje" outputId="e14f56db-cc1f-4d65-f4f2-425cb3bbabfc"
+```python colab={"base_uri": "https://localhost:8080/"} id="_erVbBxS9Bje" outputId="031ebba2-bba5-4c77-f9da-90067cac371f"
 burst_time = pd.to_datetime(burst_time)
 print(burst_time)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 410} id="HEQExazK5W_U" outputId="87d49baa-4c44-47eb-f32b-eda139c9f0e2"
+```python colab={"base_uri": "https://localhost:8080/", "height": 410} id="HEQExazK5W_U" outputId="3d997247-d1db-4617-81a3-04e19a55642e"
 if psp_threshold:
   cps = neutrons['PSP'].resample('1s').count()
   plt.figure(figsize=(12, 4))
@@ -337,7 +337,7 @@ else:
 Let's now zoom in on the burst. Recall that our burst is defined as a time period centred on:
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="MmL3bAZs4jTz" outputId="f5339420-6970-4f24-b060-3c101dba362c"
+```python colab={"base_uri": "https://localhost:8080/"} id="MmL3bAZs4jTz" outputId="6dd4f95f-4671-4b85-a5b3-b9001d9fb0ab"
 print(burst_time)
 ```
 
@@ -345,7 +345,7 @@ print(burst_time)
 with a duration of:
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="U6Yl3U8K4sDE" outputId="7d06a1cf-a958-4642-aa81-176b1e4192e5"
+```python colab={"base_uri": "https://localhost:8080/"} id="U6Yl3U8K4sDE" outputId="f54bf2b7-11a4-4709-c4b6-a570812dc8af"
 burst_duration = pd.to_timedelta(burst_duration, unit='s')
 print(burst_duration)
 ```
@@ -359,7 +359,7 @@ burst_start = burst_time - burst_duration/2
 burst_end = burst_time + burst_duration/2
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 410} id="3XbaW-nClas1" outputId="b7f6ad86-273d-4f1e-b600-0dc1d2741078"
+```python colab={"base_uri": "https://localhost:8080/", "height": 410} id="3XbaW-nClas1" outputId="6a6732f4-61f9-4858-a1c4-675f96983ead"
 if psp_threshold:
   plt.figure(figsize=(12, 4))
   plt.plot(cps[burst_start:burst_end], drawstyle='steps-mid', color='orange')
@@ -380,7 +380,7 @@ else:
 We can now easily extract the visualise the neutron waveforms for the burst using the `burst_start` and `burst_end` times.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 545} id="uSxZYs4blcjF" outputId="0cee63c4-1ee8-49f3-98a5-41442490462c"
+```python colab={"base_uri": "https://localhost:8080/", "height": 545} id="uSxZYs4blcjF" outputId="b47e2593-c42a-468a-d2f7-874a234c3a39"
 if psp_threshold:
   df_burst = neutrons[burst_start:burst_end]
   plt.figure(figsize=(10, 6))
