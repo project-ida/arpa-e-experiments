@@ -86,12 +86,12 @@ We need to do a few authentication steps:
 -  Authenticate Colab to pull the nuclear particle master sheet using the Drive API.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="ab0d5f6a-bdc4-4e80-b4e7-a95bfbfff76d"
+```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="1f927aec-9837-4b43-e973-ee072411ca2c"
 # Mount Drive
 drive.mount('/content/drive')
 
 # Copy SQL credentials from Google drive
-shutil.copy("/content/drive/MyDrive/Nucleonics/.env/psql_credentials.py", "psql_credentials.py")
+shutil.copy("/content/drive/MyDrive/Nucleonics/.env/psql_credentials_readonly.py", "psql_credentials.py")
 
 # Copy sheet ID file from Google drive
 shutil.copy("/content/drive/MyDrive/Nucleonics/.env/sheet_ids.py", "sheet_ids.py");
@@ -155,7 +155,7 @@ df = pd.DataFrame(sheet.get_all_records())
 df = fill_experiment_id(df)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="d0f89463-2f76-474c-9c13-404bbb2f4aab"
+```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="038fc2a9-14d7-4fb9-fb60-815330cf7b20"
 # Find the rows where Experiment ID matches
 rows = df[df['Experiment ID'] == experiment_id]
 
@@ -254,7 +254,7 @@ def data_exists(label):
 If we do not have an official calibration period, we'll use the next period (e.g. Background 1 or Experiment) for calculting the PSP threshold.
 <!-- #endregion -->
 
-```python id="_zIoMpMYTYeO" outputId="a0cada79-42e2-4a93-c208-de622407edbf" colab={"base_uri": "https://localhost:8080/"}
+```python id="_zIoMpMYTYeO" outputId="5e15b465-4024-4bad-db6e-99eb4fd594fc" colab={"base_uri": "https://localhost:8080/"}
 if not data_exists("Calibration"):
   print("Calibration data does not exist, looking for other data to use in place of an official calibration period")
   if data_exists("Background 1"):
@@ -336,7 +336,7 @@ def plot_psd(data, period=None, title="PSD", psp_threshold=None, ax=None):
 We begin with the calibration period for which we have the largest number of events due to the presence of a source of radiation. This PSD plot is what we'll use to extract a simple psp threshold value that can be used to quickly discriminate between gammas (lower psp) and neutrons (higher psp).  
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="9d57a4db-34c7-4726-ffd7-7c271e02f8de"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="081f450e-7219-4b6d-ecf1-d2074e0d0fb0"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration")
 else:
