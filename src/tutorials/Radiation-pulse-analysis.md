@@ -204,26 +204,39 @@ We can now get all the event data for the different periods in the experiement.
 
 ```python id="kOyHsrTcs-IY"
 def get_all_event_data(times, psp=">0", energy=">0"):
-  event_data = {}
-  event_periods = {}
-  columns = times.columns  # Include all columns, including 'Setup'
+    # Assume a single-row DataFrame like your example
+    row = 0
+    cols = list(times.columns)
 
-  for i in range(len(columns) - 1):  # Stop before the last column
-      start_time = times.iloc[0, i]
-      if pd.notna(start_time):
-          # Find the next non-empty time
-          end_time = None
-          for j in range(i + 1, len(columns)):
-              if pd.notna(times.iloc[0, j]):
-                  end_time = times.iloc[0, j]
-                  break
-          # Only proceed if a valid end_time was found
-          if end_time is not None:
-              data = get_event_data(start_time, end_time, psp, energy)
-              event_data[columns[i]] = data
-              event_periods[columns[i]] = end_time - start_time
+    # "Now in Boston" but drop tz so it matches your naive timestamps
+    now_boston_naive = pd.Timestamp.now(tz="America/New_York").tz_localize(None)
 
-  return event_data, event_periods
+    event_data = {}
+    event_periods = {}
+
+    for i, col in enumerate(cols):
+        start = times.iat[row, i]
+        if pd.isna(start):
+            continue  # skip empty starts
+
+        # find the next non-NaT time to the right
+        end = None
+        for j in range(i + 1, len(cols)):
+            cand = times.iat[row, j]
+            if pd.notna(cand):
+                end = cand
+                break
+
+        # if no end found, use "now in Boston" (naive)
+        if end is None:
+            end = now_boston_naive
+
+        # collect
+        event_data[col] = get_event_data(start, end, psp, energy)
+        event_periods[col] = end - start
+
+    return event_data, event_periods
+
 ```
 
 <!-- #region id="GoTVQZcE-H1m" -->
