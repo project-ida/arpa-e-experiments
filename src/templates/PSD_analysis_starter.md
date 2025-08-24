@@ -60,7 +60,7 @@ import matplotlib.colors as mcolors
 We need to authenticate in order to bring in the database credentials from Google drive so that we can pull data from the live database.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 53} id="QXkHkX4BwyVM" outputId="96e9e3d3-5677-47a5-cadb-9e2d5c248419"
+```python colab={"base_uri": "https://localhost:8080/", "height": 53} id="QXkHkX4BwyVM" outputId="744395ae-0df5-4673-925c-88f40291699a"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -116,7 +116,7 @@ channel_number = 0
 df_psd = get_psd_data(start_time, end_time, digitizer, channel_number)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 206} id="9YHIBfWlyufZ" outputId="37a8eef3-5cc1-4d56-c6bc-0bfff15d0100"
+```python colab={"base_uri": "https://localhost:8080/", "height": 206} id="9YHIBfWlyufZ" outputId="aba6873f-5aca-4116-b3db-c0ba7e58f209"
 df_psd.head()
 ```
 
@@ -165,7 +165,7 @@ def plot_psd(data, period=None, title="PSD", psp_threshold=None, ax=None):
         plt.show()
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="7G7_o79ex6oK" outputId="429f97cf-3e86-47b8-f846-8619f4d302a4"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="7G7_o79ex6oK" outputId="1f9d9ae4-c5a0-472e-cf81-e5e7e3f668e9"
 plot_psd(df_psd)
 ```
 
@@ -176,7 +176,7 @@ The most accurate way to discriminate between gammas and neutrons is to create a
 
 Below is the Guassaian drop method which:
 - Fits the signals with Guassians
-- Finds the psp value at which the gammas drop to some fraction of their peak, e.g. 0.1%
+- Finds the psp value at which the gammas drop to a fraction of their peak at a certain number of standard deviations away from the mean.
 <!-- #endregion -->
 
 ```python id="U9lN13g9zP5E"
@@ -191,11 +191,11 @@ def double_gaussian(x, amp1, mu1, sigma1, amp2, mu2, sigma2):
 def find_psp_threshold_gaussian(data, target_energy=500,
                                      energy_range=(0, 4000), psp_range=(0, 1),
                                      energy_bins=512, psp_bins=128,
-                                     plot=True, mean_tol=0.02, amp_ratio_tol=0.1,
-                                     drop_fraction=0.001):
+                                     plot=True, mean_tol=0.05, amp_ratio_tol=0.1,
+                                     num_sigma=4):
     """
     Fits Gaussian(s) to PSP distribution at a given energy and finds PSP threshold
-    where the lower Gaussian drops to 0.1% of its peak.
+    where the lower psp Gaussian drops to level give by num_sigma*sigma
     Falls back to single Gaussian if fitted Gaussians are too similar.
     """
 
@@ -248,9 +248,8 @@ def find_psp_threshold_gaussian(data, target_energy=500,
     lower_gauss = min(params, key=lambda p: p[1])
     amp, mu, sigma = lower_gauss
 
-    # Step 6: Compute PSP threshold at 0.1% of peak
-    delta = np.sqrt(-2 * sigma**2 * np.log(drop_fraction))
-    psp_threshold = mu + delta  # right-side cutoff
+    # Step 6: Compute PSP threshold at num_sigma*sigma
+    psp_threshold = mu + num_sigma*sigma  # right-side cutoff
 
     # Step 7: Plot
     if plot:
@@ -273,15 +272,15 @@ def find_psp_threshold_gaussian(data, target_energy=500,
 
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 487} id="s1ooJrmqzotu" outputId="5371601e-19c6-4c6a-ee9d-d991f5e813a8"
-psp_threshold = find_psp_threshold_gaussian(df_psd, target_energy=100, drop_fraction=0.001)
+```python colab={"base_uri": "https://localhost:8080/", "height": 487} id="s1ooJrmqzotu" outputId="6ecf30ac-8998-4c43-b7bc-85b7155c6403"
+psp_threshold = find_psp_threshold_gaussian(df_psd, target_energy=100, num_sigma=4)
 ```
 
 <!-- #region id="DP5I1BFFz9ch" -->
 We can now plot this threshold back onto the PSD plot.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="2lsPPDJlz2wz" outputId="af4178cc-9a9a-4dba-f92f-15fa987e0b2c"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="2lsPPDJlz2wz" outputId="7ffea60d-5ce9-498b-e78a-3ce81bb93402"
 plot_psd(df_psd, psp_threshold=psp_threshold)
 ```
 
@@ -293,7 +292,7 @@ To detect any detector drift we can perform the same analaysis as above but spit
 
 ```python id="0OUmZHhy0F4n"
 def psp_threshold_over_time(start_time, end_time, n_segments, digitizer, channel_number,
-                            target_energy=100, drop_fraction=0.001,
+                            target_energy=100, num_sigma=4,
                             show_psd_plots=True):
     """
     Calculate PSP thresholds over time between two given datetimes,
@@ -313,8 +312,8 @@ def psp_threshold_over_time(start_time, end_time, n_segments, digitizer, channel
         Number of time segments to divide the range into.
     target_energy : float
         Energy to use for PSP threshold calculation (default 100 for Gaussian method).
-    drop_fraction : float
-        Fraction of gamma peak height to define the PSP threshold.
+    num_sigma : float
+        Defined psp threshold at the num_sigma*sigma level (default 4 for Gaussian method).
     show_psd_plots : bool
         Whether to show PSD plots for each segment.
 
@@ -351,7 +350,7 @@ def psp_threshold_over_time(start_time, end_time, n_segments, digitizer, channel
             th = find_psp_threshold_gaussian(
                 seg_data,
                 target_energy=target_energy,
-                drop_fraction=drop_fraction,
+                num_sigma=num_sigma,
                 plot=False
             )
             thresholds.append(th)
@@ -391,7 +390,7 @@ Let's break apart the data into 10 segement and see how stable the psp threshold
 n_segments = 10
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 681} id="UnEl8i2v1FLW" outputId="8a12551f-df6a-477a-d282-6dbcc1802700"
+```python colab={"base_uri": "https://localhost:8080/", "height": 686} id="UnEl8i2v1FLW" outputId="d06cb89a-b181-42a0-9a88-593c276579d1"
 thresholds = psp_threshold_over_time(start_time, end_time, n_segments, digitizer, channel_number, show_psd_plots=False)
 
 ```
