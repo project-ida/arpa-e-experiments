@@ -21,7 +21,7 @@ jupyter:
 <!-- #endregion -->
 
 <!-- #region id="487e78f6-0666-4d0c-ade0-30403aa31975" -->
-A xy mg Palladium foil is gas loaded with deuterium, in a 0.19L chamber.
+Palladium foil is gas loaded with deuterium, in a 0.19L chamber.
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="6e5640a1-12da-4157-a5e8-5f73f882e6a7" outputId="bf75fb4a-26f6-48fe-b313-a61ae63a8488"
