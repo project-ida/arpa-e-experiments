@@ -25,11 +25,41 @@ A 136 mg Palladium foil is gas loaded with deuterium, in a 0.59L chamber.
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="6e5640a1-12da-4157-a5e8-5f73f882e6a7" outputId="aeceab32-afae-4d4d-9a13-6d6ce3775c05"
-# RUN THIS IF YOU ARE USING GOOGLE COLAB
+# RUN THIS TO MAKE SURE WE CAN IMPORT LIBS WHETHER WE ARE IN COLAB OR LOCAL
+
 import sys
 import os
-!git clone https://github.com/project-ida/arpa-e-experiments.git
-sys.path.insert(0,'/content/arpa-e-experiments')
+
+# Check if running in Google Colab
+try:
+    import google.colab
+    is_colab = True
+except ImportError:
+    is_colab = False
+
+if is_colab:
+    !git clone https://github.com/project-ida/arpa-e-experiments.git
+    sys.path.insert(0, '/content/arpa-e-experiments')
+else:
+    # Running locally
+    # Get the parent directory (two levels up from the current directory)
+    project_root = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
+    # Add the parent directory to sys.path
+    sys.path.insert(0, project_root)
+```
+
+```python
+# RUN THIS IF YOU ARE LOCAL. 
+# It makes sure we can import helpers from libs which is two levels up
+
+import sys
+import os
+
+# Get the parent directory (two levels up from the current directory)
+project_root = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
+
+# Add the parent directory to sys.path
+sys.path.insert(0, project_root)
 ```
 
 ```python id="a9b070cf-0f22-4946-a040-1860350240d4"
