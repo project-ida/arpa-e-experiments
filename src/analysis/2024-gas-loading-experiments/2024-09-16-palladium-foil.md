@@ -30,7 +30,6 @@ import sys
 import os
 !git clone https://github.com/project-ida/arpa-e-experiments.git
 sys.path.insert(0,'/content/arpa-e-experiments')
-os.chdir('/content/arpa-e-experiments')
 ```
 
 ```python id="a9b070cf-0f22-4946-a040-1860350240d4" outputId="c562377b-1c11-47ae-f6bb-8edde980edfe"
