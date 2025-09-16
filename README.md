@@ -1,2 +1,2 @@
 # arpa-e-experiments
-Data and analysis from ARPA-E LENR experiments at MIT
+Analysis of ARPA-E LENR experiments at MIT
