@@ -48,20 +48,6 @@ else:
     sys.path.insert(0, project_root)
 ```
 
-```python
-# RUN THIS IF YOU ARE LOCAL. 
-# It makes sure we can import helpers from libs which is two levels up
-
-import sys
-import os
-
-# Get the parent directory (two levels up from the current directory)
-project_root = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
-
-# Add the parent directory to sys.path
-sys.path.insert(0, project_root)
-```
-
 ```python id="a9b070cf-0f22-4946-a040-1860350240d4" outputId="c562377b-1c11-47ae-f6bb-8edde980edfe"
 # Libraries and helper functions
 
