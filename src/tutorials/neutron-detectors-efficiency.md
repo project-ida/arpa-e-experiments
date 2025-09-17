@@ -19,15 +19,19 @@ jupyter:
 <!-- #region id="5yxUArF9Bi2D" -->
 # Neutron detectors efficiency
 
-This tutorial involves analyzing the effects of a steel chamber on neutron detection by placing a neutron source in a graphite tunnel both inside and outside the chamber. 
+This tutorial involves analyzing the effects of a steel chamber on neutron detection by placing a neutron source in a graphite tunnel both inside and outside the chamber.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="qLRrQRiKIdjK" outputId="a1dffd91-5363-49e0-daa8-b961f4d9355d"
+```python colab={"base_uri": "https://localhost:8080/"} id="qLRrQRiKIdjK" outputId="3ce72e95-2186-44fd-d6eb-cf9a90783eec"
 # Makes Libs accessible and runs notebook from same location regardless of whether colab or local
 !pip install colocal --upgrade -q
 import colocal
 root, branch, cwd = colocal.setup()
 ```
+
+<!-- #region id="w2ESaSzdOOgU" -->
+
+<!-- #endregion -->
 
 ```python id="cbb61a57"
 # Libraries and helper functions
@@ -56,18 +60,22 @@ from libs.helpers import *
 The neutron source is placed in the graphite tunnel.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 417} id="47621fd1" outputId="4494dfb0-e93a-41ac-faf8-c3c6bc0f0b2a"
-Image(filename="media/neutron-detector-01-2024-12-13.png", width=500, height=400)
-```
+<!-- #region id="aB1YXbf-MkCB" -->
+<img src="https://drive.google.com/uc?id=1DKYgSHlc5DhPCJWa6kxlR79Mp6qzZgKx" width="500">
+
+<!-- #endregion -->
 
 <!-- #region id="13003df3" -->
 ## Setup 2: Neutron source **inside** the steel chamber in a graphite tunnel
 In this setup, the neutron source is placed in the steel chamber, within the graphite tunnel.This setup aims to analyze how the steel chamber affects neutron detection.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 417} id="ca1ca48a" outputId="54bb86e3-1b22-4fe8-e7c4-a0e191e95604"
-Image(filename="media/neutron-detector-02-2024-12-13.png", width=500, height=400)
-```
+<!-- #region id="xlxvq-5OOCLP" -->
+<img src="https://drive.google.com/uc?export=download&id=1-Otyr-5PNUflYPbPSqNvbSKBgJFyDPpo" width="500">
+
+
+
+<!-- #endregion -->
 
 <!-- #region id="WV269CAaIC3w" -->
 # Reading the Raw Data
