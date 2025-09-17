@@ -27,10 +27,10 @@ jupyter:
 
 The analysis notebook relies on the ["Nuclear particle master"](https://docs.google.com/spreadsheets/d/1zgp8MplLXNAI1s7NAs7tCCVnv7N05AR4Q7x4hnE_PiA/edit?gid=0#gid=0) sheet to provide timestamps that allow us to separate the radiation data from experiments into several regions. In ideal experiments, we'll have:
 - Set-up
-- Calibration (30 min with source)
-- Background 1 (12 hours)
+- Calibration (with source)
+- Background 1
 - Experiment
-- Background 2 (12 hours)
+- Background 2
 
 A PSD plot will be created for the calibration period in order to extract a `psp_threshold` that allows us to discriminate between gammas and neutrons. This threshold is then saved back to the master sheet.
 
@@ -86,7 +86,7 @@ We need to do a few authentication steps:
 -  Authenticate Colab to pull the nuclear particle master sheet using the Drive API.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="9b3c5cab-c423-4e38-9031-fabb5602feb2"
+```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="b5c334e4-a72d-42ab-e71c-ad058b9ed11e"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -155,7 +155,7 @@ df = pd.DataFrame(sheet.get_all_records())
 df = fill_experiment_id(df)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="d9be0efb-27c6-4e6f-f20f-aaf42e435aef"
+```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="cd36d739-27c7-4801-80ca-ec31efc1b86c"
 # Find the rows where Experiment ID matches
 rows = df[df['Experiment ID'] == experiment_id]
 
@@ -254,7 +254,7 @@ def data_exists(label):
 If we do not have an official calibration period, we'll use the next period (e.g. Background 1 or Experiment) for calculting the PSP threshold.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="_zIoMpMYTYeO" outputId="989c3aac-e2a0-43f1-f2f9-0bf415510ef2"
+```python colab={"base_uri": "https://localhost:8080/"} id="_zIoMpMYTYeO" outputId="a41f644f-0121-48bc-aeb0-1b2f60951797"
 if not data_exists("Calibration"):
   print("Calibration data does not exist, looking for other data to use in place of an official calibration period")
   if data_exists("Background 1"):
@@ -336,7 +336,7 @@ def plot_psd(data, period=None, title="PSD", psp_threshold=None, ax=None):
 We begin with the calibration period for which we have the largest number of events due to the presence of a source of radiation. This PSD plot is what we'll use to extract a simple psp threshold value that can be used to quickly discriminate between gammas (lower psp) and neutrons (higher psp).  
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="GDJzrD8zmFV-" outputId="59fc6658-d9a5-4173-f39c-c2ee581df6da"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="0f4ec50b-8074-44bf-8fca-cd321cca5805"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration")
 else:
@@ -349,82 +349,8 @@ else:
 
 The most accurate way to discriminate between gammas and neutrons is to create a fiducial lines. For the purpose of eyeballing neutron/gamma counts during a live experiment, a simple threshold psp value can be a good enough.
 
-In this notebook, we'll trial two methods
-- midpoint method
-- Guassaian drop method
-
-For the midpoint method
-- Choose an energy value
-- Determine the psp locations of the gamma and neutron peaks
-- Take the half way point between the two values.
-
-For the Guassaian drop method
-- Fit the signals with Guassians
-- Find the psp value at which the gammas drop to some fraction of their peak, e.g. 0.1%
-
-We'll attempt the midpoint first and then if that fails, then we'll fallback to the Guassian drop method.
+In this notebook, we'll fit the neutron and gamma signals with Guassians and find the psp value at which the gammas drop to a level given by some number of standard deviations away from the max.
 <!-- #endregion -->
-
-```python id="awexRLhIuuFq"
-def find_psp_midpoint(data, target_energy=500, prominence=10, energy_range=(0, 4000), psp_range=(0, 1), energy_bins=512, psp_bins=128):
-    # Step 1: Map target_energy to the closest energy_bin
-    bin_width = (energy_range[1] - energy_range[0]) / energy_bins  # 4000 / 512 = 7.8125
-    closest_energy_bin = int(round(target_energy / bin_width))
-    closest_energy_bin = max(1, min(closest_energy_bin, energy_bins))  # Clamp to [1, 512]
-    print(f"Closest energy bin to {target_energy}: {closest_energy_bin}")
-
-    # Step 2: Filter data for the closest energy_bin
-    filtered_data = data[data['energy_bin'] == closest_energy_bin]
-    if filtered_data.empty:
-        raise ValueError(f"No data found for energy bin {closest_energy_bin} (energy ~{target_energy})")
-
-    # Step 3: Prepare PSP distribution for peak detection
-    psp_bin_width = (psp_range[1] - psp_range[0]) / psp_bins  # 1 / 128 = 0.0078125
-
-    # Create a histogram-like array for the full PSP range
-    hist = np.zeros(psp_bins)
-    for idx, row in filtered_data.iterrows():
-        psp_bin = row['psp_bin'] - 1  # Convert to 0-based index (since psp_bin is 1 to 128)
-        count = row['count']
-        if 0 <= psp_bin < psp_bins:
-            hist[psp_bin] += count
-
-    # Find peaks using scipy.signal.find_peaks
-    peaks_indices, _ = find_peaks(hist, height=0, prominence=prominence)  # Adjust prominence as needed
-    if len(peaks_indices) < 2:
-        raise ValueError("Not enough significant peaks detected; adjust prominence or check data.")
-
-    # Get the two highest peaks based on prominence
-    peak_indices_sorted = sorted(peaks_indices, key=lambda x: hist[x], reverse=True)[:2]
-    if len(peak_indices_sorted) < 2:
-        raise ValueError("Not enough prominent peaks to determine midpoint.")
-
-    # Convert peak indices to PSP values
-    peak1_idx, peak2_idx = peak_indices_sorted[:2]
-    peak1_value = (peak1_idx + 0.5) * psp_bin_width  # Bin center
-    peak2_value = (peak2_idx + 0.5) * psp_bin_width  # Bin center
-    peak1_value, peak2_value = sorted([peak1_value, peak2_value])  # Ensure peak1 < peak2
-    print(f"Peak PSP values: {peak1_value:.6f}, {peak2_value:.6f}")
-
-    # Step 4: Calculate midpoint in PSP units
-    midpoint = (peak1_value + peak2_value) / 2
-    print(f"Midpoint between PSP peaks: {midpoint:.6f}")
-
-    # Step 5: Plot PSP distribution with peaks and midpoint
-    plt.figure(figsize=(8, 5))
-    psp_centers = np.arange(psp_bins) * psp_bin_width + psp_bin_width / 2  # Bin centers
-    plt.bar(psp_centers, hist, width=psp_bin_width, alpha=0.7)
-    plt.axvline(peak1_value, color='r', linestyle='--', label=f'Peak 1: {peak1_value:.3f}')
-    plt.axvline(peak2_value, color='g', linestyle='--', label=f'Peak 2: {peak2_value:.3f}')
-    plt.axvline(midpoint, color='b', label=f'Midpoint: {midpoint:.3f}')
-    plt.xlabel('PSP')
-    plt.ylabel('Count')
-    plt.title(f'PSP Distribution at Energy ~{target_energy}')
-    plt.legend()
-    plt.show()
-
-    return midpoint
-```
 
 ```python id="cOUD_wT1i3ac"
 # --- Gaussian definitions ---
@@ -438,11 +364,11 @@ def double_gaussian(x, amp1, mu1, sigma1, amp2, mu2, sigma2):
 def find_psp_threshold_gaussian(data, target_energy=500,
                                      energy_range=(0, 4000), psp_range=(0, 1),
                                      energy_bins=512, psp_bins=128,
-                                     plot=True, mean_tol=0.02, amp_ratio_tol=0.1,
-                                     drop_fraction=0.001):
+                                     plot=True, mean_tol=0.05, amp_ratio_tol=0.1,
+                                     num_sigma=3):
     """
     Fits Gaussian(s) to PSP distribution at a given energy and finds PSP threshold
-    where the lower Gaussian drops to 0.1% of its peak.
+    where the lower psp Gaussian drops to level give by num_sigma*sigma
     Falls back to single Gaussian if fitted Gaussians are too similar.
     """
 
@@ -495,9 +421,8 @@ def find_psp_threshold_gaussian(data, target_energy=500,
     lower_gauss = min(params, key=lambda p: p[1])
     amp, mu, sigma = lower_gauss
 
-    # Step 6: Compute PSP threshold at 0.1% of peak
-    delta = np.sqrt(-2 * sigma**2 * np.log(drop_fraction))
-    psp_threshold = mu + delta  # right-side cutoff
+    # Step 6: Compute PSP threshold at num_sigma*sigma
+    psp_threshold = mu + num_sigma*sigma  # right-side cutoff
 
     # Step 7: Plot
     if plot:
@@ -521,19 +446,12 @@ def find_psp_threshold_gaussian(data, target_energy=500,
 ```
 
 <!-- #region id="t3i4sq1N5oUB" -->
-For this tutorial, we'll experiment with different energies for determining a rough psp thresold value:
-- Energy = 500 for the midpoint method
-- Energy = 100 for the Gaussian drop method
+For this tutorial, we'll use `target_energy = 100` for fitting the Guassians. Keep in mind this number might need adjusting depending on what the PSD plot looks like.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="COo7DxuTi7x1" outputId="a38cfd77-fb2d-43d2-a979-a2eeb1031f33"
-
+```python colab={"base_uri": "https://localhost:8080/", "height": 487} id="COo7DxuTi7x1" outputId="7e2d2a82-9876-4d6c-a785-4c765a7bee41"
 if data_exists("Calibration"):
-  try:
-    psp_threshold = find_psp_midpoint(psd_data["Calibration"], target_energy = 500, prominence=10)
-  except:
-    print("find_psp_midpoint failed, attemping find_psp_threshold_gaussian")
-    psp_threshold = find_psp_threshold_gaussian(psd_data["Calibration"], target_energy=100, drop_fraction=0.001)
+  psp_threshold = find_psp_threshold_gaussian(psd_data["Calibration"], target_energy=100, num_sigma=4)
 else:
   psp_threshold = None
   print("‼️ Calibration data does not exist, cannot perform psp thresold analysis ‼️")
@@ -544,7 +462,7 @@ else:
 Now that we have our threshold, we can remake the PSD plots to see if there is anything obviously wrong with the analysis.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="GDItxFMPu7xY" outputId="ac3fbb3e-2950-4f88-a9ee-fd59ca9437b3"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="e2a61b1e-9ef2-41bc-c76a-e0d102fc631e"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration", psp_threshold)
 else:
@@ -555,7 +473,7 @@ else:
 It can also be instructive to create the PSD plots for the background periods - we would not expect significant changes between the two. Here, we just eyeball them, but performing a statistical analysis will be the next step.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="lqeyLIBawd9O" outputId="6b7d25b7-b47a-4cc5-9e3b-3214fe58f858"
+```python colab={"base_uri": "https://localhost:8080/", "height": 523} id="lqeyLIBawd9O" outputId="99c65716-c8ea-4b40-e53e-3a9e118aea64"
 if data_exists("Background 1") and data_exists("Background 2"):
   fig, axes = plt.subplots(1, 2, figsize=(14, 5), squeeze=False)
   axes = axes.flatten()  # Flatten for easy indexing
@@ -575,9 +493,9 @@ else:
 And of course we can look at the experimental period.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="0mYMvYpTsdf1" outputId="e391c3ee-1887-427e-e9a1-b88493935ce8"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="0mYMvYpTsdf1" outputId="1965876d-0ca6-4b76-e584-8c8f0700b50a"
 if data_exists("Experiment"):
-  plot_psd(psd_data["Experiment"], psd_periods["Experiment"], psp_threshold=psp_threshold)
+  plot_psd(psd_data["Experiment"], psd_periods["Experiment"], 'Experiment', psp_threshold=psp_threshold)
 else:
   print("‼️ Exeperiment data does not exist, cannot create PSD plot ‼️")
 ```
@@ -609,7 +527,7 @@ To detect any detector drift we can perform the same analaysis as above but spit
 <!-- #endregion -->
 
 ```python id="mMDHiFAgoZtR"
-def psp_threshold_over_time_period(period_label, n_segments, target_energy=100, drop_fraction=0.001, show_psd_plots=True):
+def psp_threshold_over_time_period(period_label, n_segments, target_energy=100, num_sigma=4, show_psd_plots=True):
     """
     Calculate PSP thresholds over time for a given experimental period,
     by splitting the period into n_segments and re-querying PSD data for each.
@@ -622,8 +540,8 @@ def psp_threshold_over_time_period(period_label, n_segments, target_energy=100, 
         Number of time segments to divide the period into.
     target_energy : float
         Energy to use for PSP threshold calculation (default 100 for Gaussian method).
-    drop_fraction : float
-        Fraction of gamma peak height to define the PSP threshold.
+    num_sigma : float
+        Defined psp threshold at the num_sigma*sigma level (default 4 for Gaussian method).
     show_psd_plots : bool
         Whether to show PSD plots for each segment.
 
@@ -667,7 +585,7 @@ def psp_threshold_over_time_period(period_label, n_segments, target_energy=100, 
             th = find_psp_threshold_gaussian(
                 seg_data,
                 target_energy=target_energy,
-                drop_fraction=drop_fraction,
+                num_sigma=num_sigma,
                 plot=False
             )
             thresholds.append(th)
@@ -697,10 +615,18 @@ def psp_threshold_over_time_period(period_label, n_segments, target_energy=100, 
 
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 1000} id="2zHO4uaEpvJw" outputId="9ade07b8-ce51-4dfa-ccb2-330848aa43ce"
-psp_thresholds = psp_threshold_over_time_period("Background 2", 10, show_psd_plots=True)
+<!-- #region id="Xn33DVdJznsg" -->
+Let's look at the PSD once per day by taking the 14 days of experimental data and performing 14 PSD analyses.
+<!-- #endregion -->
+
+```python id="PmYNOyp_zHQh" outputId="833e64b5-2af5-47ca-865b-47a178f3a4dc" colab={"base_uri": "https://localhost:8080/", "height": 757}
+psp_thresholds = psp_threshold_over_time_period("Experiment", 14, show_psd_plots=False)
 ```
 
-```python id="9gAfXLgrpwUw"
-
+```python id="9gAfXLgrpwUw" outputId="81e38f5f-fdb8-4447-bbe8-73d79fa1840c" colab={"base_uri": "https://localhost:8080/"}
+(np.max(psp_thresholds) - np.min(psp_thresholds))/np.min(psp_thresholds)*100
 ```
+
+<!-- #region id="n2Y6BbRy0xov" -->
+We can see that the PSP threshold changes by 0.6% across the 14 days.
+<!-- #endregion -->
