@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.16.6
+      jupytext_version: 1.17.3
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -25,29 +25,10 @@ The data is exported from [Oxford Instruments Aztec software](https://nano.oxins
 The data conversion is performed using `sem-eds-convert-h5iona-files.py` which can be found in the [libs](../libs/) folder of this repository.
 
 ```python
-# RUN THIS IF YOU ARE USING GOOGLE COLAB
-# It pulls the arpa-e repo into colab and makes sure we can import heplers from it
-# It also changes the working directory to the arpa-e folder so we can load media easier
-
-import sys
-import os
-!git clone https://github.com/project-ida/arpa-e-experiments.git
-sys.path.insert(0,'/content/arpa-e-experiments')
-os.chdir('/content/arpa-e-experiments')
-```
-
-```python
-# RUN THIS IF YOU ARE LOCAL. 
-# It makes sure we can import helpers from libs which is one level up
-
-import sys
-import os
-
-# Get the parent directory (one level up from the current directory)
-project_root = os.path.abspath(os.path.join(os.getcwd(), '..'))
-
-# Add the parent directory to sys.path
-sys.path.insert(0, project_root)
+# Makes Libs accessible and runs notebook from same location regardless of whether colab or local
+!pip install colocal --upgrade -q
+import colocal
+root, branch, cwd = colocal.setup()
 ```
 
 ```python

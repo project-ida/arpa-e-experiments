@@ -23,12 +23,10 @@ This tutorial involves analyzing the effects of a steel chamber on neutron detec
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="qLRrQRiKIdjK" outputId="a1dffd91-5363-49e0-daa8-b961f4d9355d"
-# RUN THIS IF YOU ARE USING GOOGLE COLAB
-import sys
-import os
-!git clone https://github.com/project-ida/arpa-e-experiments.git
-sys.path.insert(0,'/content/arpa-e-experiments')
-os.chdir('/content/arpa-e-experiments')
+# Makes Libs accessible and runs notebook from same location regardless of whether colab or local
+!pip install colocal --upgrade -q
+import colocal
+root, branch, cwd = colocal.setup()
 ```
 
 ```python id="cbb61a57"

@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.17.2
+      jupytext_version: 1.17.3
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -84,26 +84,10 @@ For more detail on this data-collection, please refer to the "*Eljen-Background-
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="2KviDUsiprMt" outputId="41ae36ad-1d58-4754-9f4a-10e1034440f2"
-# RUN THIS IF YOU ARE USING GOOGLE COLAB
-import sys
-import os
-!git clone https://github.com/project-ida/arpa-e-experiments.git
-sys.path.insert(0,'/content/arpa-e-experiments')
-os.chdir('/content/arpa-e-experiments')
-```
-
-```python id="20ae1e15"
-# RUN THIS IF YOU ARE LOCAL.
-# It makes sure we can import helpers from libs which is one level up
-
-import sys
-import os
-
-# Get the parent directory (one level up from the current directory)
-project_root = os.path.abspath(os.path.join(os.getcwd(), '..'))
-
-# Add the parent directory to sys.path
-sys.path.insert(0, project_root)
+# Makes Libs accessible and runs notebook from same location regardless of whether colab or local
+!pip install colocal --upgrade -q
+import colocal
+root, branch, cwd = colocal.setup()
 ```
 
 ```python id="cd0188ee"

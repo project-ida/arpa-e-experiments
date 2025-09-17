@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.17.1
+      jupytext_version: 1.17.3
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -33,12 +33,10 @@ Description of the experiment
 <!-- #endregion -->
 
 ```python id="6e5640a1-12da-4157-a5e8-5f73f882e6a7"
-# RUN THIS IF YOU ARE USING GOOGLE COLAB
-import sys
-import os
-!git clone https://github.com/project-ida/arpa-e-experiments.git
-sys.path.insert(0,'/content/arpa-e-experiments')
-os.chdir('/content/arpa-e-experiments')
+# Makes Libs accessible and runs notebook from same location regardless of whether colab or local
+!pip install colocal --upgrade -q
+import colocal
+root, branch, cwd = colocal.setup()
 ```
 
 ```python id="a9b070cf-0f22-4946-a040-1860350240d4"
