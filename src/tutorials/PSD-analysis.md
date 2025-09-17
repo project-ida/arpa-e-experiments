@@ -621,6 +621,10 @@ def psp_threshold_over_time_period(period_label, n_segments, target_energy=100, 
 psp_thresholds = psp_threshold_over_time_period("Background 2", 10, show_psd_plots=False)
 ```
 
-```python id="9gAfXLgrpwUw"
+<!-- #region id="0NQ7YI952tk0" -->
+We can now calcuate how much that the PSP threshold changes across time.
+<!-- #endregion -->
 
+```python id="9gAfXLgrpwUw"
+(np.max(psp_thresholds) - np.min(psp_thresholds))/np.min(psp_thresholds)*100
 ```
