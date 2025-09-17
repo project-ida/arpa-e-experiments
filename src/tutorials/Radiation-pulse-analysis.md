@@ -154,23 +154,26 @@ df = fill_experiment_id(df)
 rows = df[df['Experiment ID'] == experiment_id]
 
 if len(rows) == 0:
-  raise ValueError(f"No matser sheet entry for 'Experiment ID' = {experiment_id}")
-
-# Exract digitizer for SQL table identification
-digitizer = rows.iloc[0]["Digitizer"]
-
-# Extract times
-times = rows.iloc[[0]][['Setup', 'Calibration', 'Background 1', 'Experiment', 'Background 2', 'End']]
-times = times.apply(pd.to_datetime)
+    raise ValueError(f"No master sheet entry for 'Experiment ID' = {experiment_id}")
 
 # Extract the row corresponding to the specified channel number
 row = rows[rows["Digitizer channel number"] == channel_number]
 
 if len(row) == 0:
-  raise ValueError(f"No matser sheet entry for 'Experiment ID' = {experiment_id}, 'Digitizer channel number' = {channel_number}")
+    raise ValueError(f"No master sheet entry for 'Experiment ID' = {experiment_id}, 'Digitizer channel number' = {channel_number}")
 
-# Extract the psp neutron/gamma discriminator
-psp = row["psp threshold"].iloc[0]
+# Extract digitizer for SQL table identification
+digitizer = row.iloc[0]["Digitizer"]
+
+# Try to extract times from the channel-specific row
+times = row[['Setup', 'Calibration', 'Background 1', 'Experiment', 'Background 2', 'End']]
+
+# If all values are missing/empty, fall back to the first row of the experiment block
+if times.isnull().all(axis=None) or (times == '').all(axis=None):
+    times = rows.iloc[[0]][['Setup', 'Calibration', 'Background 1', 'Experiment', 'Background 2', 'End']]
+
+# Convert to datetime
+times = times.apply(pd.to_datetime)
 
 # Display the extracted times
 times.head()
