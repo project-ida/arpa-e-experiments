@@ -7,9 +7,10 @@ A Pd thin film on a silicon chip was loaded as received from Mastromatteo into a
 No thermal or radioactive anomalies were detected. [RESULTS OF SURFACE VIEWER/CR-39 ANALYSIS]
 
 ## Links
-[Data panels](https://nucleonics.mit.edu/data/load-panel.php?filename=completed%20arpa-e%20runs/Mastromatteo3) [SEM prescan] [Optical postscan] [Lab Notebook](https://docs.google.com/document/d/1M0-0rl_QPKIZ0oZNs8WNMiCvkWDgZa9TXCzasR5Jp1c/edit?usp=sharing)
+[Data panels](https://nucleonics.mit.edu/data/load-panel.php?filename=completed%20arpa-e%20runs/Mastromatteo3) [SEM prescan] [Optical postscan] [PSD Analysis](https://github.com/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-03/mastromatteo-03-PSD-analysis.ipynb) [Radiation Analysis](https://github.com/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-03/mastromatteo-03-radiation-pulse-analysis.ipynb) [Lab Notebook](https://docs.google.com/document/d/1M0-0rl_QPKIZ0oZNs8WNMiCvkWDgZa9TXCzasR5Jp1c/edit?usp=sharing)
 
-{Cover Image}(https://drive.google.com/uc?export=download&id=1arnAHYEduKiSQc94jP3c3q7vzdyzH85j)
+![Cover Image](https://drive.google.com/uc?export=download&id=1arnAHYEduKiSQc94jP3c3q7vzdyzH85j)
+
 
 
 
