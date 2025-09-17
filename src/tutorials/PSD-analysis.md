@@ -5,9 +5,10 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.17.2
+      jupytext_version: 1.17.3
   kernelspec:
-    display_name: Python 3
+    display_name: Python 3 (ipykernel)
+    language: python
     name: python3
 ---
 
@@ -254,7 +255,7 @@ def data_exists(label):
 If we do not have an official calibration period, we'll use the next period (e.g. Background 1 or Experiment) for calculting the PSP threshold.
 <!-- #endregion -->
 
-```python id="_zIoMpMYTYeO" outputId="52cd64ff-2daf-4d75-b46b-23428950cdbc" colab={"base_uri": "https://localhost:8080/"}
+```python colab={"base_uri": "https://localhost:8080/"} id="_zIoMpMYTYeO" outputId="52cd64ff-2daf-4d75-b46b-23428950cdbc"
 if not data_exists("Calibration"):
   print("Calibration data does not exist, looking for other data to use in place of an official calibration period")
   if data_exists("Background 1"):
@@ -449,7 +450,7 @@ def find_psp_threshold_gaussian(data, target_energy=500,
 For this tutorial, we'll use `target_energy = 100` for fitting the Guassians. Keep in mind this number might need adjusting depending on what the PSD plot looks like.
 <!-- #endregion -->
 
-```python id="COo7DxuTi7x1" outputId="f388f76b-d20e-414d-9ea1-2b0552166e6a" colab={"base_uri": "https://localhost:8080/", "height": 487}
+```python colab={"base_uri": "https://localhost:8080/", "height": 487} id="COo7DxuTi7x1" outputId="f388f76b-d20e-414d-9ea1-2b0552166e6a"
 
 if data_exists("Calibration"):
   psp_threshold = find_psp_threshold_gaussian(psd_data["Calibration"], target_energy=100, num_sigma=4)
@@ -616,7 +617,7 @@ def psp_threshold_over_time_period(period_label, n_segments, target_energy=100, 
 
 ```
 
-```python id="2zHO4uaEpvJw" outputId="13b8ce38-dbf3-492b-a85f-c4956e0d79ad" colab={"base_uri": "https://localhost:8080/", "height": 686}
+```python colab={"base_uri": "https://localhost:8080/", "height": 686} id="2zHO4uaEpvJw" outputId="13b8ce38-dbf3-492b-a85f-c4956e0d79ad"
 psp_thresholds = psp_threshold_over_time_period("Background 2", 10, show_psd_plots=False)
 ```
 

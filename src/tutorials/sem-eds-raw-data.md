@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.16.6
+      jupytext_version: 1.17.3
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -25,6 +25,13 @@ The data is exported from [Oxford Instruments Aztec software](https://nano.oxins
 
 In this notebook, we'll work with this "raw" data and show how we can load and work with this data. In [another notebook](./sem-eds-loading-numpy-data.ipynb) we'll show you how to work with the processed data.
 
+```python colab={"base_uri": "https://localhost:8080/"} id="Heb1eebmS4eI" outputId="c5896322-26c8-45ef-f593-38ff89ec7b47"
+# Makes Libs accessible and runs notebook from same location regardless of whether colab or local
+!pip install colocal --upgrade -q
+import colocal
+root, branch, cwd = colocal.setup()
+```
+
 ```python id="mV2cfXsK9ORB"
 import gdown
 import h5py
@@ -34,19 +41,6 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from PIL import Image
 from IPython.display import Image, display, Video, HTML
-```
-
-```python
-
-```
-
-```python colab={"base_uri": "https://localhost:8080/"} id="Heb1eebmS4eI" outputId="c5896322-26c8-45ef-f593-38ff89ec7b47"
-# RUN THIS IF YOU ARE USING GOOGLE COLAB
-import sys
-import os
-!git clone https://github.com/project-ida/arpa-e-experiments.git
-sys.path.insert(0,'/content/arpa-e-experiments')
-os.chdir('/content/arpa-e-experiments')
 ```
 
 ```python id="d8pqg2snyo25"

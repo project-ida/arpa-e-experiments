@@ -5,9 +5,10 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.17.2
+      jupytext_version: 1.17.3
   kernelspec:
-    display_name: Python 3
+    display_name: Python 3 (ipykernel)
+    language: python
     name: python3
 ---
 
@@ -305,7 +306,7 @@ def reconstruct_ns_pulses(df):
 We'll now reconstruct the nanosecond pulses for all the following experimental periods:
 <!-- #endregion -->
 
-```python id="k_MsVojSGcot" outputId="5534c130-65de-47cd-9486-894f568f2910" colab={"base_uri": "https://localhost:8080/"}
+```python colab={"base_uri": "https://localhost:8080/"} id="k_MsVojSGcot" outputId="5534c130-65de-47cd-9486-894f568f2910"
 neutron_data.keys()
 ```
 
@@ -329,7 +330,7 @@ stop = "2025-01-06 08:00"
 We'll make four different size "bins", 1 sec, 1 min, 10 mins, 30 mins and count the neutrons pulses during those periods.
 <!-- #endregion -->
 
-```python id="pQIGnfe4_MWK" outputId="8d977652-336e-4b2c-aaa2-1306f1c7190c" colab={"base_uri": "https://localhost:8080/", "height": 1000}
+```python colab={"base_uri": "https://localhost:8080/", "height": 1000} id="pQIGnfe4_MWK" outputId="8d977652-336e-4b2c-aaa2-1306f1c7190c"
 # Resample the data to different bin sizes
 df_per_second = neutron_data["Background 1"][start:stop].resample("1s").sum()
 df_per_minute = neutron_data["Background 1"][start:stop].resample("1min").sum()

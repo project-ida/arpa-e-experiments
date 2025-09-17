@@ -25,27 +25,10 @@ Annealed palladium foil is gas loaded with deuterium, in a 0.19L chamber.
 <!-- #endregion -->
 
 ```python id="6e5640a1-12da-4157-a5e8-5f73f882e6a7"
-# RUN THIS TO MAKE SURE WE CAN IMPORT LIBS WHETHER WE ARE IN COLAB OR LOCAL
-
-import sys
-import os
-
-# Check if running in Google Colab
-try:
-    import google.colab
-    is_colab = True
-except ImportError:
-    is_colab = False
-
-if is_colab:
-    !git clone https://github.com/project-ida/arpa-e-experiments.git
-    sys.path.insert(0, '/content/arpa-e-experiments')
-else:
-    # Running locally
-    # Get the parent directory (two levels up from the current directory)
-    project_root = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
-    # Add the parent directory to sys.path
-    sys.path.insert(0, project_root)
+# Makes Libs accessible and runs notebook from same location regardless of whether colab or local
+!pip install colocal -q
+import colocal
+root, branch, cwd = colocal.setup()
 ```
 
 ```python id="a9b070cf-0f22-4946-a040-1860350240d4" outputId="c562377b-1c11-47ae-f6bb-8edde980edfe"
