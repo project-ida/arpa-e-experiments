@@ -61,7 +61,7 @@ The neutron source is placed in the graphite tunnel.
 <!-- #endregion -->
 
 <!-- #region id="aB1YXbf-MkCB" -->
-<img src="https://drive.google.com/uc?id=1DKYgSHlc5DhPCJWa6kxlR79Mp6qzZgKx" width="500">
+<img src="media/neutron-detector-01-2024-12-13.png" width="500">
 
 <!-- #endregion -->
 
@@ -71,7 +71,7 @@ In this setup, the neutron source is placed in the steel chamber, within the gra
 <!-- #endregion -->
 
 <!-- #region id="xlxvq-5OOCLP" -->
-<img src="https://drive.google.com/uc?export=download&id=1-Otyr-5PNUflYPbPSqNvbSKBgJFyDPpo" width="500">
+<img src="media/neutron-detector-02-2024-12-13.png" width="500">
 
 
 

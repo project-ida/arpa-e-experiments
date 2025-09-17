@@ -16,14 +16,17 @@ jupyter:
 <a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/tutorials/sem-eds-raw-data.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/tutorials/sem-eds-raw-data.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
 <!-- #endregion -->
 
-# Working with ESM/EDS raw data 
+<!-- #region id="v93r8KGFOtxS" -->
+# Working with ESM/EDS raw data
+<!-- #endregion -->
 
-
+<!-- #region id="Zu-4meGWOtxS" -->
 We are working with people at Texas Tech to characterise any morphological and elemental changes that take place as part of the our experiments. This involves using a scanning electron microscope to generate pictures of the material surface (so called SEM data) and also energy-dispersive X-ray spectroscopy (EDS) to analyze elemental composition.
 
 The data is exported from [Oxford Instruments Aztec software](https://nano.oxinst.com/products/aztec/) into a HDF5 like format called [h5iona](https://github.com/oinanoanalysis/h5oina) that's stored in Google Drive, (e.g. [this folder](https://drive.google.com/drive/folders/1WqbhoVJ5d6HWgWa1Bo3wYWzeZD6t-ia5)). This data is compressed and needs to be processed for us to be able to work with.
 
 In this notebook, we'll work with this "raw" data and show how we can load and work with this data. In [another notebook](./sem-eds-loading-numpy-data.ipynb) we'll show you how to work with the processed data.
+<!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="Heb1eebmS4eI" outputId="c5896322-26c8-45ef-f593-38ff89ec7b47"
 # Makes Libs accessible and runs notebook from same location regardless of whether colab or local
@@ -483,26 +486,22 @@ file['/1/EDS/Header/Stage Position/Z'][0] # in mm
 The site numbers move from the bottom left upwards in the first column (from 1 to 25) and then start at the bottom of the second column again, moving upward. One can also check the X and Y values (in mm) in the Header/Stage Position part of the H5 files.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 777} id="rtVf4wv6U5ct" outputId="606b3472-d0b4-4c9c-d4c6-2094ea8567fb"
-Image(filename="media/aztec-01.png", width=1474, height=760)
-```
+<!-- #region id="7bqFX7v8O4p-" -->
+<img src="media/aztec-01.png" width="1474">
+<!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 777} id="HqPQcgVaU6hd" outputId="bf682df6-a11e-47ad-c83e-918ab8e87150"
-Image(filename="media/aztec-02.png", width=1474, height=760)
-```
+<!-- #region id="mtkIvdVKPgch" -->
+<img src="media/aztec-02.png" width="1474">
+<!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 777} id="ZMVDjKdHVCc1" outputId="353c4089-24ff-4024-f9d3-9fe7f8cdf580"
-Image(filename="media/aztec-03.png", width=1474, height=760)
-```
+<!-- #region id="EWDDxP5JPgZ7" -->
+<img src="media/aztec-03.png" width="1474">
+<!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 777} id="L-1smG3nVCrS" outputId="384be0df-7990-405a-dd7a-9a7494653779"
-Image(filename="media/aztec-04.png", width=1474, height=760)
-```
+<!-- #region id="ODRWPOwJPgWR" -->
+<img src="media/aztec-04.png" width="1474">
+<!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 777} id="c4jawa8FVC6r" outputId="bf50b28d-3789-441c-cf70-637fb677070e"
-Image(filename="media/aztec-05.png", width=1474, height=760)
-```
-
-```python id="ZFGDOIuEWinx"
-
-```
+<!-- #region id="mvszd86qPgRX" -->
+<img src="media/aztec-05.png" width="1474">
+<!-- #endregion -->
