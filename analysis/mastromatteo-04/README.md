@@ -1,5 +1,5 @@
 # Mastromatteo 4
-### July 17, 2025-August 1, 2025 
+### August 4, 2025-August 18, 2025 
 ## Summary
 A Pd thin film on a silicon chip was loaded as received from Mastromatteo into a chamber pressurized with hydrogen gas at 0.50 bar above atmospheric pressure. We then illuminated the chip with 1.14 mW of 633 nm light from a HeNe laser, with the spot expanded to 8.9 mm diameter to cover the whole sample. The laser illumination ran continuously for two weeks. 
 
