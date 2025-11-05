@@ -66,7 +66,7 @@ import plotly.graph_objects as go
 ## Authentication
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 53} id="FhhgoaA3A0-Z" outputId="24e35c68-72bf-4e62-d92c-e4e3d47b84f7"
+```python colab={"base_uri": "https://localhost:8080/", "height": 53} id="FhhgoaA3A0-Z" outputId="6e6348c1-23ef-471e-f3dd-2c6a3fb69c42"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -130,7 +130,7 @@ def find_root_file(event_time, channel_number):
 
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 112} id="MULgCJIACxWN" outputId="7f3c1dc2-788c-4e80-ad23-fee62d2f87c3"
+```python colab={"base_uri": "https://localhost:8080/", "height": 112} id="MULgCJIACxWN" outputId="27830e06-d946-4a8d-a1fc-a395b202cf81"
 df_root = find_root_file(time, channel_number)
 df_root
 ```
@@ -176,7 +176,7 @@ file_path = construct_file_path(closest_root_file)
 file_id = get_file_id(file_path)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="EgO6zwoTMlzN" outputId="42770c21-9fa1-4966-fc3d-ec73c6ae188e"
+```python colab={"base_uri": "https://localhost:8080/"} id="EgO6zwoTMlzN" outputId="5b9329a5-9f07-4010-b952-8c06897fd23a"
 filename = closest_root_file["file"]
 download_file_from_drive(file_id, filename)
 ```
@@ -195,19 +195,29 @@ Each radiation pulse is stored in the ROOT files with a `Timestamp`, `Energy`, `
 # Opens up the ROOT file and extracts the information
 with uproot.open(filename) as f:
     tree = f['Data_R']
+    branches = tree.keys()
     ts = tree['Timestamp'].array(library='np')
     e = tree['Energy'].array(library='np')
-    es = tree['EnergyShort'].array(library='np')
     wf = tree['Samples'].array(library='np')
+
+    # Conditionally load EnergyShort if it exists
+    if 'EnergyShort' in branches:
+        es = tree['EnergyShort'].array(library='np')
+    else:
+        es = None
 
 # Creates dataframe with absolute time index
 end_time = df_root.index[0]
 start_time = end_time - pd.to_timedelta((ts[-1]-ts[0])/1e12, unit='s')
 time_abs = start_time + pd.to_timedelta((ts - ts[0])/1e12, unit='s')
-df_pulses = pd.DataFrame({'Energy': e, 'EnergyShort': es, 'Waveform': wf}, index=pd.to_datetime(time_abs))
+
+data = {'Energy': e, 'Waveform': wf}
+if es is not None:
+    data['EnergyShort'] = es
+df_pulses = pd.DataFrame(data, index=pd.to_datetime(time_abs))
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 206} id="k-Q12sRwptwP" outputId="d66633aa-3872-4839-f345-b20dc311f299"
+```python colab={"base_uri": "https://localhost:8080/", "height": 206} id="k-Q12sRwptwP" outputId="2d8e8a16-6e34-4be1-9a5a-810eabcb6190"
 df_pulses.head()
 ```
 
@@ -215,7 +225,6 @@ df_pulses.head()
 ### Filtering pulses
 
 We don't necessarily want to see all pulses. We might wish to only see high energy pulses, or filter out neutrons from gammas (if using an Eljen detector) using the PSP value (More discussion about neutron/gamma discrimination can be found in the [PSD Analysis notebook](https://github.com/project-ida/arpa-e-experiments/blob/main/tutorials/PSD-analysis.ipynb)).
-
 
 PSP is calculated by:
 
@@ -227,7 +236,8 @@ $$
 <!-- #endregion -->
 
 ```python id="XqqcpWDg3d0g"
-df_pulses['PSP'] = 1 - (df_pulses['EnergyShort'] / df_pulses['Energy'])
+if "EnergyShort" in df_pulses.columns:
+  df_pulses['PSP'] = 1 - (df_pulses['EnergyShort'] / df_pulses['Energy'])
 ```
 
 ```python id="bTRM1Zt3CbKz"
@@ -239,10 +249,10 @@ energy_range = [0,70] # low energy
 ```
 
 ```python id="pYmh_1b3lYmQ"
-filtered = df_pulses[(df_pulses['PSP'] > psp_range[0]) & (df_pulses['PSP'] < psp_range[1])]
+filtered = df_pulses[(df_pulses['Energy'] > energy_range[0]) & (df_pulses['Energy'] < energy_range[1])]
 
-filtered = filtered[(filtered['Energy'] > energy_range[0]) & (filtered['Energy'] < energy_range[1])]
-
+if "PSP" in df_pulses.columns:
+  filtered = filtered[(filtered['PSP'] > psp_range[0]) & (filtered['PSP'] < psp_range[1])]
 ```
 
 <!-- #region id="KlFWvHRFrxS7" -->
@@ -253,12 +263,12 @@ Let's now do a sanity check and visualise the counts per second over the entire 
 We'll also mark the burst time:
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="_erVbBxS9Bje" outputId="5c89cd55-9a99-4e1d-aeca-dd2867fa3c11"
+```python colab={"base_uri": "https://localhost:8080/"} id="_erVbBxS9Bje" outputId="cfea3281-da75-4ee6-c723-9f23a02ed483"
 time = pd.to_datetime(time)
 print(time)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 410} id="HEQExazK5W_U" outputId="72edbc6e-a784-40b4-92ed-2d8543353f0e"
+```python colab={"base_uri": "https://localhost:8080/", "height": 410} id="HEQExazK5W_U" outputId="908bd92e-418c-4973-9a80-d19a4a54548e"
 cps = filtered["Energy"].resample('1s').count()
 plt.figure(figsize=(12, 4))
 plt.plot(cps, drawstyle='steps-mid')
@@ -275,7 +285,7 @@ plt.show()
 Let's now zoom in on the time period of interest which is around:
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="MmL3bAZs4jTz" outputId="f5c3ea05-8cb3-4cb0-94ad-9fb6d373f548"
+```python colab={"base_uri": "https://localhost:8080/"} id="MmL3bAZs4jTz" outputId="cc8ff7b2-eab3-4393-a444-142e82767215"
 print(time)
 ```
 
@@ -283,7 +293,7 @@ print(time)
 with a duration of:
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="U6Yl3U8K4sDE" outputId="b2552404-0b18-4672-a023-3fc5b5b76a44"
+```python colab={"base_uri": "https://localhost:8080/"} id="U6Yl3U8K4sDE" outputId="a3072ea5-0d3e-4da7-80c2-3275c52d2509"
 duration = pd.to_timedelta(duration, unit='s')
 print(duration)
 ```
@@ -297,7 +307,7 @@ start = time - duration/2
 end = time + duration/2
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 410} id="3XbaW-nClas1" outputId="728ce366-b6ad-48cb-bd92-1fd8539bcecb"
+```python colab={"base_uri": "https://localhost:8080/", "height": 410} id="3XbaW-nClas1" outputId="aae10569-f911-4af1-d612-32447f0a4392"
 plt.figure(figsize=(12, 4))
 plt.plot(cps[start:end], drawstyle='steps-mid', color='orange')
 plt.axvline(time, color='r', linestyle='--', label="Time of interest")
@@ -315,13 +325,17 @@ plt.show()
 We can now easily extract and visualise the waveforms using the `start` and `end` times.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 606} id="uSxZYs4blcjF" outputId="4ab6f704-ae08-4079-fb69-3700025452a3"
+```python colab={"base_uri": "https://localhost:8080/", "height": 606} id="uSxZYs4blcjF" outputId="eb074715-2abe-4b18-d570-ebc5c0c7cb3a"
 df_period = filtered[start:end]
 
 plt.figure(figsize=(10, 6))
 for wf in df_period['Waveform']:
     plt.plot(wf, alpha=0.5)
-plt.title(f'Waveforms for pulses between {start} and {end} \n with PSP in range {psp_range}\n and energy in range {energy_range}')
+
+if "EnergyShort" in df_pulses.columns:
+  plt.title(f'Waveforms for pulses between {start} and {end} \n with PSP in range {psp_range}\n and energy in range {energy_range}')
+else:
+  plt.title(f'Waveforms for pulses between {start} and {end} \n with energy in range {energy_range}')
 plt.xlabel('Sample number')
 plt.ylabel('Amplitude')
 plt.grid(True)
