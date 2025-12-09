@@ -11,7 +11,9 @@ jupyter:
     name: python3
 ---
 
+<!-- #region id="c9b739d7-5903-4368-867e-16b9d7136692" -->
 <a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/templates/eds-spectrum-starter.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/templates/eds-spectrum-starter.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
+<!-- #endregion -->
 
 <!-- #region id="7f188c81" -->
 # EDS Spectrum template
@@ -30,7 +32,7 @@ name.
 <!-- #endregion -->
 
 ```python id="Z5okfpEzLR6J"
-api_url = 'CHANGE_ME'
+api_url = 'CHANGE_THIS'
 
 ```
 
@@ -50,6 +52,7 @@ import requests
 from scipy.signal import savgol_filter, find_peaks, peak_widths
 from scipy import sparse
 from scipy.sparse.linalg import spsolve
+from scipy.signal import savgol_filter
 
 
 # -----------------------------
@@ -852,14 +855,33 @@ plot_overlay(stack, x, title="Overlay of ROI spectra")
 <!-- #endregion -->
 
 ```python id="T_iCmUgXKSew"
-# Visualise baseline vs corrected for the aggregate
-cum_s = cum_plot  # or your smoothed version if you expose it
-baseline = baseline_als(cum_plot)
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.signal import savgol_filter
+
+# Ensure "cum" exists from your aggregation cell
+# and api_url is defined
+
+# Get calibration (viewer-compatible)
+cal = get_energy_cal_from_dataset(api_url)
+x_keV = make_energy_axis(cum, cal)
+
+# Align lengths
+n = min(len(cum), len(x_keV))
+cum_plot = np.asarray(cum[:n], dtype=float)
+x_keV = np.asarray(x_keV[:n], dtype=float)
+
+# Smooth then estimate baseline
+cum_s = savgol_filter(cum_plot, 11, 3)
+baseline = baseline_als(cum_s)
+
+# Baseline-corrected
+cum_corr = np.clip(cum_s - baseline, 0, None)
 
 plt.figure(figsize=(10, 4.5))
-plt.plot(x_keV, cum_plot, lw=1, alpha=0.4, label="raw aggregate")
-plt.plot(x_keV, baseline, lw=1, label="estimated baseline")
-plt.plot(x_keV, np.clip(cum_plot - baseline, 0, None), lw=1.2, label="baseline-corrected")
+plt.plot(x_keV, cum_plot, lw=1, alpha=0.35, label="raw aggregate")
+plt.plot(x_keV, baseline, lw=1, label="estimated baseline (on smoothed)")
+plt.plot(x_keV, cum_corr, lw=1.2, label="baseline-corrected")
 plt.xlabel("Energy (keV)")
 plt.ylabel("Counts")
 plt.title("Baseline correction helps peak finding")
