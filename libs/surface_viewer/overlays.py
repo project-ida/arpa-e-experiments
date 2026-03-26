@@ -11,7 +11,7 @@ API_URL = "https://nucleonics.mit.edu/surface-viewer/api/protected/create_heatma
 def get_api_auth(username=None, password=None):
     """Prompt interactively if username/password are not provided."""
     if username is None:
-        username = input("API username: ")
+        username = getpass("API username: ")
     if password is None:
         password = getpass("API password: ")
     return HTTPBasicAuth(username, password)
