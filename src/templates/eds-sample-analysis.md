@@ -11,7 +11,9 @@ jupyter:
     name: python3
 ---
 
+<!-- #region id="7daa6b8c-7515-4843-b533-3cbed9054895" -->
 <a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/templates/eds-sample-analysis.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/templates/eds-sample-analysis.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
+<!-- #endregion -->
 
 <!-- #region id="7f188c81" -->
 # EDS Analysis template
@@ -28,7 +30,7 @@ name.
 
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="_K48SSZ_Z44M" outputId="bbd9ec0a-8fc3-43e0-cd58-d73d8376ca3c"
+```python colab={"base_uri": "https://localhost:8080/"} id="_K48SSZ_Z44M" outputId="adc4a3a4-a1b0-4bec-95c2-7a3589de4c0c"
 # Set up the GitHub repo in Colab so the shared helper modules can be imported.
 
 !pip install colocal -q
@@ -116,7 +118,7 @@ PEAK_FWHM_MN_EV = 67.8
 
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 635} id="9df52624" outputId="13f6eba4-2cb7-4b69-9c74-6a9dbde517b9"
+```python colab={"base_uri": "https://localhost:8080/", "height": 635} id="9df52624" outputId="390bf89d-e544-45d4-90dd-674ee2a29c2c"
 # Load ROI selections and, if requested, enumerate all cells from overlays/selection-grid.json.
 
 roi_frames = {}
@@ -141,7 +143,7 @@ if LOAD_ALL_CELLS:
 
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 66, "referenced_widgets": ["dc05a57d2a2a4baa8c7ce26a0c9ba5b1", "d9a69d6e5d114f84ba97f446072130ef", "252d540c9aa541f6a6bbe33649e8f75a", "799625fd8cdc44709e540b233cc4ee21", "bfc76807faf5494b89edaa18c3460a65", "de0c0083034947608b493fe6e486c7c7", "3f36a5b55bca4338be4a84bdd482bce5", "5a3adf09ae0c469b9ac86a0321b3da2a", "063881938ff34fecaf164b79f4b463d4", "f077cfd657a8406c9dcd0c972c961605", "c661b1cef3a1462796195bebf95d440d"]} id="f7c5adb5" outputId="db6c5080-2eee-4fac-f863-0ffa04f3e712"
+```python colab={"base_uri": "https://localhost:8080/"} id="f7c5adb5" outputId="f0743f30-8ec6-4300-af40-0b9d200acae5"
 # Collect the unique spectrum JSON URLs needed across ROI selections and the all-cells grid.
 
 roi_urls = sorted(set(
@@ -161,7 +163,7 @@ index = build_spectrum_index(all_urls, progress=True)
 
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 165, "referenced_widgets": ["6856240dba6141c7b8c299a9691dc031", "5cc6d421fd7549608cf7d749d441d826", "2ba857add00e414d862c107307fa5541", "4f890fa889c448e4b483113761b9df49", "3f16af0aebe84135a9af6c0ed3fc23c0", "dca688518b7446d09e0d7a8fdcccfdb5", "70d0856771cb4ffa939b8432c06477d4", "14d968100d5f488ab94bb177160a7acc", "87aa801639974efcb8e6a679f2c8b6f3", "e3e8ae03ccc34dbe83224f785785523b", "475bd3d679b24efc985843408a446265", "947fd897bb174ee2beb655a8fefa519b", "1841091ce54b47208f0ccb820ee5141e", "5c3a597045ad4837b519f03f6db772e7", "8f1de4d8b4234b54a2fd8f5f4ca204e1", "ff9daa35f2a24e5b8d2602d2593a60db", "398f6d69b14c49558c71102055238bfe", "0eb08f0c3bb94ce4afbb09b99180e3c8", "81cef18e40324682b795fdd29e067b37", "ee707a064fbd428598493a10e9e14974", "71f58774f3f64f279fc5ace2a9552f93", "c85a1aa269424f1ea7afd871bd0a6b81", "45bd0cc8b8934585b169b7b503602acb", "19d021851e6b4aacb9b994ff0c6b36ca", "fb701fa531e24368878a8b95a12543bc", "14d7660602254bedb2355af4e0aa65db", "b12cc30d34cc495aba2fc90be82cc4fe", "b1d8efd5ac3444b6845a14f2060ebbfc", "be2378d133224032b2697a68e3088ac8", "eba9a547d43d46a5b533d69da5ce66f7", "7ea11d36344c4ee09ada76a63883f44f", "d6010fb800164f1aa1dbe93f6b0b430b", "c0055c152f0f407db81acf44bb5a1169"]} id="83346e85" outputId="f09c9ff8-112f-462b-88e4-449fd819495d"
+```python colab={"base_uri": "https://localhost:8080/"} id="83346e85" outputId="c26afe41-dcb8-4aa1-d214-84dd4b63e41b"
 # Attach spectra to the ROI tables and the optional all-cells table.
 
 for roi_name, df in roi_frames.items():
@@ -177,7 +179,7 @@ if LOAD_ALL_CELLS and not all_cells_df.empty:
 
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 1000} id="6653d088" outputId="f683a84b-13e5-49ab-f664-49b0f8fdb6fd"
+```python colab={"base_uri": "https://localhost:8080/", "height": 1000} id="6653d088" outputId="a3439910-1e28-4ee6-db48-a8cac452f1aa"
 # Print quick summaries of the selected ROI cells by basename and source spectrum file.
 
 for roi_name, df in roi_frames.items():
@@ -211,7 +213,7 @@ if LOAD_ALL_CELLS and not all_cells_df.empty:
 
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="b97f6ba8" outputId="b9c111ac-d858-40a8-b3e1-a97a6f96fea7"
+```python colab={"base_uri": "https://localhost:8080/"} id="b97f6ba8" outputId="b7c4030f-0ea7-4003-b688-208ac9a987c6"
 # Build aggregate stacks, cumulative spectra, and mean spectra for each analysis group.
 
 need_calibration = True
@@ -269,7 +271,7 @@ for api_url in ROI_API_URLS:
 
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="0ef9187d" outputId="2ec4d208-754c-4a81-d302-e86cffc61b40"
+```python colab={"base_uri": "https://localhost:8080/"} id="0ef9187d" outputId="c94f2e99-8311-4fb3-d273-29c287181fbc"
 # Report which energy calibration was found and whether config values or defaults are being used.
 
 if cal is not None:
@@ -281,7 +283,7 @@ else:
 
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 506} id="b2b49706" outputId="d4626af1-97b9-4f46-fea9-2aa4636d580d"
+```python colab={"base_uri": "https://localhost:8080/", "height": 506} id="b2b49706" outputId="1277fbd6-fb55-4ae6-b45a-ce0de75efac3"
 # Plot cumulative spectra for all cells and ROI regions on a common axis.
 
 fig, ax = plt.subplots(figsize=(11, 5))
@@ -313,7 +315,7 @@ plt.show()
 
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 1000} id="c9ae05a3" outputId="a1d4eb82-bc34-4eb1-d9ca-7bd2ecdd33cb"
+```python colab={"base_uri": "https://localhost:8080/", "height": 1000} id="c9ae05a3" outputId="1ece6679-0054-44de-d75d-a24419234216"
 # Condition each aggregate spectrum, detect peaks, and print first-pass element assignments.
 
 peak_summary = {}
@@ -425,7 +427,7 @@ BAND_END = 9.8 #1000
 HIST_BINS = 500
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 1000} id="WyWhFSHHjWzj" outputId="493cdfcb-6063-4924-e937-e70dc268c536"
+```python colab={"base_uri": "https://localhost:8080/", "height": 1000} id="WyWhFSHHjWzj" outputId="4cd7ca4d-ac37-4b47-b0db-9f6eabc0e99d"
 # Overlay up to 50 individual cell spectra per region, with element annotations and the selected band shaded in gray.
 
 N_OVERLAY_SPECTRA = 50
@@ -448,7 +450,7 @@ plot_overlaid_cell_spectra(
 )
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="31a290de" outputId="50a081fa-44d4-4737-f875-861b7229e7c6"
+```python colab={"base_uri": "https://localhost:8080/"} id="31a290de" outputId="5360f884-aa94-404a-a236-cf3e6c04b4c0"
 # Resolve the requested band to channel indices and compute per-cell band sums.
 
 band_start_ch, band_end_ch = resolve_band_to_channels(
@@ -473,7 +475,7 @@ for name, res in aggregate_results.items():
     res["df"]["band_value"] = res["df"]["spectrum"].apply(lambda s: band_sum(s, band_start_ch, band_end_ch))
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 967} id="12d03a2b" outputId="bee09a78-2d62-4c6f-e4df-9b1029b1e1ca"
+```python colab={"base_uri": "https://localhost:8080/", "height": 967} id="12d03a2b" outputId="cce3ddcb-6ebb-4a0b-e74e-5c619afe6c40"
 # Build vertically stacked histograms with shared bins and a shared global x-axis range.
 
 # Shared bins across all aggregates
@@ -518,7 +520,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="c1c277c6" outputId="343fe425-4937-415c-d36c-4bffc9f1b548"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="c1c277c6" outputId="99bbacba-825e-4ad8-878b-0c270eb0c8e5"
 # Overlay all band-sum histograms on one log-scale plot for direct comparison.
 
 plt.figure(figsize=(10, 5))
@@ -536,7 +538,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 332} id="a746c947" outputId="878b9bf6-5eea-48bd-97ec-1556b5f5f3f9"
+```python colab={"base_uri": "https://localhost:8080/", "height": 332} id="a746c947" outputId="926384a7-1a03-4244-e635-9f25000bc731"
 # Summarize the band-sum distributions and propose value ranges for overlays.
 
 stats_rows = []
@@ -577,7 +579,7 @@ VMIN = 0
 VMAX = 11262
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="5tVt5_NzI30V" outputId="90ea44ac-ddd2-4ee9-988e-0ade4e4f679e"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="5tVt5_NzI30V" outputId="bdf66289-43e4-4f15-aaaa-1b8595febaf4"
 # Preview the chosen overlay range on the combined log-scale band-sum histogram.
 
 plt.figure(figsize=(10, 5))
@@ -597,7 +599,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="33caf51e" outputId="cee77577-ae65-4245-e8c7-8f539db0e2af"
+```python colab={"base_uri": "https://localhost:8080/"} id="33caf51e" outputId="23661f4e-35a0-4419-ce7d-35568f51609b"
 # Authenticate to the overlay API and extract dataset metadata from the ROI URL.
 
 auth = get_api_auth()
@@ -610,7 +612,7 @@ print("Input folder:", input_folder)
 print(f"Using resolved band: {band_start_ch}–{band_end_ch} channels")
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="599dffb5" outputId="bd49793e-f1c4-4ce9-d160-c70025fefb6c"
+```python colab={"base_uri": "https://localhost:8080/"} id="599dffb5" outputId="5cbb4eef-2494-4ea5-8513-fdf711fbccab"
 # Create the overlay heatmap and print both the overlay URL and the sample viewer link.
 
 resp_create = create_overlay(
@@ -633,7 +635,7 @@ print("Sample viewer:", sample_viewer_url)
 
 ```
 
-```python id="F7vc6pANHtR2"
+```python id="F7vc6pANHtR2" colab={"base_uri": "https://localhost:8080/", "height": 35} outputId="986fe75b-a332-4f1b-cf2e-0eafac9827c5"
 # Show the current overlay filename for quick reuse or copy/paste.
 
 overlay_file
@@ -645,7 +647,7 @@ overlay_file
 overlay_file_to_be_deleted = "overlays/heatmap_ch500-1000_rng9000-12000.json"  # replace with the file you want to delete
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="28976f42" outputId="359e75eb-9ce9-4680-e5f3-fc190f92a8de"
+```python id="28976f42"
 # # Delete the selected overlay heatmap file from the server.
 
 # resp_delete = delete_overlay(
