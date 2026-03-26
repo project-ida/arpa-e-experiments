@@ -12,21 +12,19 @@ jupyter:
     name: python3
 ---
 
+<!-- #region id="4c47888e-cbe8-4640-8fa0-d976bed3542f" -->
 <a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/templates/waveform-extraction-starter-local.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/templates/waveform-extraction-starter-local.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
+<!-- #endregion -->
 
 <!-- #region id="23ce122c-c3b5-4a7f-a8bb-448d8042509a" -->
-# Waveform extraction (local Ubuntu / Synology version)
-
-This copy is configured for a local notebook running on Ubuntu with the Synology share mounted at `/mnt/Synology/Computers`.
-
-The existing notebook outputs have been preserved from the original Colab run. Once you rerun the edited setup cells locally, those stored outputs will refresh to match the local workflow.
+# Waveform extraction (local / Synology version)
 
 <!-- #endregion -->
 
 <!-- #region id="ydG__I6QBDGM" -->
 
 ‼️ **Prerequisites** ‼️:
-- The Synology share is mounted at `/mnt/Synology/Computers`
+- The Synology share is mounted at `/mnt/synology/Computers`
 - The PostgreSQL credentials file is available in your home directory as either `psql_credentials.py` or `psql_credentials_readonly.py`
 
 <!-- #endregion -->
