@@ -4,7 +4,7 @@ from urllib.parse import parse_qs, quote, urljoin, urlparse
 
 import pandas as pd
 import requests
-from tqdm.auto import tqdm
+from tqdm import tqdm
 
 
 def get_roi_name_from_api_url(api_url: str) -> str:
