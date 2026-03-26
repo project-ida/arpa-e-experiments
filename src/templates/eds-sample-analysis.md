@@ -14,13 +14,10 @@ jupyter:
 <a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/templates/eds-sample-analysis.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/templates/eds-sample-analysis.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
 
 <!-- #region id="7f188c81" -->
-*Overview: This cell explains the notebook purpose and basic usage.*
-
-# EDS Spectrum template
+# EDS Analysis template
 
 This notebook provides a quick, end-to-end demo for ROI-based EDS analysis:
-it pulls a saved ROI set from the Surface Viewer API, builds a table of selected tiles,
-loads the corresponding spectra, aggregates them, and runs a simple first-pass peak analysis.
+it pulls saved regions from the Surface Viewer API, builds a table of selected cells, loads the corresponding spectra, aggregates them, and runs a simple first-pass peak analysis.
 
 ## How to use
 
@@ -576,11 +573,11 @@ display(range_suggestions_df)
 # Choose the display range to apply when creating the overlay heatmap.
 
 # Pick one of the suggested ranges from range_suggestions_df above, then edit if desired.
-VMIN = 3
-VMAX = 9039
+VMIN = 0
+VMAX = 11262
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="5tVt5_NzI30V" outputId="d7b93941-ae7c-4e80-e63a-f12aec7e3ed1"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="5tVt5_NzI30V" outputId="90ea44ac-ddd2-4ee9-988e-0ade4e4f679e"
 # Preview the chosen overlay range on the combined log-scale band-sum histogram.
 
 plt.figure(figsize=(10, 5))
@@ -600,7 +597,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-```python id="33caf51e"
+```python colab={"base_uri": "https://localhost:8080/"} id="33caf51e" outputId="cee77577-ae65-4245-e8c7-8f539db0e2af"
 # Authenticate to the overlay API and extract dataset metadata from the ROI URL.
 
 auth = get_api_auth()
@@ -613,7 +610,7 @@ print("Input folder:", input_folder)
 print(f"Using resolved band: {band_start_ch}–{band_end_ch} channels")
 ```
 
-```python id="599dffb5"
+```python colab={"base_uri": "https://localhost:8080/"} id="599dffb5" outputId="bd49793e-f1c4-4ce9-d160-c70025fefb6c"
 # Create the overlay heatmap and print both the overlay URL and the sample viewer link.
 
 resp_create = create_overlay(
@@ -645,10 +642,10 @@ overlay_file
 ```python id="36jZsLOhHfvW"
 # Specify an overlay filename if you want to delete an existing overlay.
 
-overlay_file_to_be_deleted = "overlays/heatmap_ch400-700_rng3-9039.json"  # replace with the file you want to delete
+overlay_file_to_be_deleted = "overlays/heatmap_ch500-1000_rng9000-12000.json"  # replace with the file you want to delete
 ```
 
-```python id="28976f42"
+```python colab={"base_uri": "https://localhost:8080/"} id="28976f42" outputId="359e75eb-9ce9-4680-e5f3-fc190f92a8de"
 # # Delete the selected overlay heatmap file from the server.
 
 # resp_delete = delete_overlay(
@@ -656,8 +653,4 @@ overlay_file_to_be_deleted = "overlays/heatmap_ch400-700_rng3-9039.json"  # repl
 #     dataset=dataset,
 #     overlay_file=overlay_file_to_be_deleted,
 # )
-```
-
-```python id="eRsaOwHggVev"
-
 ```
