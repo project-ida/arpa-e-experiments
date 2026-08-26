@@ -169,14 +169,14 @@ def print_info(dataframe, verbose=False, expected_interval=1.0, tolerance=0.1):
             in_notebook = False
 
         if not in_notebook:
-            print(f"\n{caption}")
+            if caption is not None:
+                print(f"\n{caption}")
             print(table.to_string(index=False))
             return
 
         styled_table = (
             table.style
             .hide(axis="index")
-            .set_caption(caption)
             .set_table_styles([{
                 "selector": "caption",
                 "props": [
@@ -187,6 +187,8 @@ def print_info(dataframe, verbose=False, expected_interval=1.0, tolerance=0.1):
                 ],
             }])
         )
+        if caption is not None:
+            styled_table = styled_table.set_caption(caption)
         if formatters is not None:
             styled_table = styled_table.format(formatters)
         display(styled_table)
@@ -241,7 +243,7 @@ def print_info(dataframe, verbose=False, expected_interval=1.0, tolerance=0.1):
         })
 
     summary = pd.DataFrame(summary_rows)
-    display_table(summary, "Acquisition timing summary")
+    display_table(summary, caption=None)
 
     if not verbose or not has_intervals:
         return
