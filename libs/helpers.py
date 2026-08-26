@@ -200,8 +200,8 @@ def process_data(dataframes, meta_data=None):
     ----------
     dataframes : list of pd.DataFrame
         A list of DataFrames to be processed. Each DataFrame is expected to have a time-based
-        index, which will be rounded to the nearest second and averaged for any duplicate
-        timestamps after rounding.
+        index, which will be floored to the start of the second and averaged for any duplicate
+        timestamps after flooring.
 
     meta_data : dict, optional
         A dictionary containing metadata to attach to the final DataFrame. Each key-value pair
@@ -216,14 +216,14 @@ def process_data(dataframes, meta_data=None):
     pd.DataFrame
         A single DataFrame with a common time index across all input DataFrames. The data
         from each input DataFrame is concatenated along columns, with missing values interpolated
-        linearly. The `attrs` attribute of the returned DataFrame contains the metadata provided
-        by `meta_data` if supplied.
+        linearly according to elapsed time. The `attrs` attribute of the returned DataFrame contains
+        the metadata provided by `meta_data` if supplied.
 
     Notes:
     -----
     - The function aligns the DataFrames to a shared time range based on the maximum starting
       timestamp and minimum ending timestamp across all DataFrames.
-    - Duplicate timestamps within each DataFrame are averaged after rounding to the nearest second.
+    - Duplicate timestamps within each DataFrame are averaged after flooring to the start of the second.
     - Any remaining NaN values at the edges of the combined DataFrame are dropped after interpolation.
     
     Example:
@@ -236,12 +236,12 @@ def process_data(dataframes, meta_data=None):
     'Etched titanium foil'
     """
 
-    # Step 1: Round the time index and average duplicates within each DataFrame
+    # Step 1: Floor the time index and average duplicates within each DataFrame
     processed_dfs = []
     for df in dataframes:
         df = df.copy()  # Avoid modifying the original DataFrame
-        df.index = df.index.floor('s') # Round the time to the nearest second
-        df = df.groupby(df.index).mean() # Average any values at the same time after rounding
+        df.index = df.index.floor('s') # Floor the time to the start of the second
+        df = df.groupby(df.index).mean() # Average any values at the same time after flooring
         processed_dfs.append(df)
     
     # Step 2: Determine the global overlapping time range
@@ -258,7 +258,7 @@ def process_data(dataframes, meta_data=None):
     combined_df = pd.concat(processed_dfs, axis=1)
     
     # Step 5: Interpolate missing values and drop any remaining NaNs at the time range edges
-    combined_df = combined_df.interpolate(method='linear').dropna()
+    combined_df = combined_df.interpolate(method='time').dropna()
 
     # Step 6: Attach metadata to the DataFrame if provided
     if meta_data is not None:
