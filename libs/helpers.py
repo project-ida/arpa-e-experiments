@@ -103,90 +103,195 @@ def load_data(url):
     except Exception as e:
         raise RuntimeError(f"Error loading data: {e}")
 
-def print_info(dataframe):
-    """
-    Prints summary information about a DataFrame containing time-indexed measurements.
+def print_info(dataframe, verbose=False, expected_interval=1.0, tolerance=0.05):
+    """Display timing and missing-value information for a time-indexed DataFrame.
 
-    This function outputs key information, including the start and end times of the data,
-    total number of data points, average time between measurements, and a count of NaN
-    values for each column.
+    By default, the function displays a single acquisition timing summary. Set
+    ``verbose=True`` to also display the most common intervals, cumulative gap
+    counts, and the largest individual gaps.
 
-    It also provides a summary of the time differences between successive measurements,
-    showing the most common interval (Δt), the second most common interval (if available),
-    and the number and proportion of measurements with less common intervals. This helps
-    identify irregular sampling or data collection issues.
-
-    Parameters:
-    -----------
+    Parameters
+    ----------
     dataframe : pandas.DataFrame
-        A DataFrame with a time-based index representing the measurement timestamps.
-        The columns should represent various measured variables.
+        DataFrame whose index contains measurement timestamps.
+    verbose : bool, default False
+        Whether to display the detailed interval and gap tables.
+    expected_interval : float, default 1.0
+        Expected time between measurements, in seconds.
+    tolerance : float, default 0.05
+        Allowed difference from ``expected_interval``, in seconds.
 
-    Outputs:
+    Examples
     --------
-    - Start time of measurements.
-    - End time of measurements.
-    - Total number of data points.
-    - Average time interval (in seconds) between data points.
-    - Most common and second most common time intervals between measurements.
-    - Count and percentage of measurements with non-standard time intervals.
-    - Count of NaN values per column.
+    Display the concise summary:
 
-    Example:
-    --------
-    print_info(dataframe)
-    
-    Notes:
-    ------
-    - Assumes that `dataframe` has a time-based index in chronological order.
-    - Calculates the time interval by dividing the total time span by the number of points.
-    - Useful for quickly inspecting data completeness and identifying potential data gaps.
+    >>> print_info(dataframe)
+
+    Include detailed timing diagnostics:
+
+    >>> print_info(dataframe, verbose=True)
+
+    Notes
+    -----
+    Common intervals are grouped after rounding to the nearest millisecond.
+    The input DataFrame is not modified.
     """
 
+    if dataframe.empty:
+        raise ValueError("The DataFrame must contain at least one measurement.")
+    if tolerance < 0:
+        raise ValueError("tolerance must be non-negative.")
 
-    # Ensure index is datetime and sorted
-    dataframe = dataframe.copy()
-    dataframe.index = pd.to_datetime(dataframe.index)
-    dataframe = dataframe.sort_index()
+    # Copy and sort only the timestamps; large measurement columns need not be duplicated.
+    timestamps = (
+        pd.Series(pd.to_datetime(dataframe.index), name="Timestamp")
+        .sort_values(ignore_index=True)
+    )
+    if timestamps.isna().any():
+        raise ValueError("The DataFrame index contains an invalid timestamp.")
 
-        
-    # When does data collection begin and end
-    print(f"Measurements start at: {dataframe.index[0]}")
-    print(f"Measurements end at: {dataframe.index[-1]}")
-    print("---------")
-    
-    # How many data points do we have
-    raw_total_points = len(dataframe)
-    print(f"Total number of measurements: {raw_total_points}")
+    delta_seconds = timestamps.diff().dt.total_seconds().iloc[1:]
+    rounded_deltas = delta_seconds.round(3)
+    lower_limit = expected_interval - tolerance
+    upper_limit = expected_interval + tolerance
+    within_tolerance = delta_seconds.between(lower_limit, upper_limit)
+    has_intervals = not delta_seconds.empty
+    mode_delta = rounded_deltas.value_counts().index[0] if has_intervals else None
 
-    # What's the average time in seconds time between data points
-    time_between_points = ((dataframe.index[-1] - dataframe.index[0]) / raw_total_points).total_seconds()
-    print(f"Average time between measurements: {time_between_points:.6f} s")
-    print("---------")
+    def display_table(table, caption, formatters=None):
+        """Display a styled table in notebooks, with a text fallback elsewhere."""
+        try:
+            from IPython import get_ipython
+            from IPython.display import display
 
-    # Time difference analysis
-    delta_seconds = dataframe.index.to_series().diff().dt.total_seconds().dropna().round(3)
-    delta_counts = delta_seconds.value_counts().sort_values(ascending=False)
+            in_notebook = get_ipython() is not None
+        except ImportError:
+            in_notebook = False
 
-    if len(delta_counts) > 0:
-        most_common = delta_counts.index[0]
-        most_common_count = delta_counts.iloc[0]
-        print(f"Most common Δt between measurements: {most_common} s ({most_common_count} instances)")
+        if not in_notebook:
+            print(f"\n{caption}")
+            print(table.to_string(index=False))
+            return
 
-        if len(delta_counts) > 1:
-            second_common = delta_counts.index[1]
-            second_common_count = delta_counts.iloc[1]
-            print(f"Second most common Δt: {second_common} s ({second_common_count} instances)")
+        styled_table = (
+            table.style
+            .hide(axis="index")
+            .set_caption(caption)
+            .set_table_styles([{
+                "selector": "caption",
+                "props": [
+                    ("caption-side", "top"),
+                    ("font-size", "16px"),
+                    ("font-weight", "bold"),
+                    ("text-align", "left"),
+                ],
+            }])
+        )
+        if formatters is not None:
+            styled_table = styled_table.format(formatters)
+        display(styled_table)
 
-        other_counts = delta_counts.iloc[1:].sum()
-        print(f"Measurements with a Δt not equal to the most common: {other_counts} ({other_counts / raw_total_points:.2%})")
-    else:
-        print("No time difference data available (only one timestamp?)")
-    print("---------")
+    summary_rows = [
+        {"Metric": "Measurements", "Value": f"{len(dataframe):,}"},
+        {"Metric": "Start", "Value": str(timestamps.iloc[0])},
+        {"Metric": "End", "Value": str(timestamps.iloc[-1])},
+        {
+            "Metric": "Mean Δt",
+            "Value": f"{delta_seconds.mean():.6f} s" if has_intervals else "N/A",
+        },
+        {
+            "Metric": "Median Δt",
+            "Value": f"{delta_seconds.median():.6f} s" if has_intervals else "N/A",
+        },
+        {
+            "Metric": "Most common Δt",
+            "Value": f"{mode_delta:.3f} s" if has_intervals else "N/A",
+        },
+        {
+            "Metric": "99th percentile Δt",
+            "Value": (
+                f"{delta_seconds.quantile(0.99):.3f} s"
+                if has_intervals else "N/A"
+            ),
+        },
+        {
+            "Metric": "Maximum Δt",
+            "Value": f"{delta_seconds.max():.3f} s" if has_intervals else "N/A",
+        },
+        {
+            "Metric": f"Within {expected_interval:g} ± {tolerance:g} s",
+            "Value": (
+                f"{within_tolerance.sum():,} "
+                f"({within_tolerance.mean():.2%})"
+            ) if has_intervals else "N/A",
+        },
+        {
+            "Metric": "Outside tolerance",
+            "Value": (
+                f"{(~within_tolerance).sum():,} "
+                f"({(~within_tolerance).mean():.2%})"
+            ) if has_intervals else "N/A",
+        },
+    ]
 
-    # Count NaNs
-    print("Total number of NaNs")
-    print(dataframe.isna().sum())
+    for column, nan_count in dataframe.isna().sum().items():
+        summary_rows.append({
+            "Metric": f"NaNs — {column}",
+            "Value": f"{nan_count:,}",
+        })
+
+    summary = pd.DataFrame(summary_rows)
+    display_table(summary, "Acquisition timing summary")
+
+    if not verbose or not has_intervals:
+        return
+
+    top_n = 10
+    common_intervals = (
+        rounded_deltas.value_counts()
+        .head(top_n)
+        .rename_axis("Δt (s)")
+        .reset_index(name="Count")
+    )
+    common_intervals["Percentage"] = common_intervals["Count"] / len(delta_seconds)
+    display_table(
+        common_intervals,
+        f"Top {top_n} most common intervals",
+        {
+            "Δt (s)": "{:.3f}",
+            "Count": "{:,}",
+            "Percentage": "{:.2%}",
+        },
+    )
+
+    gap_thresholds = (1.5, 2, 10, 60)
+    gap_summary = pd.DataFrame([
+        {
+            "Threshold": f"> {threshold:g} s",
+            "Count": int((delta_seconds > threshold).sum()),
+            "Percentage": (delta_seconds > threshold).mean(),
+        }
+        for threshold in gap_thresholds
+    ])
+    display_table(
+        gap_summary,
+        "Intervals exceeding gap thresholds (cumulative)",
+        {"Count": "{:,}", "Percentage": "{:.4%}"},
+    )
+
+    largest_gaps = 10
+    largest_deltas = delta_seconds.nlargest(largest_gaps)
+    largest_positions = largest_deltas.index.to_numpy()
+    largest = pd.DataFrame({
+        "Start": timestamps.iloc[largest_positions - 1].to_numpy(),
+        "End": timestamps.iloc[largest_positions].to_numpy(),
+        "Δt (s)": largest_deltas.to_numpy(),
+    })
+    display_table(
+        largest,
+        f"Largest {largest_gaps} gaps",
+        {"Δt (s)": "{:,.3f}"},
+    )
 
     
     
