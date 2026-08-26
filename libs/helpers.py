@@ -103,7 +103,7 @@ def load_data(url):
     except Exception as e:
         raise RuntimeError(f"Error loading data: {e}")
 
-def print_info(dataframe, verbose=False, expected_interval=1.0, tolerance=0.05):
+def print_info(dataframe, verbose=False, expected_interval=1.0, tolerance=0.1):
     """Display timing and missing-value information for a time-indexed DataFrame.
 
     By default, the function displays a single acquisition timing summary. Set
@@ -118,7 +118,7 @@ def print_info(dataframe, verbose=False, expected_interval=1.0, tolerance=0.05):
         Whether to display the detailed interval and gap tables.
     expected_interval : float, default 1.0
         Expected time between measurements, in seconds.
-    tolerance : float, default 0.05
+    tolerance : float, default 0.1
         Allowed difference from ``expected_interval``, in seconds.
 
     Examples
