@@ -8,6 +8,7 @@ No thermal or radioactive anomalies were detected. [RESULTS OF CR-39 ANALYSIS]
 
 ## Links
 - [Data panels](https://nucleonics.mit.edu/data/load-panel.php?filename=completed%20arpa-e%20runs/Nassisi1)
+- [Loading Analysis](https://github.com/project-ida/arpa-e-experiments/blob/main/analysis/nassisi-01/Nassisi_1.ipynb)
 - [PSD Analysis](https://github.com/project-ida/arpa-e-experiments/blob/main/analysis/nassisi-01/Nassisi_1_Refined_PSD.ipynb)
 - [Radiation Analysism, soaking period](https://github.com/project-ida/arpa-e-experiments/blob/main/analysis/nassisi-01/Nassisi_1a_Radiation_pulse_analysis.ipynb)
 - [Radiation Analysis, laser period](https://github.com/project-ida/arpa-e-experiments/blob/main/analysis/nassisi-01/Nassisi_1b_Radiation_pulse_analysis_updated.ipynb)
