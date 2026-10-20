@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.18.1
+      jupytext_version: 1.19.6
   kernelspec:
     display_name: Python 3
     name: python3
@@ -28,11 +28,18 @@ jupyter:
 This notebook contains starter code that extracts and visualises event waveforms from a ROOT file.
 <!-- #endregion -->
 
+```python colab={"base_uri": "https://localhost:8080/"} id="iRx5OjNEHaKe" outputId="20c6846a-81f2-4e3f-f250-821d584acbcd"
+# Makes Libs accessible and runs notebook from same location regardless of whether colab or local
+!pip install colocal -q
+import colocal
+root, branch, cwd = colocal.setup()
+```
+
 <!-- #region id="Fu4x4NPbBKrT" -->
 ## Libraries
 <!-- #endregion -->
 
-```python id="IAyoM46dBFqg"
+```python id="IAyoM46dBFqg" colab={"base_uri": "https://localhost:8080/"} outputId="e99ac556-af52-4c8c-c856-457c740c94cb"
 # Auth
 import sys, os
 import shutil
@@ -60,13 +67,17 @@ import uproot
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import plotly.graph_objects as go
+
+
+# Use our custom helper functions
+from libs.sql_api import SQLConnection, SQLAPIError, read_sql
 ```
 
 <!-- #region id="C99IMdA1BSWv" -->
 ## Authentication
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 53} id="FhhgoaA3A0-Z" outputId="6e6348c1-23ef-471e-f3dd-2c6a3fb69c42"
+```python colab={"base_uri": "https://localhost:8080/", "height": 53} id="FhhgoaA3A0-Z" outputId="9e5cac46-a748-4f72-fc4b-8f4d9746005c"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -82,11 +93,17 @@ shutil.copy("/content/drive/MyDrive/Nucleonics/.env/psql_credentials_readonly.py
 
 ```python id="R5pArHA9BUJV"
 # Import SQL credentials
-from psql_credentials import PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE
+from psql_credentials import PGHOST, PGUSER, PGPASSWORD, PGPORT, PGDATABASE
 
 # Create the database connection string
-connection_uri = f'postgresql+psycopg2://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}'
-engine = create_engine(connection_uri)
+connection_uri = f'https://{PGHOST}/sql-api/query.php'
+engine = SQLConnection(
+    connection_uri,
+    PGUSER,
+    PGPASSWORD,
+    database=PGDATABASE,
+    timeout=(10, 600),
+)
 ```
 
 <!-- #region id="uNJuPTnlBf3C" -->
@@ -121,7 +138,7 @@ def find_root_file(event_time, channel_number):
     LIMIT 1;
     """
     file_pattern = f"%_CH{channel_number}@%"
-    df = pd.read_sql(query, con=engine, params={
+    df = read_sql(query, con=engine, params={
         "event_time": event_time,
         "file_pattern": file_pattern
     })
@@ -130,7 +147,7 @@ def find_root_file(event_time, channel_number):
 
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 112} id="MULgCJIACxWN" outputId="27830e06-d946-4a8d-a1fc-a395b202cf81"
+```python colab={"base_uri": "https://localhost:8080/", "height": 129} id="MULgCJIACxWN" outputId="24d903df-1691-4aa1-9bb6-40f0e0b104ab"
 df_root = find_root_file(time, channel_number)
 df_root
 ```
@@ -171,7 +188,7 @@ def download_file_from_drive(file_id, filename):
 
 ```
 
-```python id="O0d0eZmvJUgK"
+```python id="7kMHw24YMlGq"
 file_path = construct_file_path(closest_root_file)
 file_id = get_file_id(file_path)
 ```
