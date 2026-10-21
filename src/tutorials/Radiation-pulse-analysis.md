@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.17.3
+      jupytext_version: 1.19.6
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -45,6 +45,18 @@ experiment_id = 1
 channel_number = 0
 ```
 
+```python id="7bYTuE7Z4kUE"
+# Makes Libs accessible and runs notebook from same location regardless of whether colab or local
+!pip install colocal -q
+import colocal
+root, branch, cwd = colocal.setup()
+```
+
+```python id="3_2zkbkp4mgA"
+# Fixes plotly install for proper rendering in nbviewer
+!pip install -q --upgrade --force-reinstall "plotly==6.8.0"
+```
+
 <!-- #region id="gqHlPSyYrxDU" -->
 ## Libraries
 <!-- #endregion -->
@@ -72,6 +84,13 @@ from scipy.stats import kstest
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import plotly.graph_objects as go
+
+# Make sure plotly displays properly in colab, notebooks and nbviewer
+import plotly.io as pio
+pio.renderers.default = "notebook_connected+colab"
+
+# Use our custom helper functions
+from libs.sql_api import SQLConnection, SQLAPIError, read_sql
 ```
 
 <!-- #region id="3AaQ35teouCo" -->
@@ -96,14 +115,20 @@ shutil.copy("/content/drive/MyDrive/Nucleonics/.env/sheet_ids.py", "sheet_ids.py
 
 ```python id="OA2IJWNSoyIF"
 # Import SQL credentials
-from psql_credentials import PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE
+from psql_credentials import PGHOST, PGUSER, PGPASSWORD, PGPORT, PGDATABASE
 
 # Import sheet ID for the nuclear particle master sheet
 from sheet_ids import NUCLEAR_PARTICLE_MASTER as sheet_id
 
 # Create the database connection string
-connection_uri = f'postgresql+psycopg2://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}'
-engine = create_engine(connection_uri)
+connection_uri = f'https://{PGHOST}/sql-api/query.php'
+engine = SQLConnection(
+    connection_uri,
+    PGUSER,
+    PGPASSWORD,
+    database=PGDATABASE,
+    timeout=(10, 600),
+)
 ```
 
 ```python id="7xEZcdqnr8iF"
@@ -172,6 +197,9 @@ times = row[['Setup', 'Calibration', 'Background 1', 'Experiment', 'Background 2
 if times.isnull().all(axis=None) or (times == '').all(axis=None):
     times = rows.iloc[[0]][['Setup', 'Calibration', 'Background 1', 'Experiment', 'Background 2', 'End']]
 
+# Extract the psp neutron/gamma discriminator
+psp = row["psp threshold"].iloc[0]
+
 # Convert to datetime
 times = times.apply(pd.to_datetime)
 
@@ -197,7 +225,7 @@ def get_event_data(start_time, end_time, psp=">0", energy=">0"):
   AND time BETWEEN '{start_time}' AND '{end_time}'
   ORDER BY time;
   """
-  df = pd.read_sql(query, engine, index_col=None)
+  df = read_sql(query, engine, index_col=None)
   df.set_index('time', inplace=True)
   return df
 ```
