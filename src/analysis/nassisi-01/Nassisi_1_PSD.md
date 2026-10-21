@@ -20,6 +20,13 @@ We have noticed that due to the long duration of the Nassisi experiment, there i
 Nassisi 1 ran from 16:25 April 4 to 12:00 June 20.
 <!-- #endregion -->
 
+```python id="a19244753e00"
+# Makes Libs accessible and runs notebook from same location regardless of whether colab or local
+!pip install colocal -q
+import colocal
+root, branch, cwd = colocal.setup()
+```
+
 ```python id="hwEs60h81e1_"
 # Auth
 import sys, os
@@ -38,6 +45,9 @@ from sqlalchemy import create_engine, text
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import plotly.graph_objects as go
+
+# Use our custom helper functions
+from libs.sql_api import SQLConnection, SQLAPIError, read_sql
 ```
 
 ```python colab={"base_uri": "https://localhost:8080/", "height": 54} id="rVUwPPMo2m91" outputId="b5edc9ea-e599-492c-df14-5f24d99f662c"
@@ -50,11 +60,17 @@ shutil.copy("/content/drive/MyDrive/Nucleonics/.env/psql_credentials_readonly.py
 
 ```python id="G5MWwce52qaD"
 # Import SQL credentials
-from psql_credentials import PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE
+from psql_credentials import PGHOST, PGUSER, PGPASSWORD, PGPORT, PGDATABASE
 
 # Create the database connection string
-connection_uri = f'postgresql+psycopg2://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}'
-engine = create_engine(connection_uri)
+connection_uri = f'https://{PGHOST}/sql-api/query.php'
+engine = SQLConnection(
+    connection_uri,
+    PGUSER,
+    PGPASSWORD,
+    database=PGDATABASE,
+    timeout=(10, 600),
+)
 ```
 
 ```python id="8REFFz9g2u9j"
@@ -69,7 +85,7 @@ def get_psd_data(start_time, end_time, digitizer, channel_number):
   GROUP BY psp_bin, energy_bin
   ORDER BY psp_bin, energy_bin;
   """
-  return pd.read_sql(query, engine, index_col=None)
+  return read_sql(query, engine, index_col=None)
 
 ```
 
@@ -81,7 +97,7 @@ def get_event_data(start_time, end_time, psp=">0", energy=">0"):
   AND time BETWEEN '{start_time}' AND '{end_time}'
   ORDER BY time;
   """
-  df = pd.read_sql(query, engine, index_col=None)
+  df = read_sql(query, engine, index_col=None)
   df.set_index('time', inplace=True)
   return df
 ```
