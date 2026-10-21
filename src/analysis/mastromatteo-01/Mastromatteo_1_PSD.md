@@ -12,7 +12,7 @@ jupyter:
 ---
 
 <!-- #region id="718fa448-89aa-4055-a179-b265ca731032" -->
-<a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-02/Mastromatteo_2_PSD_analysis.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-02/Mastromatteo_2_PSD_analysis.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
+<a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-01/Mastromatteo_1_PSD.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-01/Mastromatteo_1_PSD.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
 <!-- #endregion -->
 
 <!-- #region id="zPGvduxO5Zva" -->
@@ -46,11 +46,11 @@ You will be asked a couple of time to authenticate with your Google account, but
 <!-- #endregion -->
 
 ```python id="Fh2oRsfz2EKK"
-experiment_id = 12
-channel_number = 1
+experiment_id = 2
+channel_number = 0
 ```
 
-```python id="2b27f50b50c7"
+```python colab={"base_uri": "https://localhost:8080/"} id="r-G8XiTN7XpB" outputId="48061c73-0329-4033-c276-dffbaf2bb083"
 # Makes Libs accessible and runs notebook from same location regardless of whether colab or local
 !pip install colocal -q
 import colocal
@@ -79,7 +79,7 @@ from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 from sqlalchemy import create_engine, text
 
-# Plotting
+#Plotting
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
@@ -96,7 +96,7 @@ We need to do a few authentication steps:
 -  Authenticate Colab to pull the nuclear particle master sheet using the Drive API.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="d2a6b0aa-f9f9-41d8-8a17-6c79c07590f0"
+```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="75b0ee1c-3bdb-4630-df3e-5c6447db92c9"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -171,7 +171,7 @@ df = pd.DataFrame(sheet.get_all_records())
 df = fill_experiment_id(df)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="9d5e2780-f6c9-4bb2-fbe7-233072579096"
+```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="3a72b818-a699-4a36-8923-abaf1dd85cde"
 # Find the rows where Experiment ID matches
 rows = df[df['Experiment ID'] == experiment_id]
 
@@ -270,7 +270,7 @@ def data_exists(label):
 If we do not have an official calibration period, we'll use the next period (e.g. Background 1 or Experiment) for calculting the PSP threshold.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="_zIoMpMYTYeO" outputId="e1476536-7fec-4bd8-fe96-b8ac5999dc9b"
+```python colab={"base_uri": "https://localhost:8080/"} id="_zIoMpMYTYeO" outputId="18150046-9f06-48ee-ca19-d43ab1312fa0"
 if not data_exists("Calibration"):
   print("Calibration data does not exist, looking for other data to use in place of an official calibration period")
   if data_exists("Background 1"):
@@ -281,10 +281,6 @@ if not data_exists("Calibration"):
     psd_data["Calibration"] = psd_data["Experiment"]
     psd_periods["Calibration"] = psd_periods["Experiment"]
     print("Using Experiment data for calibration")
-  elif data_exists("Background 2"):
-    psd_data["Calibration"] = psd_data["Background 2"]
-    psd_periods["Calibration"] = psd_periods["Background 2"]
-    print("Using Background 2 data for calibration")
   elif data_exists("Setup"):
     psd_data["Calibration"] = psd_data["Setup"]
     psd_periods["Calibration"] = psd_periods["Setup"]
@@ -352,7 +348,7 @@ def plot_psd(data, period=None, title="PSD", psp_threshold=None, ax=None):
 We begin with the calibration period for which we have the largest number of events due to the presence of a source of radiation. This PSD plot is what we'll use to extract a simple psp threshold value that can be used to quickly discriminate between gammas (lower psp) and neutrons (higher psp).  
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="91bab7da-ccd4-4231-f9ca-844ea76bda21"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="f04a08fc-fabc-49e3-d1a1-78ed9da7e2cc"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration")
 else:
@@ -365,20 +361,10 @@ else:
 
 The most accurate way to discriminate between gammas and neutrons is to create a fiducial lines. For the purpose of eyeballing neutron/gamma counts during a live experiment, a simple threshold psp value can be a good enough.
 
-In this notebook, we'll trial two methods
-- midpoint method
-- Guassaian drop method
-
-For the midpoint method
+In this notebook, we trial a midpoint method.
 - Choose an energy value
 - Determine the psp locations of the gamma and neutron peaks
 - Take the half way point between the two values.
-
-For the Guassaian drop method
-- Fit the signals with Guassians
-- Find the psp value at which the gammas drop to some fraction of their peak, e.g. 0.1%
-
-We'll attempt the midpoint first and then if that fails, then we'll fallback to the Guassaian drop method.
 <!-- #endregion -->
 
 ```python id="awexRLhIuuFq"
@@ -442,7 +428,7 @@ def find_psp_midpoint(data, target_energy=500, prominence=10, energy_range=(0, 4
     return midpoint
 ```
 
-```python id="cOUD_wT1i3ac"
+```python id="y_rjZfWG2e9s"
 # --- Gaussian definitions ---
 def gaussian(x, amp, mu, sigma):
     return amp * np.exp(-(x - mu)**2 / (2 * sigma**2))
@@ -454,7 +440,7 @@ def double_gaussian(x, amp1, mu1, sigma1, amp2, mu2, sigma2):
 def find_psp_threshold_gaussian(data, target_energy=500,
                                      energy_range=(0, 4000), psp_range=(0, 1),
                                      energy_bins=512, psp_bins=128,
-                                     plot=True, mean_tol=0.05, amp_ratio_tol=0.1,
+                                     plot=True, mean_tol=0.02, amp_ratio_tol=0.1,
                                      drop_fraction=0.001):
     """
     Fits Gaussian(s) to PSP distribution at a given energy and finds PSP threshold
@@ -466,7 +452,6 @@ def find_psp_threshold_gaussian(data, target_energy=500,
     bin_width_e = (energy_range[1] - energy_range[0]) / energy_bins
     closest_energy_bin = int(round(target_energy / bin_width_e))
     closest_energy_bin = max(1, min(closest_energy_bin, energy_bins))
-    print(f"Closest energy bin to {target_energy}: {closest_energy_bin}")
 
     # Step 2: Filter data for that energy bin
     filtered = data[data['energy_bin'] == closest_energy_bin]
@@ -512,11 +497,9 @@ def find_psp_threshold_gaussian(data, target_energy=500,
     lower_gauss = min(params, key=lambda p: p[1])
     amp, mu, sigma = lower_gauss
 
-    # Step 6: Compute PSP threshold at 0.1% of peak
-    delta = 3*sigma#np.sqrt(-2 * sigma**2 * np.log(drop_fraction))
+    # Step 6: Compute PSP threshold at 1% of peak
+    delta = np.sqrt(-2 * sigma**2 * np.log(drop_fraction))
     psp_threshold = mu + delta  # right-side cutoff
-    print(delta/sigma)
-
 
     # Step 7: Plot
     if plot:
@@ -536,34 +519,29 @@ def find_psp_threshold_gaussian(data, target_energy=500,
         plt.show()
 
     return psp_threshold
-
 ```
 
 <!-- #region id="t3i4sq1N5oUB" -->
-For this tutorial, we'll experiment with different energies for determining a rough psp thresold value:
-- Energy = 500 for the midpoint method
-- Energy = 100 for the Gaussian drop method
+In this analysis we'll use Energy  = 500
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 560} id="COo7DxuTi7x1" outputId="09abfd8c-ab7d-4384-b5ef-2a029387c418"
-
+```python colab={"base_uri": "https://localhost:8080/", "height": 523} id="eq9yNEu9u1WM" outputId="eda60826-b6be-4243-e2e0-050991490ee3"
 if data_exists("Calibration"):
   try:
-    psp_threshold = find_psp_midpoint(psd_data["Calibration"], target_energy = 500, prominence=10)
+    psp_threshold = find_psp_midpoint(psd_data["Calibration"], target_energy = 500, prominence=5)
   except:
     print("find_psp_midpoint failed, attemping find_psp_threshold_gaussian")
-    psp_threshold = find_psp_threshold_gaussian(psd_data["Calibration"], target_energy=60, drop_fraction=0.001)
+    psp_threshold = find_psp_threshold_gaussian(psd_data["Calibration"], target_energy=100, drop_fraction=0.001)
 else:
   psp_threshold = None
   print("‼️ Calibration data does not exist, cannot perform psp thresold analysis ‼️")
-
 ```
 
 <!-- #region id="k3oLzeKc53Y4" -->
 Now that we have our threshold, we can remake the PSD plots to see if there is anything obviously wrong with the analysis.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="9031c3d6-ad57-40ad-c071-3b186f0a55ea"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="06cd97d1-2c82-41c2-f70f-6c55139ecfc8"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration", psp_threshold)
 else:
@@ -574,7 +552,7 @@ else:
 It can also be instructive to create the PSD plots for the background periods - we would not expect significant changes between the two. Here, we just eyeball them, but performing a statistical analysis will be the next step.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 487} id="lqeyLIBawd9O" outputId="7590f4ed-df93-4408-e5a8-85b762092d03"
+```python colab={"base_uri": "https://localhost:8080/", "height": 582} id="lqeyLIBawd9O" outputId="e0bde250-66fa-42b9-a17c-10ac904e0e13"
 if data_exists("Background 1") and data_exists("Background 2"):
   fig, axes = plt.subplots(1, 2, figsize=(14, 5), squeeze=False)
   axes = axes.flatten()  # Flatten for easy indexing
@@ -594,7 +572,7 @@ else:
 And of course we can look at the experimental period.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="0mYMvYpTsdf1" outputId="e7e3bc6e-91d2-411f-d3cc-b4a1ea09f9d6"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="0mYMvYpTsdf1" outputId="d5113675-8203-49b0-e0f3-5ca56a4cc3f9"
 if data_exists("Experiment"):
   plot_psd(psd_data["Experiment"], psd_periods["Experiment"], psp_threshold=psp_threshold)
 else:
@@ -605,7 +583,7 @@ else:
 Finally, we now update the master spreadsheet with the PSP threshold that will be used to gamma/neutron discrimination.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="4a4cfcc5-ba4a-4f0a-b929-623c755066de"
+```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="cced48be-a740-46cd-91f2-c8e03f919020"
 if psp_threshold is not None and "Calibration" in psd_data:
   # Calculate the row number (adjusting for header row)
 
@@ -621,105 +599,6 @@ else:
   print("‼️ No psp threshold has been calculated. Nothing to upload to master sheet.")
 ```
 
-<!-- #region id="YlzJLYYKoFjv" -->
-## PSP thresold over time
-
-To detect any detector drift we can perform the same analaysis as above but spit the data into several parts to get psp threshold over time.
-<!-- #endregion -->
-
-```python id="mMDHiFAgoZtR"
-def psp_threshold_over_time_period(period_label, n_segments, target_energy=100, drop_fraction=0.001, show_psd_plots=True):
-    """
-    Calculate PSP thresholds over time for a given experimental period,
-    by splitting the period into n_segments and re-querying PSD data for each.
-
-    Parameters
-    ----------
-    period_label : str
-        Name of the period in `psd_periods` / `times` (e.g., "Experiment").
-    n_segments : int
-        Number of time segments to divide the period into.
-    target_energy : float
-        Energy to use for PSP threshold calculation (default 100 for Gaussian method).
-    drop_fraction : float
-        Fraction of gamma peak height to define the PSP threshold.
-    show_psd_plots : bool
-        Whether to show PSD plots for each segment.
-
-    Returns
-    -------
-    thresholds : list of float
-        PSP thresholds for each segment.
-    """
-
-    if period_label not in times.columns:
-        raise ValueError(f"Period '{period_label}' not found in times table.")
-
-    # Get start and end times from the master times DataFrame
-    start_time = times.iloc[0][period_label]
-    col_index = list(times.columns).index(period_label)
-    for j in range(col_index + 1, len(times.columns)):
-        if pd.notna(times.iloc[0, j]):
-            end_time = times.iloc[0, j]
-            break
-    else:
-        raise ValueError(f"No end time found for period '{period_label}'")
-
-    total_duration = (end_time - start_time) / n_segments
-    thresholds = []
-    mid_times = []  # store midpoint times for plotting
-
-    for i in range(n_segments):
-        seg_start = start_time + i * total_duration
-        seg_end = seg_start + total_duration
-        seg_mid = seg_start + total_duration / 2
-        mid_times.append(seg_mid)
-
-        seg_data = get_psd_data(seg_start, seg_end)
-
-        if seg_data.empty:
-            thresholds.append(np.nan)
-            print(f"Segment {i+1} ({seg_start} - {seg_end}): No data")
-            continue
-
-        try:
-            th = find_psp_threshold_gaussian(
-                seg_data,
-                target_energy=target_energy,
-                drop_fraction=drop_fraction,
-                plot=False
-            )
-            thresholds.append(th)
-            print(f"Segment {i+1} ({seg_start} - {seg_end}): PSP threshold = {th:.4f}")
-
-            if show_psd_plots:
-                plt.figure(figsize=(8, 6))
-                plot_psd(seg_data, period=None, title=f"Segment {i+1} ({seg_start} - {seg_end})", psp_threshold=th)
-                plt.show()
-
-        except ValueError as e:
-            thresholds.append(np.nan)
-            print(f"Segment {i+1} ({seg_start} - {seg_end}): {e}")
-
-    # Final trend plot using midpoint times
-    plt.figure(figsize=(10, 5))
-    plt.plot(mid_times, thresholds, marker='o', linestyle='-')
-    plt.xlabel("Time")
-    plt.ylabel("PSP Threshold (Gaussian drop method)")
-    plt.title(f"PSP Threshold Over Time ({period_label})")
-    plt.grid(True)
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.show()
-
-    return thresholds
-
-```
-
-```python colab={"base_uri": "https://localhost:8080/", "height": 1000} id="2zHO4uaEpvJw" outputId="df9188cc-413e-4516-9e47-f5df5f379196"
-psp_thresholds = psp_threshold_over_time_period("Background 2", 10, show_psd_plots=False)
-```
-
-```python id="9gAfXLgrpwUw"
+```python id="3wHPc5X2DTuE"
 
 ```

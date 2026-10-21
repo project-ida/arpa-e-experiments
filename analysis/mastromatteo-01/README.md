@@ -10,7 +10,7 @@ No thermal or radioactive anomalies were detected. [RESULTS OF SURFACE VIEWER/CR
 - [Data panels](https://nucleonics.mit.edu/data/load-panel.php?filename=completed%20arpa-e%20runs/Mastromatteo1)
 - [SEM prescan]()
 - [Optical postscan]
-- [PSD Analysis](https://github.com/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-01/Mastromatteo1_PSD_analysis.ipynb)
+- [PSD Analysis](https://github.com/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-01/Mastromatteo_1_PSD.ipynb)
 - [Radiation Analysis](https://github.com/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-01/Mastromatteo_1_Radiation_pulse_analysis_updated.ipynb)
 - [Lab Notebook](https://docs.google.com/document/d/1M0-0rl_QPKIZ0oZNs8WNMiCvkWDgZa9TXCzasR5Jp1c/edit?usp=sharing)
 

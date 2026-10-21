@@ -212,7 +212,7 @@ times.head()
 
 We store each individual radiation pulse in our database. These pulses are characterised by an energy and a psp value. The radiation pulses contain a mixture of gamma and neutron events which can be distinguised through PSD analysis at different levels of sophistication.
 
-The [simplest PSD analysis](https://github.com/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-03/mastromatteo-03-PSD-analysis.ipynb) is to use a constant PSP discriminator value above which the pulses are considered to be neutrons, below are gammas. We can also combine this with an similar energy discriminator.
+The [simplest PSD analysis](https://github.com/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-03/Mastromatteo_3_PSD.ipynb) is to use a constant PSP discriminator value above which the pulses are considered to be neutrons, below are gammas. We can also combine this with an similar energy discriminator.
 
 We can then query the database to pull only the events that match our PSD analysis requirements.
 <!-- #endregion -->

@@ -5,14 +5,14 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.17.3
+      jupytext_version: 1.19.6
   kernelspec:
     display_name: Python 3
     name: python3
 ---
 
 <!-- #region id="718fa448-89aa-4055-a179-b265ca731032" -->
-<a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-03/mastromatteo-03-PSD-analysis.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-03/mastromatteo-03-PSD-analysis.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
+<a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-03/Mastromatteo_3_PSD.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-03/Mastromatteo_3_PSD.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
 <!-- #endregion -->
 
 <!-- #region id="zPGvduxO5Zva" -->
@@ -50,6 +50,13 @@ experiment_id = 12
 channel_number = 2
 ```
 
+```python id="0e9af27c9ffc"
+# Makes Libs accessible and runs notebook from same location regardless of whether colab or local
+!pip install colocal -q
+import colocal
+root, branch, cwd = colocal.setup()
+```
+
 <!-- #region id="ngm6-Aeq3BBl" -->
 ## Libraries
 <!-- #endregion -->
@@ -75,6 +82,9 @@ from sqlalchemy import create_engine, text
 # Plotting
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+
+# Use our custom helper functions
+from libs.sql_api import SQLConnection, SQLAPIError, read_sql
 ```
 
 <!-- #region id="ECkL-FKb0z8d" -->
@@ -99,14 +109,20 @@ shutil.copy("/content/drive/MyDrive/Nucleonics/.env/sheet_ids.py", "sheet_ids.py
 
 ```python id="yxzMFBara5ov"
 # Import SQL credentials
-from psql_credentials import PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE
+from psql_credentials import PGHOST, PGUSER, PGPASSWORD, PGPORT, PGDATABASE
 
 # Import sheet ID for the nuclear particle master sheet
 from sheet_ids import NUCLEAR_PARTICLE_MASTER as sheet_id
 
 # Create the database connection string
-connection_uri = f'postgresql+psycopg2://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}'
-engine = create_engine(connection_uri)
+connection_uri = f'https://{PGHOST}/sql-api/query.php'
+engine = SQLConnection(
+    connection_uri,
+    PGUSER,
+    PGPASSWORD,
+    database=PGDATABASE,
+    timeout=(10, 600),
+)
 ```
 
 ```python id="qFmXJoGKj_Sh"
@@ -200,7 +216,7 @@ def get_psd_data(start_time, end_time):
   GROUP BY psp_bin, energy_bin
   ORDER BY psp_bin, energy_bin;
   """
-  return pd.read_sql(query, engine, index_col=None)
+  return read_sql(query, engine, index_col=None)
 
 
 def get_all_psd_data(times):
@@ -619,11 +635,11 @@ def psp_threshold_over_time_period(period_label, n_segments, target_energy=100, 
 Let's look at the PSD once per day by taking the 14 days of experimental data and performing 14 PSD analyses.
 <!-- #endregion -->
 
-```python id="PmYNOyp_zHQh" outputId="833e64b5-2af5-47ca-865b-47a178f3a4dc" colab={"base_uri": "https://localhost:8080/", "height": 757}
+```python colab={"base_uri": "https://localhost:8080/", "height": 757} id="PmYNOyp_zHQh" outputId="833e64b5-2af5-47ca-865b-47a178f3a4dc"
 psp_thresholds = psp_threshold_over_time_period("Experiment", 14, show_psd_plots=False)
 ```
 
-```python id="9gAfXLgrpwUw" outputId="81e38f5f-fdb8-4447-bbe8-73d79fa1840c" colab={"base_uri": "https://localhost:8080/"}
+```python colab={"base_uri": "https://localhost:8080/"} id="9gAfXLgrpwUw" outputId="81e38f5f-fdb8-4447-bbe8-73d79fa1840c"
 (np.max(psp_thresholds) - np.min(psp_thresholds))/np.min(psp_thresholds)*100
 ```
 

@@ -12,7 +12,7 @@ jupyter:
 ---
 
 <!-- #region id="718fa448-89aa-4055-a179-b265ca731032" -->
-<a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-01/Mastromatteo1_PSD_analysis.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-01/Mastromatteo1_PSD_analysis.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
+<a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-04/Mastromatteo_4_5inch_PSD.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-04/Mastromatteo_4_5inch_PSD.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
 <!-- #endregion -->
 
 <!-- #region id="zPGvduxO5Zva" -->
@@ -46,11 +46,11 @@ You will be asked a couple of time to authenticate with your Google account, but
 <!-- #endregion -->
 
 ```python id="Fh2oRsfz2EKK"
-experiment_id = 2
-channel_number = 0
+experiment_id = 13
+channel_number = 4
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="r-G8XiTN7XpB" outputId="48061c73-0329-4033-c276-dffbaf2bb083"
+```python id="4c6e050dfc2f"
 # Makes Libs accessible and runs notebook from same location regardless of whether colab or local
 !pip install colocal -q
 import colocal
@@ -79,7 +79,7 @@ from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 from sqlalchemy import create_engine, text
 
-#Plotting
+# Plotting
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
@@ -96,12 +96,12 @@ We need to do a few authentication steps:
 -  Authenticate Colab to pull the nuclear particle master sheet using the Drive API.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="75b0ee1c-3bdb-4630-df3e-5c6447db92c9"
+```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="4b2bcb30-b692-438e-d4f4-7f42d5ca35c8"
 # Mount Drive
 drive.mount('/content/drive')
 
 # Copy SQL credentials from Google drive
-shutil.copy("/content/drive/MyDrive/Nucleonics/.env/psql_credentials_readonly.py", "psql_credentials.py")
+shutil.copy("/content/drive/MyDrive/Nucleonics/.env/psql_credentials.py", "psql_credentials.py")
 
 # Copy sheet ID file from Google drive
 shutil.copy("/content/drive/MyDrive/Nucleonics/.env/sheet_ids.py", "sheet_ids.py");
@@ -171,7 +171,7 @@ df = pd.DataFrame(sheet.get_all_records())
 df = fill_experiment_id(df)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="3a72b818-a699-4a36-8923-abaf1dd85cde"
+```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="fe9a9e49-8244-4939-d574-d8424344cb66"
 # Find the rows where Experiment ID matches
 rows = df[df['Experiment ID'] == experiment_id]
 
@@ -270,7 +270,7 @@ def data_exists(label):
 If we do not have an official calibration period, we'll use the next period (e.g. Background 1 or Experiment) for calculting the PSP threshold.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="_zIoMpMYTYeO" outputId="18150046-9f06-48ee-ca19-d43ab1312fa0"
+```python id="_zIoMpMYTYeO"
 if not data_exists("Calibration"):
   print("Calibration data does not exist, looking for other data to use in place of an official calibration period")
   if data_exists("Background 1"):
@@ -348,7 +348,7 @@ def plot_psd(data, period=None, title="PSD", psp_threshold=None, ax=None):
 We begin with the calibration period for which we have the largest number of events due to the presence of a source of radiation. This PSD plot is what we'll use to extract a simple psp threshold value that can be used to quickly discriminate between gammas (lower psp) and neutrons (higher psp).  
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="f04a08fc-fabc-49e3-d1a1-78ed9da7e2cc"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="9ff87eaf-4f37-4cf2-ecc9-ad38c98686d1"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration")
 else:
@@ -361,10 +361,20 @@ else:
 
 The most accurate way to discriminate between gammas and neutrons is to create a fiducial lines. For the purpose of eyeballing neutron/gamma counts during a live experiment, a simple threshold psp value can be a good enough.
 
-In this notebook, we trial a midpoint method.
+In this notebook, we'll trial two methods
+- midpoint method
+- Guassaian drop method
+
+For the midpoint method
 - Choose an energy value
 - Determine the psp locations of the gamma and neutron peaks
 - Take the half way point between the two values.
+
+For the Guassaian drop method
+- Fit the signals with Guassians
+- Find the psp value at which the gammas drop to some fraction of their peak, e.g. 0.1%
+
+We'll attempt the midpoint first and then if that fails, then we'll fallback to the Guassaian drop method.
 <!-- #endregion -->
 
 ```python id="awexRLhIuuFq"
@@ -428,7 +438,7 @@ def find_psp_midpoint(data, target_energy=500, prominence=10, energy_range=(0, 4
     return midpoint
 ```
 
-```python id="y_rjZfWG2e9s"
+```python id="cOUD_wT1i3ac"
 # --- Gaussian definitions ---
 def gaussian(x, amp, mu, sigma):
     return amp * np.exp(-(x - mu)**2 / (2 * sigma**2))
@@ -474,8 +484,8 @@ def find_psp_threshold_gaussian(data, target_energy=500,
 
     if use_double:
         # Initial guess: amplitudes, means, sigmas
-        p0 = [hist[peaks[0]], psp_centres[peaks[0]], 0.01,
-              hist[peaks[1]], psp_centres[peaks[1]], 0.01]
+        p0 = [hist[peaks[0]], psp_centres[peaks[0]], 0.05,
+              hist[peaks[1]], psp_centres[peaks[1]], 0.05]
         bounds = (0, [np.inf, 1, np.inf, np.inf, 1, np.inf])
         popt, _ = curve_fit(double_gaussian, psp_centres, hist, p0=p0, bounds=bounds)
         params = [(popt[0], popt[1], popt[2]), (popt[3], popt[4], popt[5])]
@@ -488,7 +498,7 @@ def find_psp_threshold_gaussian(data, target_energy=500,
 
     if not use_double:
         # Fit single Gaussian
-        p0 = [np.max(hist), psp_centres[np.argmax(hist)], 0.01]
+        p0 = [np.max(hist), psp_centres[np.argmax(hist)], 0.05]
         bounds = (0, [np.inf, 1, np.inf])
         popt, _ = curve_fit(gaussian, psp_centres, hist, p0=p0, bounds=bounds)
         params = [tuple(popt)]
@@ -519,13 +529,17 @@ def find_psp_threshold_gaussian(data, target_energy=500,
         plt.show()
 
     return psp_threshold
+
 ```
 
 <!-- #region id="t3i4sq1N5oUB" -->
-In this analysis we'll use Energy  = 500
+For this tutorial, we'll experiment with different energies for determining a rough psp thresold value:
+- Energy = 500 for the midpoint method
+- Energy = 100 for the Gaussian drop method
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 523} id="eq9yNEu9u1WM" outputId="eda60826-b6be-4243-e2e0-050991490ee3"
+```python colab={"base_uri": "https://localhost:8080/", "height": 460} id="COo7DxuTi7x1" outputId="cae0b9ac-c2ef-4c13-ce3e-e8465f2507a5"
+
 if data_exists("Calibration"):
   try:
     psp_threshold = find_psp_midpoint(psd_data["Calibration"], target_energy = 500, prominence=5)
@@ -535,13 +549,14 @@ if data_exists("Calibration"):
 else:
   psp_threshold = None
   print("‼️ Calibration data does not exist, cannot perform psp thresold analysis ‼️")
+
 ```
 
 <!-- #region id="k3oLzeKc53Y4" -->
 Now that we have our threshold, we can remake the PSD plots to see if there is anything obviously wrong with the analysis.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="06cd97d1-2c82-41c2-f70f-6c55139ecfc8"
+```python id="GDItxFMPu7xY"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration", psp_threshold)
 else:
@@ -552,7 +567,7 @@ else:
 It can also be instructive to create the PSD plots for the background periods - we would not expect significant changes between the two. Here, we just eyeball them, but performing a statistical analysis will be the next step.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 582} id="lqeyLIBawd9O" outputId="e0bde250-66fa-42b9-a17c-10ac904e0e13"
+```python id="lqeyLIBawd9O"
 if data_exists("Background 1") and data_exists("Background 2"):
   fig, axes = plt.subplots(1, 2, figsize=(14, 5), squeeze=False)
   axes = axes.flatten()  # Flatten for easy indexing
@@ -572,9 +587,9 @@ else:
 And of course we can look at the experimental period.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="0mYMvYpTsdf1" outputId="d5113675-8203-49b0-e0f3-5ca56a4cc3f9"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="0mYMvYpTsdf1" outputId="ae63bde9-a389-4b0d-fb7f-0aea84592564"
 if data_exists("Experiment"):
-  plot_psd(psd_data["Experiment"], psd_periods["Experiment"], psp_threshold=psp_threshold)
+  plot_psd(psd_data["Experiment"], psd_periods["Experiment"])
 else:
   print("‼️ Exeperiment data does not exist, cannot create PSD plot ‼️")
 ```
@@ -583,7 +598,7 @@ else:
 Finally, we now update the master spreadsheet with the PSP threshold that will be used to gamma/neutron discrimination.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="cced48be-a740-46cd-91f2-c8e03f919020"
+```python id="fPphtneprA95"
 if psp_threshold is not None and "Calibration" in psd_data:
   # Calculate the row number (adjusting for header row)
 
@@ -597,8 +612,4 @@ if psp_threshold is not None and "Calibration" in psd_data:
   print("Google Sheet updated successfully.")
 else:
   print("‼️ No psp threshold has been calculated. Nothing to upload to master sheet.")
-```
-
-```python id="3wHPc5X2DTuE"
-
 ```

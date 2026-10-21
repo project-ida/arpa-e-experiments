@@ -12,7 +12,7 @@ jupyter:
 ---
 
 <!-- #region id="718fa448-89aa-4055-a179-b265ca731032" -->
-<a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-06/Mastromatteo_6_PSD_analysis.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-06/Mastromatteo_6_PSD_analysis.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
+<a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-05/Mastromatteo_5_PSD.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-05/Mastromatteo_5_PSD.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
 <!-- #endregion -->
 
 <!-- #region id="zPGvduxO5Zva" -->
@@ -46,11 +46,11 @@ You will be asked a couple of time to authenticate with your Google account, but
 <!-- #endregion -->
 
 ```python id="Fh2oRsfz2EKK"
-experiment_id = 31
-channel_number = 3
+experiment_id = 13
+channel_number = 2
 ```
 
-```python id="10a0bf73dbbb"
+```python id="6ab417d92b65"
 # Makes Libs accessible and runs notebook from same location regardless of whether colab or local
 !pip install colocal -q
 import colocal
@@ -96,7 +96,7 @@ We need to do a few authentication steps:
 -  Authenticate Colab to pull the nuclear particle master sheet using the Drive API.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="372727d1-fa30-4f64-da54-f67b73496b88"
+```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="3c4a4e89-690f-47b6-b0ea-29d23cdb2849"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -171,7 +171,7 @@ df = pd.DataFrame(sheet.get_all_records())
 df = fill_experiment_id(df)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="d356e571-374a-4246-e3c6-ba64e958e9cf"
+```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="c93f37f8-caf1-4dfa-e79b-bd8ade392c22"
 # Find the rows where Experiment ID matches
 rows = df[df['Experiment ID'] == experiment_id]
 
@@ -348,7 +348,7 @@ def plot_psd(data, period=None, title="PSD", psp_threshold=None, ax=None):
 We begin with the calibration period for which we have the largest number of events due to the presence of a source of radiation. This PSD plot is what we'll use to extract a simple psp threshold value that can be used to quickly discriminate between gammas (lower psp) and neutrons (higher psp).  
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="58bdff39-5c75-4ba9-8503-eeb35e052043"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="0322b42e-9792-480b-fd3b-0738504f911e"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration")
 else:
@@ -538,7 +538,7 @@ For this tutorial, we'll experiment with different energies for determining a ro
 - Energy = 100 for the Gaussian drop method
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 522} id="COo7DxuTi7x1" outputId="5476d863-cb8c-4d4a-9205-2413472cf7b7"
+```python colab={"base_uri": "https://localhost:8080/", "height": 522} id="COo7DxuTi7x1" outputId="fafacc49-42b8-4172-ab6f-cda4d12dd14b"
 
 if data_exists("Calibration"):
   try:
@@ -556,7 +556,7 @@ else:
 Now that we have our threshold, we can remake the PSD plots to see if there is anything obviously wrong with the analysis.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="dce4aed1-1fff-4319-a82e-2a9a44c23667"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="ec105b3b-79e9-4624-e221-844f0a962f25"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration", psp_threshold)
 else:
@@ -567,7 +567,7 @@ else:
 It can also be instructive to create the PSD plots for the background periods - we would not expect significant changes between the two. Here, we just eyeball them, but performing a statistical analysis will be the next step.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 487} id="lqeyLIBawd9O" outputId="3e320560-f7a5-41eb-8fca-56bf93a19331"
+```python colab={"base_uri": "https://localhost:8080/", "height": 581} id="lqeyLIBawd9O" outputId="7e58e6a3-76ce-47c9-9644-f44fa38f1726"
 if data_exists("Background 1") and data_exists("Background 2"):
   fig, axes = plt.subplots(1, 2, figsize=(14, 5), squeeze=False)
   axes = axes.flatten()  # Flatten for easy indexing
@@ -587,7 +587,7 @@ else:
 And of course we can look at the experimental period.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="0mYMvYpTsdf1" outputId="8115762d-4ad1-4d63-9eef-5ae3409086fb"
+```python colab={"base_uri": "https://localhost:8080/"} id="0mYMvYpTsdf1" outputId="c2d7f982-201e-4acb-90b2-bfc3418f06d1"
 if data_exists("Experiment"):
   plot_psd(psd_data["Experiment"], psd_periods["Experiment"], psp_threshold=psp_threshold)
 else:
@@ -598,7 +598,7 @@ else:
 Finally, we now update the master spreadsheet with the PSP threshold that will be used to gamma/neutron discrimination.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="e6e0d82c-e9bb-4be2-d666-2339527c7374"
+```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="a1f5d94b-4b66-4bc4-abc0-656748972b0b"
 if psp_threshold is not None and "Calibration" in psd_data:
   # Calculate the row number (adjusting for header row)
 
