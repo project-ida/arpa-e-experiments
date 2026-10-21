@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.17.3
+      jupytext_version: 1.19.6
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -51,6 +51,13 @@ experiment_id = 1
 channel_number = 0
 ```
 
+```python colab={"base_uri": "https://localhost:8080/"} id="XMYQg56ntQi1" outputId="f2b31b9e-9303-4a20-9185-b3cb4646e064"
+# Makes Libs accessible and runs notebook from same location regardless of whether colab or local
+!pip install colocal -q
+import colocal
+root, branch, cwd = colocal.setup()
+```
+
 <!-- #region id="ngm6-Aeq3BBl" -->
 ## Libraries
 <!-- #endregion -->
@@ -76,6 +83,9 @@ from sqlalchemy import create_engine, text
 # Plotting
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+
+# Use our custom helper functions
+from libs.sql_api import SQLConnection, SQLAPIError, read_sql
 ```
 
 <!-- #region id="ECkL-FKb0z8d" -->
@@ -87,7 +97,7 @@ We need to do a few authentication steps:
 -  Authenticate Colab to pull the nuclear particle master sheet using the Drive API.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="132f6a47-f4a5-4e5d-9cd0-5bf5f62acc17"
+```python colab={"base_uri": "https://localhost:8080/"} id="hLa3yxHiau8o" outputId="e93b3897-96a8-46e5-8ae3-085eb5c359ae"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -100,14 +110,20 @@ shutil.copy("/content/drive/MyDrive/Nucleonics/.env/sheet_ids.py", "sheet_ids.py
 
 ```python id="yxzMFBara5ov"
 # Import SQL credentials
-from psql_credentials import PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE
+from psql_credentials import PGHOST, PGUSER, PGPASSWORD, PGPORT, PGDATABASE
 
 # Import sheet ID for the nuclear particle master sheet
 from sheet_ids import NUCLEAR_PARTICLE_MASTER as sheet_id
 
 # Create the database connection string
-connection_uri = f'postgresql+psycopg2://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}'
-engine = create_engine(connection_uri)
+connection_uri = f'https://{PGHOST}/sql-api/query.php'
+engine = SQLConnection(
+    connection_uri,
+    PGUSER,
+    PGPASSWORD,
+    database=PGDATABASE,
+    timeout=(10, 600),
+)
 ```
 
 ```python id="qFmXJoGKj_Sh"
@@ -156,7 +172,7 @@ df = pd.DataFrame(sheet.get_all_records())
 df = fill_experiment_id(df)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="644135ab-507b-45b9-a100-951fbddc9ac6"
+```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="bfHvT6Qtkvbq" outputId="fa9bd6ca-1a8a-4bba-90ff-bb73eb05a674"
 # Find the rows where Experiment ID matches
 rows = df[df['Experiment ID'] == experiment_id]
 
@@ -201,7 +217,7 @@ def get_psd_data(start_time, end_time):
   GROUP BY psp_bin, energy_bin
   ORDER BY psp_bin, energy_bin;
   """
-  return pd.read_sql(query, engine, index_col=None)
+  return read_sql(query, engine, index_col=None)
 
 
 def get_all_psd_data(times):
@@ -255,7 +271,7 @@ def data_exists(label):
 If we do not have an official calibration period, we'll use the next period (e.g. Background 1 or Experiment) for calculting the PSP threshold.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="_zIoMpMYTYeO" outputId="52cd64ff-2daf-4d75-b46b-23428950cdbc"
+```python colab={"base_uri": "https://localhost:8080/"} id="_zIoMpMYTYeO" outputId="776777bf-92ed-43ac-dea7-a728f4d65cd6"
 if not data_exists("Calibration"):
   print("Calibration data does not exist, looking for other data to use in place of an official calibration period")
   if data_exists("Background 1"):
@@ -337,7 +353,7 @@ def plot_psd(data, period=None, title="PSD", psp_threshold=None, ax=None):
 We begin with the calibration period for which we have the largest number of events due to the presence of a source of radiation. This PSD plot is what we'll use to extract a simple psp threshold value that can be used to quickly discriminate between gammas (lower psp) and neutrons (higher psp).  
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="df2076c2-8f6b-4b74-becc-76d339b3db0c"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDJzrD8zmFV-" outputId="da428dae-8879-4a20-8eb5-a76253db3e16"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration")
 else:
@@ -450,7 +466,7 @@ def find_psp_threshold_gaussian(data, target_energy=500,
 For this tutorial, we'll use `target_energy = 100` for fitting the Guassians. Keep in mind this number might need adjusting depending on what the PSD plot looks like.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 487} id="COo7DxuTi7x1" outputId="f388f76b-d20e-414d-9ea1-2b0552166e6a"
+```python colab={"base_uri": "https://localhost:8080/", "height": 487} id="COo7DxuTi7x1" outputId="40c92cfe-a29b-4fdf-a3a0-823f8ecf44c6"
 
 if data_exists("Calibration"):
   psp_threshold = find_psp_threshold_gaussian(psd_data["Calibration"], target_energy=100, num_sigma=4)
@@ -464,7 +480,7 @@ else:
 Now that we have our threshold, we can remake the PSD plots to see if there is anything obviously wrong with the analysis.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="12c7744a-5394-48ad-f0ab-46a8205fd620"
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="GDItxFMPu7xY" outputId="5e53cd85-b6c7-46a4-ba35-2ff9da1290e9"
 if data_exists("Calibration"):
   plot_psd(psd_data["Calibration"], psd_periods["Calibration"], "Calibration", psp_threshold)
 else:
@@ -475,7 +491,7 @@ else:
 It can also be instructive to create the PSD plots for the background periods - we would not expect significant changes between the two. Here, we just eyeball them, but performing a statistical analysis will be the next step.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 582} id="lqeyLIBawd9O" outputId="b6761e24-6655-426c-fbe3-ceb067ded2f4"
+```python colab={"base_uri": "https://localhost:8080/", "height": 582} id="lqeyLIBawd9O" outputId="3682e8a9-a3a1-4eeb-b2f5-53d8239ab480"
 if data_exists("Background 1") and data_exists("Background 2"):
   fig, axes = plt.subplots(1, 2, figsize=(14, 5), squeeze=False)
   axes = axes.flatten()  # Flatten for easy indexing
@@ -495,7 +511,7 @@ else:
 And of course we can look at the experimental period.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="0mYMvYpTsdf1" outputId="93b43d20-ad8e-4a81-85f8-f11a7d1af34e"
+```python colab={"base_uri": "https://localhost:8080/"} id="0mYMvYpTsdf1" outputId="887419d5-ed7a-441e-b6d2-28851aefba5a"
 if data_exists("Experiment"):
   plot_psd(psd_data["Experiment"], psd_periods["Experiment"], psp_threshold=psp_threshold)
 else:
@@ -506,7 +522,7 @@ else:
 Finally, we now update the master spreadsheet with the PSP threshold that will be used to gamma/neutron discrimination.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="ad385aed-e7c8-4956-f0c8-fe6ccdc05582"
+```python colab={"base_uri": "https://localhost:8080/"} id="fPphtneprA95" outputId="6370c8b6-4ddc-496b-8999-3ad81bc3a800"
 if psp_threshold is not None and "Calibration" in psd_data:
   # Calculate the row number (adjusting for header row)
 
@@ -617,7 +633,7 @@ def psp_threshold_over_time_period(period_label, n_segments, target_energy=100, 
 
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 686} id="2zHO4uaEpvJw" outputId="13b8ce38-dbf3-492b-a85f-c4956e0d79ad"
+```python colab={"base_uri": "https://localhost:8080/", "height": 686} id="2zHO4uaEpvJw" outputId="2b7cbc4e-fdff-46ed-f165-475a9b4aa2aa"
 psp_thresholds = psp_threshold_over_time_period("Background 2", 10, show_psd_plots=False)
 ```
 
@@ -625,6 +641,10 @@ psp_thresholds = psp_threshold_over_time_period("Background 2", 10, show_psd_plo
 We can now calcuate how much that the PSP threshold changes across time.
 <!-- #endregion -->
 
-```python id="9gAfXLgrpwUw"
+```python id="9gAfXLgrpwUw" colab={"base_uri": "https://localhost:8080/"} outputId="52f660b6-e9b6-47d7-f299-6dad6729041d"
 (np.max(psp_thresholds) - np.min(psp_thresholds))/np.min(psp_thresholds)*100
+```
+
+```python id="qAuZB-J9tua8"
+
 ```
