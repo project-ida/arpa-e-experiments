@@ -14,4 +14,5 @@ No thermal or radioactive anomalies were detected. [RESULTS OF SURFACE VIEWER/CR
 - [Radiation Analysis](https://github.com/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-01/Mastromatteo_1_Radiation_pulse_analysis_updated.ipynb)
 - [Lab Notebook](https://docs.google.com/document/d/1M0-0rl_QPKIZ0oZNs8WNMiCvkWDgZa9TXCzasR5Jp1c/edit?usp=sharing)
 
-<img width="789" height="490" alt="mastromatteo1" src="https://github.com/user-attachments/assets/d4c4d3ab-722d-4385-b7a0-32f7cf11e956" />
+<img width="789" height="490" alt="mastromatteo1" src="https://github.com/user-attachments/assets/7473d9f6-5280-4ca7-87f7-e0e7d1fd73b5" />
+
