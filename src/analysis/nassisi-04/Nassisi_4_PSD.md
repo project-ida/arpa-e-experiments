@@ -11,13 +11,13 @@ jupyter:
     name: python3
 ---
 
-<a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/analysis/nassisi-03/Nassisi_3_Refined_PSD.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/analysis/nassisi-03/Nassisi_3_Refined_PSD.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
+<a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/analysis/nassisi-04/Nassisi_4_PSD.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/analysis/nassisi-04/Nassisi_4_PSD.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
 
 <!-- #region id="sceBesRj1jlf" -->
-#Nassisi 3
+#Nassisi 4
 We have noticed that due to the long duration of the Nassisi experiment, there is some detector drift, causing the neutron and gamma bands to shift over time. In order to get a more accurate count of neutrons, we will break the experiment into chunks and analyze each separately.
 
-Nassisi 3 ran from 16:25 April 4 to 12:00 June 20.
+Nassisi 4 ran from 12:00 April 16 to 12:00 June 23.
 <!-- #endregion -->
 
 ```python id="hwEs60h81e1_"
@@ -40,7 +40,7 @@ import matplotlib.colors as mcolors
 import plotly.graph_objects as go
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 53} id="rVUwPPMo2m91" outputId="54995b60-806c-454f-cb72-54f459bacb68"
+```python colab={"base_uri": "https://localhost:8080/", "height": 53} id="rVUwPPMo2m91" outputId="ec4627a3-3630-491c-9ea7-7b16b8ac1f05"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -206,16 +206,20 @@ def find_psp_threshold_gaussian(data, target_energy=500,
 
 ```python id="ceL2TYKU213e"
 digitizer = "caen8ch"
-channel_number = 3
+channel_number = 2
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="245c4535" outputId="6066ed70-170b-471b-ffd9-a1282d32475c"
+<!-- #region id="BKCKqNitvcXK" -->
+On May 16, the experiment was temporarily moved to the 4 channel digitizer to have the deuterium cycled. It was returned to the 8 channel at 15:00 on May 19.
+<!-- #endregion -->
+
+```python colab={"base_uri": "https://localhost:8080/"} id="245c4535" outputId="546ff120-72fe-4712-b7ac-7e47b52d8332"
 #Break range into 2 day periods
 
 from datetime import datetime, timedelta
 
-start_time_str = '2025-04-04 16:25'
-end_time_str = '2025-06-20 12:00'
+start_time_str = '2025-04-16 12:00'
+end_time_str = '2025-05-16 11:30'
 
 start_time = datetime.strptime(start_time_str, '%Y-%m-%d %H:%M')
 end_time = datetime.strptime(end_time_str, '%Y-%m-%d %H:%M')
@@ -236,7 +240,7 @@ for start, end in time_periods:
     print(f"Start: {start}, End: {end}")
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 1000} id="SOPp_MMO7k54" outputId="4631de3a-d50a-4389-f2b4-d3c9e308c548"
+```python colab={"base_uri": "https://localhost:8080/", "height": 1000} id="SOPp_MMO7k54" outputId="dc0196af-63fe-4024-a311-8c195064fa6b"
 #For each start and end time in start and end, run get_psd_data and return a list of the PSPs
 psd_list = []
 neutron_rates = []
@@ -244,7 +248,7 @@ for start, end in time_periods:
     df_psd = get_psd_data(start, end, digitizer, channel_number)
     psp_threshold = find_psp_threshold_gaussian(df_psd, target_energy=100, num_sigma=4)
     psd_list.append(psp_threshold)
-    neutron_data = get_event_data(start,end,f">{psp_threshold}")#,">500")
+    neutron_data = get_event_data(start,end,f">{psp_threshold}",">500")
     neutron_data = reconstruct_ns_pulses(neutron_data)
     deltas = np.diff(neutron_data.index.values).astype("timedelta64[ns]") / np.timedelta64(1, "s")
     delta_sorted = np.sort(deltas)
@@ -255,25 +259,141 @@ for start, end in time_periods:
 
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="0evnwW6I_fBb" outputId="8b977a66-9175-4647-b805-a3cd42d805e4"
+<!-- #region id="xRfrLQeihOC8" -->
+Let's plot the full PSD histogram for this time period.
+<!-- #endregion -->
+
+```python id="Pf8_sZqhhRGC"
+def plot_psd(data, period=None, title="PSD", psp_threshold=None, ax=None):
+    # Initialise histogram
+    hist = np.zeros((512, 128), dtype=int)
+
+    if period is not None:
+        days = period.days
+        hours = period.components.hours
+        days_str = f"{days} day" if days == 1 else f"{days} days" if days > 0 else ""
+        hours_str = f"{hours} hour" if hours == 1 else f"{hours} hours"
+        period_string = f"{days_str}, {hours_str}" if days > 0 else hours_str
+        period_string = period_string.strip(", ")
+    else:
+        period_string = None
+
+    # Accumulate counts
+    for row in data.itertuples(index=False):
+        psp_bin, energy_bin, count = row
+        if 0 <= energy_bin < 512 and 0 <= psp_bin < 128:
+            hist[energy_bin, psp_bin] += int(count)
+
+    # Define bin edges
+    energy_edges = np.linspace(0, 4000, 513)  # 512 bins → 513 edges
+    psp_edges = np.linspace(0, 1, 129)        # 128 bins → 129 edges
+
+    # Plot with pcolormesh and log colour scale
+    if ax is None:
+        fig = plt.figure(figsize=(10, 6))
+        ax = fig.add_subplot(111)
+
+    im = ax.pcolormesh(energy_edges, psp_edges, hist.T,
+                      norm=mcolors.LogNorm(vmin=1, vmax=hist.max()),
+                      cmap='viridis', shading='auto')
+    ax.set_xlabel('Energy')
+    ax.set_ylabel('PSP')
+    if period_string is not None:
+        ax.set_title(f"{title} ({period_string})")
+    else:
+        ax.set_title(title)
+
+    # Draw horizontal red line at psp_threshold if provided
+    if psp_threshold is not None:
+        if 0 <= psp_threshold <= 1:  # Ensure threshold is within PSP range [0, 1]
+            ax.axhline(y=psp_threshold, color='red', linestyle='-', label=f'PSP Threshold: {psp_threshold:.3f}')
+            ax.legend()
+
+    # Add colorbar
+    plt.colorbar(im, ax=ax, label='Count (log scale)')
+
+    if ax is None:
+        plt.show()
+```
+
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="dFNkaAIzhWs0" outputId="955f1fca-84f4-4175-9687-48f9349272bd"
+psd_data = get_psd_data(start_time_str, end_time_str, digitizer, channel_number)
+plot_psd(psd_data)
+```
+
+<!-- #region id="vI6P_aE6mU_z" -->
+This range includes May 8, when the detectors were moved to the basement and had to be restarted after power loss. If we only include data before May 8, the bifurcation goes away
+<!-- #endregion -->
+
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="8q66avRlmmPS" outputId="6397f4a0-e9cf-4617-8f11-3c7a10413b96"
+psd_data = get_psd_data(start_time_str, '2025-05-08 00:00', digitizer, channel_number)
+plot_psd(psd_data)
+```
+
+<!-- #region id="hFep1Nrn-6s-" -->
+Now for the second half of the dataset on the 8 channel digitizer
+<!-- #endregion -->
+
+```python colab={"base_uri": "https://localhost:8080/"} id="YEsXrzTPxvnZ" outputId="73961844-b4de-4698-cea6-e786bd977751"
+#Break range into 2 day periods
+
+from datetime import datetime, timedelta
+
+start_time_str = '2025-05-19 15:00'
+end_time_str = '2025-06-23 12:00'
+
+start_time = datetime.strptime(start_time_str, '%Y-%m-%d %H:%M')
+end_time = datetime.strptime(end_time_str, '%Y-%m-%d %H:%M')
+
+time_periods = []
+current_start_time = start_time
+
+while current_start_time < end_time:
+    current_end_time = current_start_time + timedelta(days=2)
+    if current_end_time > end_time:
+        current_end_time = end_time
+    time_periods.append((current_start_time.strftime('%Y-%m-%d %H:%M'), current_end_time.strftime('%Y-%m-%d %H:%M')))
+    all_times.append((current_start_time.strftime('%Y-%m-%d %H:%M'), current_end_time.strftime('%Y-%m-%d %H:%M')))
+    current_start_time = current_end_time
+
+for start, end in time_periods:
+    print(f"Start: {start}, End: {end}")
+```
+
+```python colab={"base_uri": "https://localhost:8080/", "height": 1000} id="9IFVbrC4yq4S" outputId="1279499c-14cb-41e9-ecc2-9824e6599059"
+#For each start and end time in start and end, run get_psd_data and return a list of the PSPs
+
+for start, end in time_periods:
+    df_psd = get_psd_data(start, end, digitizer, channel_number)
+    psp_threshold = find_psp_threshold_gaussian(df_psd, target_energy=100, num_sigma=4)
+    psd_list.append(psp_threshold)
+    neutron_data = get_event_data(start,end,f">{psp_threshold}",">500")
+    neutron_data = reconstruct_ns_pulses(neutron_data)
+    deltas = np.diff(neutron_data.index.values).astype("timedelta64[ns]") / np.timedelta64(1, "s")
+    delta_sorted = np.sort(deltas)
+    lam = 1 / np.mean(delta_sorted)
+    print(lam)
+    neutron_rates.append(lam)
+```
+
+```python colab={"base_uri": "https://localhost:8080/", "height": 564} id="7WLX0eCxkD08" outputId="4f215175-eb86-4bf1-a479-987e317c9f93"
+psd_data = get_psd_data(start_time_str, end_time_str, digitizer, channel_number)
+plot_psd(psd_data)
+```
+
+```python colab={"base_uri": "https://localhost:8080/"} id="0evnwW6I_fBb" outputId="39a39366-2b3a-42a6-d952-ed994e89ae4b"
 psd_list
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="ByO4Kw2rHk4O" outputId="d6eda286-2e36-425c-edcd-ba9b2ee5e4a8"
+```python colab={"base_uri": "https://localhost:8080/"} id="ByO4Kw2rHk4O" outputId="c26b2039-140f-4957-f002-7b62490fe09f"
 neutron_rates
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="ht-2Uqc9qRW9" outputId="ae847c55-0fe0-4417-bd7b-9c93711d5bcc"
-#Calculate the average of neutron_rates
-average_neutron_rate = np.mean(neutron_rates)
-average_neutron_rate
-```
-
-```python colab={"base_uri": "https://localhost:8080/"} id="PLwGhHZBKXF9" outputId="9d24398d-74ff-446f-b271-8e8e8cfd0351"
+```python colab={"base_uri": "https://localhost:8080/"} id="PLwGhHZBKXF9" outputId="cbe44bc6-ea01-48bf-e72e-42b904add9e8"
 all_times
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="i3r1pXsHHps1" outputId="9e875d1c-c9f5-455f-e974-f5fc4b76a649"
+```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="i3r1pXsHHps1" outputId="334420e4-87c5-4060-b3e4-92c1df4884a6"
 #Plot neutron_rates over time using pltly
 #Convert all_times to timestamps
 start_times = [period[0] for period in all_times]
@@ -284,13 +404,13 @@ fig.add_trace(go.Scattergl(name="Neutrons per second", x=start_times, y=neutron_
 
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="rjRTR0bLeDfR" outputId="c93503f7-2556-4d23-f5c6-a23ac2aa6686"
+```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="rjRTR0bLeDfR" outputId="eacb40ac-1eae-4a07-8dd7-67b40a46ea56"
 fig = go.Figure(layout=dict(yaxis_title="PSP", showlegend=False, height=600, width=800))
 fig.add_trace(go.Scattergl(name="PSP", x=start_times, y=psd_list))
 ```
 
-<!-- #region id="7xamjQ_ibxzt" -->
+<!-- #region id="95bIUJ5hiJPt" -->
 #Conclusion
 
-The drift in the PSP distribution mostly occured in a discrete event, namely, when the chamber was transferred to the LASER lab for laser treatment. This may have been caused by small disturbances in the electrical connections. Overall, the drift is found to be small, so for the analysis we will use the average PSP cutoff for discrimination.
+Here we see the PSP distribution is roughly constant, except for a discrete event that occured when the chambers were moved to the LASER lab for laser treatment. Note that although this experiment lagged the other two by 10 days and so did not begin its laser treatment until May 19, the chamber needed to travel with the other two chambers as all three were run through a single multichannel digitizer. During the move, a cable was damaged, and other cables were shuffled around to replace the broken one. As a result of changing cables, the PSP distribution shifted. We therefore break our analysis up into two periods, and use the average PSP value for each period separately.
 <!-- #endregion -->
