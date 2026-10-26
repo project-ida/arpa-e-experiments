@@ -31,6 +31,13 @@ The analysis notebook contains starter code for doing PSD analysis.
 
 <!-- #endregion -->
 
+```python id="22c38f9ea1da"
+# Makes Libs accessible and runs notebook from same location regardless of whether colab or local
+!pip install colocal -q
+import colocal
+root, branch, cwd = colocal.setup()
+```
+
 <!-- #region id="r8YnwifBxHbC" -->
 ## Libraries
 <!-- #endregion -->
@@ -47,11 +54,13 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
-from sqlalchemy import create_engine, text
 
 # Plotting
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+
+# Use our custom helper functions
+from libs.sql_api import SQLConnection, SQLAPIError, read_sql
 ```
 
 <!-- #region id="pFm9re7FxJZG" -->
@@ -70,11 +79,17 @@ shutil.copy("/content/drive/MyDrive/Nucleonics/.env/psql_credentials_readonly.py
 
 ```python id="NrwixMX_xV4U"
 # Import SQL credentials
-from psql_credentials import PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE
+from psql_credentials import PGHOST, PGUSER, PGPASSWORD, PGPORT, PGDATABASE
 
 # Create the database connection string
-connection_uri = f'postgresql+psycopg2://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}'
-engine = create_engine(connection_uri)
+connection_uri = f'https://{PGHOST}/sql-api/query.php'
+engine = SQLConnection(
+    connection_uri,
+    PGUSER,
+    PGPASSWORD,
+    database=PGDATABASE,
+    timeout=(10, 600),
+)
 ```
 
 <!-- #region id="r8KsZm9pxfDD" -->
@@ -98,7 +113,7 @@ def get_psd_data(start_time, end_time, digitizer, channel_number):
   GROUP BY psp_bin, energy_bin
   ORDER BY psp_bin, energy_bin;
   """
-  return pd.read_sql(query, engine, index_col=None)
+  return read_sql(query, engine, index_col=None)
 ```
 
 <!-- #region id="rAOtR5n2yy0O" -->
