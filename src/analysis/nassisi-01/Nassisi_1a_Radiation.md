@@ -448,21 +448,7 @@ fig.add_trace(go.Scattergl(name="Counts per min", x=experiment_cpm.index, y=expe
 ```
 
 <!-- #region id="JZbwIIHfBR_q" -->
-We can exclude these spikes:
-<!-- #endregion -->
-
-```python colab={"base_uri": "https://localhost:8080/", "height": 634} id="nO9T4l3x1Rmc" outputId="2f1cf7af-d47c-4288-aaa5-ddf86c39c929"
-experiment_cpm = experiment.resample("60s").size().rename("counts").to_frame()
-#Include only counts greater than 0 and less than 200
-experiment_cpm = experiment_cpm[(experiment_cpm.counts < 200) & (experiment_cpm.counts > 0)]
-rate_excluding_spikes = np.mean(experiment_cpm.counts)/60
-print(f"Rate excluding spike: {rate_excluding_spikes:.2f} events per second")
-fig = go.Figure(layout=dict(yaxis_title="Counts per min", showlegend=False, height=600, width=1200))
-fig.add_trace(go.Scattergl(name="Counts per min", x=experiment_cpm.index, y=experiment_cpm.counts))
-```
-
-<!-- #region id="ITucHJSXjuCr" -->
-We can see with the spikes and the gaps exluded, the rate agrees with the background rate we measured prior.
+The following timing analysis includes the electronic spikes. We then repeat the analysis with an earlier end time to exclude the final period affected by these disturbances.
 <!-- #endregion -->
 
 <!-- #region id="6McultY7klTK" -->
