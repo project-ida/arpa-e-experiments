@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.17.3
+      jupytext_version: 1.19.6
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -19,68 +19,20 @@ jupyter:
 <!-- #region id="e99c3707" -->
 # Spotting Outliers from Neutron Detection Background
 
+This tutorial examines individual one-minute neutron counts that are unusually high under a constant-rate Poisson background model. We estimate the model's mean from the selected background record and compare two ways of identifying minutes for closer inspection:
 
-In a previous notebook, *Eljen-Background-Characterization*, we demonstrated how to verify that our neutron-count background is statistically stable over long runs. In this standalone notebook, we’ll go further by turning our focus to the problem of identifying individual neutron bursts that rise far above the expected background level. We will do this in two ways:
+1. **A mean-plus-Z-standard-deviations rule.** This provides a familiar count threshold and shows why a Gaussian interpretation can be inaccurate when the mean count is small.
+2. **Poisson upper-tail probabilities with a Bonferroni reference threshold.** These account for the discrete count distribution and show how the number of minutes examined affects the threshold for flagging a result.
 
-1. **Naive Z-Score Test**
-    
-    We start with the familiar normal‐approximation to the Poisson distribution. For a process with mean rate $\lambda$ and $\sigma = \sqrt{\lambda}$, any one-minute count exceeding $\lambda + Z \cdot \sqrt{\lambda}$ is flagged as a Z-sigma outlier. This is quick and easy (see [Knoll, Radiation Detection and Measurement, 4th ed., Wiley 2010](https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://indico-tdli.sjtu.edu.cn/event/171/contributions/2123/attachments/982/1592/Knoll4thEdition.pdf&ved=2ahUKEwj_3a_0h5mOAxUmVKQEHX6pFBsQFnoECBYQAQ&usg=AOvVaw3T5snevdAgApirjiP7auMo)), but it treats each minute in isolation.
-
-
-
-2. **Family-Wise Error Control (Bonferroni)**  
-
-    When you scan a long time series, such as a 24-hour background run divided into $N$ one-minute intervals, each interval represents a separate hypothesis test (“is this minute an outlier?”).  Even with a stringent per-test threshold, the sheer number of tests makes false alarms almost inevitable.  Specifically, scanning $N$ independent minutes at a fixed per-test $\alpha$ gives
-
-   $$
-   \mathrm{FWER} = 1 - (1-\alpha)^N \approx N\alpha \quad(\text{for small }\alpha).
-   $$
-
-   Over a full day ($N \approx 1440$) using a 3 $\alpha$ cut ($\alpha \approx 0.00135$) yields  
-
-   $$
-   \mathrm{FWER} \approx 1440 \times 0.00135 \approx 1.94,
-   $$
-
-   meaning you’re almost certain to see at least one (and on average $1.94$) “false” outlier(s) purely by chance.  
-
-   To counteract this effect of a long measurement period, we apply the **[Bonferroni correction](https://en.wikipedia.org/wiki/Bonferroni_correction)**, which adjusts the per-test significance level to  
-
-   $$
-   \alpha_{\rm per} = \frac{\alpha_{\rm family}}{N},
-   $$
-
-   ensuring  
-
-   $$
-   \mathrm{FWER} \le N \times \alpha_{\rm per} = \alpha_{\rm family}.
-   $$  
-
-   For example, to keep $\mathrm{FWER}=0.05$ over $N=1440$ minutes,
-
-   $$
-   \alpha_{\rm per} = \frac{0.05}{1440} \approx 3.5\times10^{-5},
-   $$
-
-   corresponding to an **adjusted threshold**  
-
-   $$
-   Z_{\rm adj} \;=\;\Phi^{-1}\!\Bigl(1-\tfrac12\,\alpha_{\rm per}\Bigr)\;\approx\;4.0,
-   $$
-
-   i.e.roughly a $4\alpha$ cut instead of $3\alpha$, which compensates for the extended duration of the measurement.
+For details of the dataset, see [Eljen Background Characterization](Eljen-Background-Characterization.ipynb). Here we use a constant-rate Poisson model to illustrate the outlier calculations.
 <!-- #endregion -->
 
 <!-- #region id="56b5e3f2" -->
-# Step 0 - Gathering Data and Distribution Characterization
+# Step 0 - Loading the Data and Estimating the Background Mean
 
-As in our Eljen background–characterization study, we begin by importing the raw neutron‐count data and extracting its key statistical properties. In this step, we:
-- Load the time‐series dataset of background counts.
-- Retrieve the count distribution to confirm its Poisson‐like behavior.
+We load the neutron and gamma count exports, sum their one-second counts into one-minute bins, and select the background period. The analysis below uses the neutron counts.
 
-With these baseline statistics in hand, we’ll be ready to spot any bursts that deviate from the expected background.
-
-For more detail on this data-collection, please refer to the "*Eljen-Background-Characterization*" notebook.
+The code reports the selected time range, the number of minute bins, and their mean count. Minutes with zero counts remain in the calculation.
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="2KviDUsiprMt" outputId="41ae36ad-1d58-4754-9f4a-10e1034440f2"
@@ -121,14 +73,15 @@ meta = {
 
 ```python id="1de73abf"
 neutron_df = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/eljen/eljen-2inch-long-term-1f.csv',
+    'https://nucleonics.mit.edu/data/csv-files/eljen/eljen-2inch-long-term/eljen-2inch-long-term-1-fullres.csv',
     parse_dates=['time'],
     date_format="ISO8601",
     index_col='time'
 )
 
+# The current panel's gamma export for this detector is graph 5.
 gamma_df = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/eljen/eljen-2inch-long-term-3f.csv',
+    'https://nucleonics.mit.edu/data/csv-files/eljen/eljen-2inch-long-term/eljen-2inch-long-term-5-fullres.csv',
     parse_dates=['time'],
     date_format="ISO8601",
     index_col='time'
@@ -139,198 +92,196 @@ gamma_df = pd.read_csv(
 neutron_df_1_minute = neutron_df.resample('1min').sum()
 gamma_df_1_minute = gamma_df.resample('1min').sum()
 
-# Assuming neutron_df_1_minute has a datetime index
 start_time = "2024-12-19 00:00:00"
 end_time = "2025-01-23 23:59:00"
 
-neutron_df_1_minute_background = neutron_df_1_minute.loc[start_time:end_time]
-gamma_df_1_minute_background = gamma_df_1_minute[start_time:end_time]
+neutron_df_1_minute_background = neutron_df_1_minute.loc[start_time:end_time].copy()
+gamma_df_1_minute_background = gamma_df_1_minute.loc[start_time:end_time].copy()
 
-# Ensure the index is datetime
-neutron_df_1_minute_background.index = pd.to_datetime(neutron_df_1_minute_background.index)
-
-# Group by day
-grouped_by_day = neutron_df_1_minute_background.groupby(neutron_df_1_minute_background.index.date)
-
-
-# Define bins for the histogram
-bins = np.arange(neutron_df_1_minute_background["Counts"].min(),
-                 neutron_df_1_minute_background["Counts"].max() + 1, 1)  # Use integer bins
-
-histograms = []
-for day, group in grouped_by_day:
-    hist_values, bin_edges = np.histogram(group["Counts"], bins=bins, density=True)
-    histograms.append(hist_values)
-
-# Convert list to array and compute mean + std across days
-histograms = np.array(histograms)
-mean_histogram = np.mean(histograms, axis=0)
-std_histogram = np.std(histograms, axis=0)
-
-# Estimate Poisson background mean
+# Estimate the mean number of neutron counts in a one-minute bin.
 lambda_ = neutron_df_1_minute_background["Counts"].mean()
-threshold_3sigma = lambda_ + 3 * np.sqrt(lambda_)
+
+print(f"Selected minute bins: {neutron_df_1_minute_background.index.min()} to "
+      f"{neutron_df_1_minute_background.index.max()}")
+print(f"Number of minute bins: {len(neutron_df_1_minute_background):,}")
+print(f"Estimated background mean: {lambda_:.6f} counts/min")
 ```
 
 <!-- #region id="44592eba" -->
-## Step 1 - Zooming in on Outliers Through a Naive Z-test
+## Step 1 - A Mean-Plus-Z-Standard-Deviations Threshold
 
-Once we have established the stability of background, we are interested in determining whether any specific neutron burst is "significantly high". To do this, we use the well-established normal approximation to the Poisson distribution.
+For a Poisson-distributed count $K$ with mean $\lambda$, the standard deviation is $\sqrt{\lambda}$. A simple screening rule flags a minute when
 
-Given a Poisson process with mean rate $ \lambda $, the standard deviation is $ \sqrt{\lambda} $. Under this approximation, an observed count is considered statistically significant at Z standard deviations if:
+$$
+K > \lambda + Z\sqrt{\lambda}.
+$$
 
-$$ \text{Count} > \lambda + Z \cdot \sqrt{\lambda}$$
+This rule is easy to visualize. However, when $\lambda$ is only a few counts per minute, the Poisson distribution is discrete and asymmetric. A threshold three standard deviations above its mean does not have the same upper-tail probability as a three-standard-deviation threshold in a normal distribution.
 
-This method is commonly used in radiation measurement and other count-based detection systems, as detailed in:
-
-- G. F. Knoll, *Radiation Detection and Measurement*, 4th ed., Wiley, 2010.
+The function below keeps this simple rule as an illustration. It also reports the first integer count that it flags and the corresponding Poisson upper-tail probability at the estimated background mean.
 <!-- #endregion -->
 
 ```python id="7ff9e36f"
-# Function to update the plot based on Z
 def plot_outliers(Z):
     threshold_poisson = lambda_ + Z * np.sqrt(lambda_)
-    poisson_outliers = neutron_df_1_minute_background[neutron_df_1_minute_background["Counts"] > threshold_poisson]
+    first_flagged_count = max(0, int(np.floor(threshold_poisson)) + 1)
+    poisson_outliers = neutron_df_1_minute_background[
+        neutron_df_1_minute_background["Counts"] > threshold_poisson
+    ]
+    tail_probability = stats.poisson.sf(first_flagged_count - 1, mu=lambda_)
 
     plt.figure(figsize=(14, 5))
     plt.plot(neutron_df_1_minute_background.index, neutron_df_1_minute_background["Counts"],
              label="Counts per Minute", color='blue', linewidth=1)
-
     plt.scatter(poisson_outliers.index, poisson_outliers["Counts"],
-                color='red', label=f"Outliers (> {threshold_poisson:.2f} counts)", zorder=5)
-
+                color='red', label=f"Flagged minutes (counts >= {first_flagged_count})", zorder=5)
     plt.axhline(threshold_poisson, color='gray', linestyle='--', linewidth=1.5,
-                label=f"Z = {Z:.1f} Threshold")
-
-    plt.title(f"Neutron Count Time Series with Z={Z:.1f} Outlier Threshold")
+                label=f"Mean + {Z:g} standard deviations")
+    plt.title(f"One-minute Neutron Counts with a Mean-plus-{Z:g}-SD Threshold")
     plt.xlabel("Time")
     plt.ylabel("Counts per Minute")
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
     plt.show()
+
+    print(f"Count threshold: {threshold_poisson:.6f}")
+    print(f"First flagged integer count: {first_flagged_count}")
+    print(f"Poisson probability of reaching that count or higher: "
+          f"{tail_probability:.6g} ({100 * tail_probability:.3f}% per minute)")
+    print(f"Minutes flagged by this count threshold: {len(poisson_outliers):,}")
     return threshold_poisson
 ```
 
 <!-- #region id="f90857e8" -->
-## Step 2 - Interpreting the Outlier Threshold Plot
+## Step 2 - Interpreting the Count-Threshold Plot
 
-In the plot generated by the code above: `plot_outliers(Z)`, you’ll see:
+- **Blue line:** the observed one-minute neutron counts.
+- **Gray dashed line:** the mean-plus-$Z$-standard-deviations threshold.
+- **Red dots:** the minutes whose counts exceed that threshold.
 
-- **Blue line**: the time series of 1-minute neutron counts during our background period.  
-- **Gray dashed horizontal line**: the chosen significance threshold  
-  $$
-    \lambda + Z\,\sqrt{\lambda},
-  $$  
-  where $\lambda$ is the long-term background mean and $Z$ is the number of standard deviations.  
-- **Red dots**: the individual 1-minute bins whose counts exceed that threshold and are therefore flagged as “outliers.”
+The output beneath the plot gives the actual Poisson tail probability associated with the chosen integer cutoff. At this dataset's mean of about 2.11 counts per minute, setting $Z=3$ flags counts of 7 or more, with a model probability of about **0.605% per minute**. The one-sided normal $3\sigma$ tail is about **0.135%**. These probabilities differ because the normal approximation is inaccurate at this low mean count.
 
-### How to Read the Plot
+Changing $Z$ changes the screening threshold. Lower values flag more minutes, while higher values flag fewer. To choose a threshold from a specified Poisson tail probability, use Step 4.
 
-1. **Threshold level**  
-   - If you set $Z=3$, the gray line sits at $\lambda + 3\sqrt{\lambda}$.  
-   - Under a pure Poisson background, fewer than $0.03\%$ of minutes should exceed this threshold by chance alone.  
-
-2. **Sensitivity vs. false-alarm rate**  
-   - **Lower \(Z\)** makes the threshold lower and flags more bins (higher sensitivity but more false positives).  
-   - **Higher \(Z\)** raises the bar, flagging only the most extreme bursts (fewer false alarms but possibly missing smaller but real events).
-
-3. **Temporal context**  
-   - Look at clusters of red dots: repeated outliers close in time may indicate a sustained burst or a transient change in background conditions.  
-   - Isolated red dots could be statistical fluctuations (especially if \(Z\) is low).
-
-4. **Choosing \(Z\) for your experiment**  
-   - For routine background checks, \(Z=3\) is a common industry standard (≈99.7% confidence).  
-   - If you need very low false-alarm rates, consider \(Z=4\) or higher.  
-   - You can interactively adjust \(Z\) below to see how the balance between sensitivity and specificity changes.
-
-
-In order to visualize the effect of choosing different values of $Z$, feel free to interact with the code block below and play around with the variables!
+The next section explains why even a small probability for one minute can produce many flags when a long record is scanned.
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/", "height": 414} id="ac069f07" outputId="7532f937-7b5d-4225-e5b5-346b81ed3579"
-plot_outliers(Z=3)
+threshold_3sigma = plot_outliers(Z=3)
 ```
 
 <!-- #region id="75737a86" -->
-## Step 3 - Accounting for Multiple Comparisons (Family-Wise Error Rate)
+## Step 3 - Accounting for Multiple Comparisons
 
-When you scan a long time series for outliers, each minute’s count is a separate hypothesis test (“is this minute an outlier?”).  If you keep using a fixed $3 \alpha$ threshold (per-test $\alpha \approx 0.00135$), then over $N$ independent minutes your **family-wise error rate** (FWER) grows:
-
-$$
-\text{FWER} = 1 - (1 - \alpha)^N \approx N \cdot \alpha \quad (\text{for small }\alpha).
-$$
-
-For example, over a 1 day background run $(N≈1440$ minutes),
+Suppose $N$ minutes are examined, and each test has an actual false-positive probability $\alpha$ under the background model. Let $V$ be the number of false flags. Its expected value is
 
 $$
-\text{FWER} \approx 1440 \times 0.00135 ≈ 1.94,
+\mathbb{E}[V] = N\alpha.
 $$
-i.e. almost certain to see at least one “false” $3 \alpha$ outlier just by chance.
 
-Let's look into a possible solution for this issue:
+The family-wise error rate (FWER) is the probability of at least one false flag. For independent tests,
+
+$$
+\mathrm{FWER} = P(V\ge1) = 1-(1-\alpha)^N.
+$$
+
+As a one-day illustration, take $N=1440$ and $\alpha=0.00135$, approximately the one-sided normal $3\sigma$ tail probability. Then
+
+$$
+\mathbb{E}[V] = 1440\times0.00135 = 1.944,
+$$
+
+$$
+\mathrm{FWER} = 1-(1-0.00135)^{1440} \approx 0.8571.
+$$
+
+Thus, this example has about an **86% chance of at least one false flag**, with **1.94 false flags expected on average**. The approximation $\mathrm{FWER}\approx N\alpha$ is useful only when $N\alpha\ll1$. This example uses a hypothetical per-minute probability; the low-count rule in Step 1 has the different Poisson probability printed beside its plot.
 
 ### The Bonferroni Correction
 
-A simple (but conservative) fix is the **Bonferroni correction**, which sets the per-test $\alpha$ to  
+To bound the probability of any false flag by a chosen family level $\alpha_{\rm family}$, the [Bonferroni method](https://www.itl.nist.gov/div898/handbook/prc/section4/prc473.htm) uses
 
 $$
-\alpha_{\rm per-test} = \frac{\alpha_{\rm family}}{N},
+\alpha_{\rm per} = \frac{\alpha_{\rm family}}{N}.
 $$
 
-so that  
+When each individual test has false-positive probability at most $\alpha_{\rm per}$,
 
 $$
-\text{FWER} \;\le\; N \times \alpha_{\rm per-test} = \alpha_{\rm family}.
-$$  
-
-If you want $\mathrm{FWER}=0.05$ over $N=1440$ minutes, then  
-
-$$
-\alpha_{\rm per-test} = \frac{0.05}{1440} \approx 3.5\times10^{-5},
+\mathrm{FWER} \le \sum_{i=1}^{N}\alpha_{\rm per} = \alpha_{\rm family}.
 $$
 
-which corresponds to a threshold
+This bound does not require independence. For a family level of 0.05 over 1,440 minutes,
 
 $$
-Z_{\rm adj} = \Phi^{-1}(1 - \tfrac12\,\alpha_{\rm per-test}) \approx 4.0,
+\alpha_{\rm per} = \frac{0.05}{1440} \approx 3.4722\times10^{-5}.
 $$
 
-i.e. roughly a $4 \alpha$ cut instead of $3 \alpha$.
+Its equivalent one-sided normal threshold is
 
+$$
+Z_{\rm adj} = \Phi^{-1}(1-\alpha_{\rm per}) \approx 3.98,
+$$
+
+where $\Phi$ is the standard normal cumulative distribution function. The conversion uses the upper tail because we are looking for unusually high counts.
+
+Step 4 calculates Poisson upper-tail probabilities and takes $N$ from the number of minutes actually plotted. Its Bonferroni reference therefore covers the entire selected record.
 <!-- #endregion -->
 
 <!-- #region id="9578a701" -->
-## Step 4 - New method for Visualizing Pointwise Poisson Probabilities
+## Step 4 - Plotting Poisson Upper-Tail Probabilities
 
-Rather than just flagging a binary outlier, we can compute for each 1-minute count $k$ its exact tail-probability under Poisson$(\lambda)$:
+For each observed one-minute count $k$, calculate the probability of obtaining that count or a larger one under a Poisson model with mean $\lambda$:
 
 $$
-p_k = P(\,K\ge k\,) \;=\; 1 - F(k-1;\lambda),
+p_k = P(K\ge k) = 1-F(k-1;\lambda).
 $$
 
-and then plot $\log_{10}(p_k)$ against time.  This tells you at a glance how unlikely each point is, without choosing a hard $Z$.
+Here $F$ is the Poisson cumulative distribution function. We plot $\log_{10}(p_k)$ so that small tail probabilities remain easy to compare. The code uses [SciPy's Poisson survival functions](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.poisson.html) to evaluate the upper tail directly and avoid subtracting a value close to one.
+
+The background mean is estimated from the same record being scanned. These calculations treat that estimate as fixed and omit its uncertainty. The plotted probabilities and Bonferroni line therefore illustrate screening under the fitted constant-rate Poisson model; a formal false-alarm guarantee requires calibrated individual tests that account for background estimation.
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/", "height": 319} id="afe106c4" outputId="4c2fa824-900f-4fbd-abe1-303168afdbf8"
-# λ from long-term background
-lambda_ = neutron_df_1_minute_background["Counts"].mean()
+count_values = neutron_df_1_minute_background["Counts"].to_numpy()
+if len(count_values) == 0:
+    raise ValueError("The selected background period contains no minute bins.")
+if (not np.all(np.isfinite(count_values)) or np.any(count_values < 0)
+        or not np.allclose(count_values, np.rint(count_values), rtol=0, atol=1e-10)):
+    raise ValueError("Poisson tail calculations require nonnegative integer counts.")
 
-# Compute tail-probabilities and log10
-counts = neutron_df_1_minute_background["Counts"].values.astype(int)
-p_tail = 1 - stats.poisson.cdf(counts - 1, mu=lambda_)
-log_p = np.log10(p_tail)
+# Round only floating-point representation noise before converting to integers.
+counts = np.rint(count_values).astype(np.int64)
+lambda_ = counts.mean()
+N_tests = len(counts)
+alpha_family = 0.05
+alpha_per_test = alpha_family / N_tests
+alpha_single = stats.norm.sf(3)  # One-sided normal 3-sigma probability as a reference.
 
-# Plot log10(p-value) time series
+# P(K >= k) = sf(k - 1). Calculate log tails directly for numerical stability.
+p_tail = stats.poisson.sf(counts - 1, mu=lambda_)
+log_p = stats.poisson.logsf(counts - 1, mu=lambda_) / np.log(10)
+pointwise_flags = log_p <= np.log10(alpha_single)
+bonferroni_flags = log_p <= np.log10(alpha_per_test)
+
+print(f"Number of tested minute bins: {N_tests:,}")
+print(f"Pointwise upper-tail reference: {alpha_single:.8g}")
+print(f"Bonferroni reference: {alpha_family:g}/{N_tests} = {alpha_per_test:.8g}")
+print(f"Log10 Bonferroni reference: {np.log10(alpha_per_test):.6f}")
+print(f"Minutes at or below the pointwise reference: {pointwise_flags.sum():,}")
+print(f"Minutes at or below the Bonferroni reference: {bonferroni_flags.sum():,}")
+
 plt.figure(figsize=(14, 4))
 plt.plot(neutron_df_1_minute_background.index, log_p, lw=1, color='blue')
-plt.axhline(np.log10(0.00135), color='gray', linestyle='--', label='3σ p-threshold')
-plt.axhline(np.log10(0.05/len(counts)), color='red', linestyle='--',
-            label='Bonferroni p-threshold (α=0.05)')
-plt.ylim(-10, 0)
+plt.axhline(np.log10(alpha_single), color='gray', linestyle='--',
+            label='Pointwise upper-tail reference (normal 3σ probability)')
+plt.axhline(np.log10(alpha_per_test), color='red', linestyle='--',
+            label=f'Bonferroni reference (0.05/{N_tests:,} minutes)')
+plt.ylim(min(-10, np.floor(log_p.min()) - 1), 0)
 plt.xlabel("Time")
-plt.ylabel(r"$\log_{10}$[P(K $\geq$ k)]")
-plt.title("Log Tail-Probability of Each 1-min Count Under Poisson Background")
+plt.ylabel(r"$\log_{10} P(K \geq k)$")
+plt.title("Upper-tail Probability of Each One-minute Count Under the Fitted Poisson Background")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
@@ -340,32 +291,20 @@ plt.show()
 <!-- #region id="4b1a8660" -->
 ## Step 5 - Interpreting the Log Tail-Probability Plot
 
-Once we’ve computed for each one-minute count $k$ its exact tail probability under $\mathrm{Poisson}(\lambda)$,
+- **Vertical axis:** a value of $-3$ means a model tail probability of $10^{-3}=0.001$. Lower points correspond to smaller probabilities of observing that many counts or more.
+- **Gray dashed line:** the pointwise upper-tail reference is about 0.00135, or $\log_{10}(p)\approx-2.87$. This is a probability reference taken from the normal $3\sigma$ tail; the plotted count probabilities are evaluated with the Poisson distribution.
+- **Red dashed line:** the nominal Bonferroni reference is $\log_{10}(0.05/N)$, with the actual $N$ and threshold printed above. For the separate one-day example with $N=1440$, this value would be approximately $-4.459$. The multiweek record shown here uses its full number of minute bins.
+- **Points on or below a line:** these meet the corresponding screening threshold under the fitted model. The printed totals show how many minutes are flagged by each reference.
 
-$$
-p_k \;=\; P(K \ge k)
-\;=\; 1 - F(k-1; \lambda),
-$$
-
-we ploted $\log_{10}(p_k)$ against time above.  
-
-Here are a few comments on how to read the above plot:
-
-- **Y-axis ($\log_{10} p_k$).**  A value of $-2.9$ corresponds to $p_k \approx 10^{-2.9} \approx 1.26 \times 10^{-3}$, the usual $3 \sigma$ tail.  A value of $-6.3$ is roughly $10^{-6.3}\approx5\times10^{-7}$, the Bonferroni-adjusted threshold for $\mathrm{FWER}=0.05$ over $N\approx1440$ tests.
-- **Lower bars = more improbable events.**  The deeper a bar drops below a horizontal threshold line, the more statistically significant that burst is.
-- **No binary cutoff needed.**  You can instantly compare “how unlikely” each burst is, rather than just seeing “yes/no” flags.
-
-
-This visualization thus gives a continuous measure of probability or *surprise* for every data point, highlights the most extreme outliers, and shows at a glance how they compare against any desired significance level.
-
+Use flagged minutes to guide follow-up checks of the detector and background conditions. A small tail probability identifies an unusual count under the chosen model; establishing its physical cause requires that further investigation.
 <!-- #endregion -->
 
 <!-- #region id="a7da1bf1" -->
 ## Conclusion
 
-Overall, in this notebook, we began by characterizing our neutron‐count background data and applied a simple Z‐test to flag unusually high readings. We then tightened our criteria with a Bonferroni correction to control the family‐wise error rate, and finally introduced a log tail‐probability plot to visualize pointwise Poisson outliers more intuitively.
+This notebook compares a simple mean-plus-$Z$-standard-deviations rule with upper-tail probabilities calculated from a fitted Poisson background. At low mean counts, the two approaches can flag different minutes. The Bonferroni reference then shows how scanning more minutes calls for a smaller per-minute probability threshold.
 
-Together, these techniques provide a principled, complementary toolkit for spotting and interpreting true anomalies in count‐based measurements.
+The displayed counts, probabilities, and flagged-minute totals provide a reproducible way to select candidates for investigation. Their interpretation depends on the constant-rate Poisson model and the treatment of the estimated background mean described above.
 
-In a future notebook, we will want to perform the same analysis for gamma counts.
+The same calculations can be explored for gamma counts in a future notebook.
 <!-- #endregion -->
