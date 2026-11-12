@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.17.3
+      jupytext_version: 1.19.6
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -85,14 +85,14 @@ We have collected long-term data on the neutron and gamma counts per second pick
 
 ```python id="aYBCnu4vFL4D"
 neutron_df = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/eljen/eljen-2inch-long-term-1f.csv',
+    'https://nucleonics.mit.edu/data/csv-files/eljen/eljen-2inch-long-term/eljen-2inch-long-term-1-fullres.csv',
     parse_dates=['time'],
     date_format="ISO8601",
     index_col='time'
 )
 
 gamma_df = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/eljen/eljen-2inch-long-term-3f.csv',
+    'https://nucleonics.mit.edu/data/csv-files/eljen/eljen-2inch-long-term/eljen-2inch-long-term-5-fullres.csv',
     parse_dates=['time'],
     date_format="ISO8601",
     index_col='time'
