@@ -91,7 +91,7 @@ In this setup, the neutron source is placed in the steel chamber, within the gra
 ```python id="Kr0YO2nBHv8w"
 # Read the counts per minute data
 CountsPerMinute = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/he3-detectors-steeltest2-19.csv',
+    'https://nucleonics.mit.edu/data/csv-files/he3-detectors-steeltest2/he3-detectors-steeltest2-19-fullres.csv',
     parse_dates=['time'],
     date_format="ISO8601",
     index_col='time'
@@ -99,8 +99,14 @@ CountsPerMinute = pd.read_csv(
 ```
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="tPHaO7lRIWzV" outputId="5cb67afa-7b5e-4ab7-8955-f522c501098d"
-# Print out basic description of the data, including any NaNs
-print_info(CountsPerMinute)
+# Describe the data and observed timestamp spacing.
+print(f"Measurements start at: {CountsPerMinute.index.min()}")
+print(f"Measurements end at: {CountsPerMinute.index.max()}")
+print(f"Total number of measurements: {len(CountsPerMinute)}")
+mean_spacing = CountsPerMinute.index.to_series().diff().dt.total_seconds().mean()
+print(f"Mean time between recorded measurements: {mean_spacing:.6f} s")
+print("Total number of NaNs:")
+print(CountsPerMinute.isna().sum())
 ```
 
 <!-- #region id="ozpASpPyLg2Y" -->
@@ -180,7 +186,8 @@ else:
 
 ```python colab={"base_uri": "https://localhost:8080/", "height": 565} id="KJqgPeundVw2" outputId="50e3a2aa-21f0-4ed3-debc-c5a459e8e045"
 plt.figure(figsize=(8, 6))
-plt.boxplot([tunnel_data, chamber_data], labels=['Tunnel', 'Chamber in Tunnel'])
+plt.boxplot([tunnel_data, chamber_data])
+plt.xticks([1, 2], ['Tunnel', 'Chamber in Tunnel'])
 plt.title('Comparison of Neutron Counts')
 plt.ylabel('Counts Per Minute')
 plt.grid(True)
@@ -213,7 +220,8 @@ filtered_tunnel_data = remove_ramp(tunnel_data)
 filtered_chamber_data = remove_ramp(chamber_data)
 
 plt.figure(figsize=(8, 6))
-plt.boxplot([filtered_tunnel_data, filtered_chamber_data], labels=['Tunnel', 'Chamber in Tunnel'])
+plt.boxplot([filtered_tunnel_data, filtered_chamber_data])
+plt.xticks([1, 2], ['Tunnel', 'Chamber in Tunnel'])
 plt.title('Comparison of Neutron Counts')
 plt.ylabel('Counts Per Minute')
 plt.grid(True)
@@ -252,7 +260,7 @@ print(f"P-value: {p_value}")
 ```
 
 <!-- #region id="AOIILiyPdr7c" -->
-The standard significance level set in a t-test is 5%. We see here that our P-Value ~ 12.35% is above below the significance level. Hence, the means of the tunnel and chamber data are not significantly different.
+The p-value is approximately 12.36%, which is above the 5% significance level. This test does not find a statistically significant difference between the tunnel and chamber means.
 <!-- #endregion -->
 
 <!-- #region id="5xw8ImvZkZl_" -->
@@ -316,59 +324,59 @@ Let us now have a look at each individual tube to compare their count rates.
 <!-- #endregion -->
 
 ```python id="OLAzV4-CsSZK"
-# Read the counts per minute data for each channel 0 - 7
+# Read neutron counts for channels 0 - 7
 
 CountsPerMinute_0 = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/he3-detectors-steeltest2-1.csv',
+    'https://nucleonics.mit.edu/data/csv-files/he3-detectors-steeltest2/he3-detectors-steeltest2-1-fullres.csv',
     parse_dates=['time'],
     date_format="ISO8601",
     index_col='time'
 )
 
 CountsPerMinute_1 = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/he3-detectors-steeltest2-3.csv',
+    'https://nucleonics.mit.edu/data/csv-files/he3-detectors-steeltest2/he3-detectors-steeltest2-3-fullres.csv',
     parse_dates=['time'],
     date_format="ISO8601",
     index_col='time'
 )
 
 CountsPerMinute_2 = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/he3-detectors-steeltest2-5.csv',
+    'https://nucleonics.mit.edu/data/csv-files/he3-detectors-steeltest2/he3-detectors-steeltest2-5-fullres.csv',
     parse_dates=['time'],
     date_format="ISO8601",
     index_col='time'
 )
 
 CountsPerMinute_3 = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/he3-detectors-steeltest2-7.csv',
+    'https://nucleonics.mit.edu/data/csv-files/he3-detectors-steeltest2/he3-detectors-steeltest2-7-fullres.csv',
     parse_dates=['time'],
     date_format="ISO8601",
     index_col='time'
 )
 
 CountsPerMinute_4 = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/he3-detectors-steeltest2-9.csv',
+    'https://nucleonics.mit.edu/data/csv-files/he3-detectors-steeltest2/he3-detectors-steeltest2-9-fullres.csv',
     parse_dates=['time'],
     date_format="ISO8601",
     index_col='time'
 )
 
 CountsPerMinute_5 = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/he3-detectors-steeltest2-11.csv',
+    'https://nucleonics.mit.edu/data/csv-files/he3-detectors-steeltest2/he3-detectors-steeltest2-11-fullres.csv',
     parse_dates=['time'],
     date_format="ISO8601",
     index_col='time'
 )
 
 CountsPerMinute_6 = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/he3-detectors-steeltest2-13.csv',
+    'https://nucleonics.mit.edu/data/csv-files/he3-detectors-steeltest2/he3-detectors-steeltest2-13-fullres.csv',
     parse_dates=['time'],
     date_format="ISO8601",
     index_col='time'
 )
 
 CountsPerMinute_7 = pd.read_csv(
-    'http://nucleonics.mit.edu/csv-files/he3-detectors-steeltest2-15.csv',
+    'https://nucleonics.mit.edu/data/csv-files/he3-detectors-steeltest2/he3-detectors-steeltest2-15-fullres.csv',
     parse_dates=['time'],
     date_format="ISO8601",
     index_col='time'
@@ -377,7 +385,7 @@ CountsPerMinute_7 = pd.read_csv(
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="mlHjjSqbucKH" outputId="a6cebd2f-2595-4487-ba2c-9157e39a28d5"
 means = np.array([CountsPerMinute_0.mean(), CountsPerMinute_1.mean(), CountsPerMinute_2.mean(), CountsPerMinute_3.mean(),
-         CountsPerMinute_4.mean(), CountsPerMinute_6.mean(), CountsPerMinute_7.mean()])
+         CountsPerMinute_4.mean(), CountsPerMinute_5.mean(), CountsPerMinute_6.mean(), CountsPerMinute_7.mean()])
 
 worst_efficiency = np.where(means == means.min())
 
