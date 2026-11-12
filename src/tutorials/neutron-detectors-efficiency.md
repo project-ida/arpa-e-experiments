@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.3'
-      jupytext_version: 1.17.3
+      jupytext_version: 1.19.6
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -283,25 +283,26 @@ time_difference = (date_experiment - date_initial).days / 365.25
 
 At = A0 * np.exp(-decay_constant * time_difference) # Activity on the day of the experiment
 dps_t = At*conversion_factor
-neutrons_ps_t = dps_t * spontaneous_fission_fraction
+# Convert the spontaneous-fission rate to the neutron emission rate.
+neutrons_ps_t = dps_t * spontaneous_fission_fraction * neutrons_per_fission
 ```
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="Ts7F-QGDl4XL" outputId="64675685-9f90-4a21-b331-37ac50f7c55b"
 neutrons_pm_t = neutrons_ps_t * 60
 # Experiment-specific data
-neutrons_detected_per_minute =  np.mean(filtered_tunnel_data) # Total counts detected during the experiment
+neutrons_detected_per_minute = np.mean(filtered_tunnel_data) # Mean measured count rate (counts/min)
 
 # Setup efficiency
-detector_efficiency = neutrons_detected_per_minute /neutrons_pm_t
+detector_efficiency = neutrons_detected_per_minute / neutrons_pm_t
 
 # Results
-print(f"Expected neutron emissions per minute: {neutrons_pm_t:.2f} neutrons per second")
-print(f"Measured neutrons per minute: {neutrons_detected_per_minute:.2f} neutrons")
-print(f"Detector efficiency: {detector_efficiency:.6f} ({detector_efficiency * 100:.2f}%)")
+print(f"Expected neutron emission rate: {neutrons_pm_t:.2f} neutrons/min")
+print(f"Measured count rate: {neutrons_detected_per_minute:.2f} counts/min")
+print(f"Setup efficiency: {detector_efficiency * 100:.2f}%")
 ```
 
 <!-- #region id="kWBfSg8hGZlp" -->
-In this computation, we assumed that our detectors communaly cover the sample's entire solid angle. In reality, this is not true as the gaps between each tube causes gaps in the solid angle. Hence, this efficiency, of 11.68% corresponds to the efficiency of our setup as a whole rather than that of each liquid scintillation detector.
+The estimated overall setup efficiency is 3.11% for this source position and counting threshold. This ratio includes the effects of geometry and detector response. The measured count rate used here includes background.
 <!-- #endregion -->
 
 ```python id="0leh-0IhO-Mx"
