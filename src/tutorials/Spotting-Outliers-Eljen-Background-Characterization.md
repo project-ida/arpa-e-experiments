@@ -24,6 +24,8 @@ This tutorial examines individual one-minute neutron counts that are unusually h
 1. **A mean-plus-Z-standard-deviations rule.** This provides a familiar count threshold and shows why a Gaussian interpretation can be inaccurate when the mean count is small.
 2. **Poisson upper-tail probabilities with a Bonferroni reference threshold.** These account for the discrete count distribution and show how the number of minutes examined affects the threshold for flagging a result.
 
+The example uses one-second neutron counts from the two-inch Eljen detector, recorded during December 2024 and January 2025. We select the background period from 19 December to 23 January, after the californium calibration exposure. The data-loading step below reads the CSV files, sums the counts into one-minute bins and estimates the background mean used in the outlier calculations that follow.
+
 For details of the dataset, see [Eljen Background Characterization](Eljen-Background-Characterization.ipynb). Here we use a constant-rate Poisson model to illustrate the outlier calculations.
 <!-- #endregion -->
 
@@ -240,7 +242,7 @@ $$
 
 Here $F$ is the Poisson cumulative distribution function. We plot $\log_{10}(p_k)$ so that small tail probabilities remain easy to compare. The code uses [SciPy's Poisson survival functions](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.poisson.html) to evaluate the upper tail directly and avoid subtracting a value close to one.
 
-The background mean is estimated from the same record being scanned. These calculations treat that estimate as fixed and omit its uncertainty. The plotted probabilities and Bonferroni line therefore illustrate screening under the fitted constant-rate Poisson model; a formal false-alarm guarantee requires calibrated individual tests that account for background estimation.
+The background mean is estimated from the same record being scanned, and the calculations below treat that estimate as fixed. The plotted probabilities and Bonferroni line therefore illustrate screening under a fitted constant-rate Poisson model. To use these thresholds as a detection rule with a specified false-alarm probability, the analysis must account for uncertainty in the estimated mean and any variation in the background rate over time.
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/", "height": 319} id="afe106c4" outputId="4c2fa824-900f-4fbd-abe1-303168afdbf8"
