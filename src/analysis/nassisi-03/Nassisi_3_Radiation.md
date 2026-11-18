@@ -72,7 +72,7 @@ import numpy as np
 import pandas as pd
 from scipy.signal import find_peaks
 from sqlalchemy import create_engine, text
-from scipy.stats import ks_2samp
+from scipy.stats import kstest
 
 
 #Plotting
@@ -414,6 +414,20 @@ plt.show()
 
 ```
 
+<!-- #region id="vZ5l_hCiTb6a" -->
+# Run KS test against an exponential distribution with estimated lambda
+ks_stat, p_value = kstest(synthetic_deltas_sorted, 'expon', args=(0, 1/lam))
+
+ks_stat, p_value
+<!-- #endregion -->
+
+```python id="x-xLJnC9Tbf-"
+# # Run KS test against an exponential distribution with estimated lambda
+# ks_stat, p_value = kstest(synthetic_deltas_sorted, 'expon', args=(0, 1/lam))
+
+# ks_stat, p_value
+```
+
 <!-- #region id="eJ5bN8PjCQga" -->
 It's instructive to look at the cumulative pulses alongside the counts per minute.
 <!-- #endregion -->
@@ -427,8 +441,7 @@ fig.add_trace(go.Scattergl(name="Counts per min", x=background_cpm.index, y=back
 <!-- #region id="B8ZzYbhLlMNV" -->
 ## Anomaly detection
 
-We compare the measured experiment and Background 2 inter-pulse distributions using a two-sample Kolmogorov–Smirnov test. The plot places an approximate comparison band around the measured background CDF, with its width calculated from both sample sizes. An experiment curve that crosses this band exceeds the selected threshold, alpha = 0.003. Rerun the following comparison cells to obtain the updated result.
-
+We can use the inter-pulse cumulative probability to detect deviations from normal background, aka anomalies.
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/"} id="PdHlw300IfEy" outputId="ff18aaf0-8e0c-49a2-afc8-26c8e0d68760"
@@ -474,60 +487,67 @@ plt.show()
 neutron_periods["Background 1"]
 ```
 
-```python id="T57-XEeqCaeR"
-# Two-sample KS test of the measured experiment and Background 2 intervals.
-ks_stat, p_value = ks_2samp(
-    experiment_delta_sorted, background2_delta_sorted,
-    alternative="two-sided", method="auto",
-)
+```python colab={"base_uri": "https://localhost:8080/"} id="T57-XEeqCaeR" outputId="fd6639f7-905f-47f9-8f35-7fef9351d939"
+# Run KS test against an exponential distribution with estimated lambda
+ks_stat, p_value = kstest(experiment_delta_sorted, 'expon', args=(0, 1/experiment_lam))
 
 ks_stat, p_value
-
 ```
 
-```python id="juDzyr-9Cz9r"
-# Number of measured background and experiment intervals.
-n = len(background2_delta_sorted)
-m = len(experiment_delta_sorted)
-if n == 0 or m == 0:
-    raise ValueError("Both periods must contain inter-event intervals.")
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="juDzyr-9Cz9r" outputId="31b5d7ec-1aa6-40d4-de07-f2fd98f1e75c"
+# Number of samples (n)
+n = len(experiment_delta_sorted)
 
-# Approximate two-sample KS critical value at alpha = 0.003.
+# Desired confidence level (e.g. ~3σ = 99.7%)
 alpha = 0.003
-D_alpha = np.sqrt(-0.5 * np.log(alpha / 2)) * np.sqrt((m + n) / (m * n))
 
-# Evaluate both empirical CDFs at every observed interval length.
-ks_grid = np.unique(np.concatenate(([0.0], background2_delta_sorted, experiment_delta_sorted)))
-background_cdf = np.searchsorted(background2_delta_sorted, ks_grid, side="right") / n
-experiment_cdf = np.searchsorted(experiment_delta_sorted, ks_grid, side="right") / m
-upper_bound = np.clip(background_cdf + D_alpha, 0, 1)
-lower_bound = np.clip(background_cdf - D_alpha, 0, 1)
+# Kolmogorov–Smirnov critical value for given alpha and n
+D_alpha = np.sqrt(-0.5 * np.log(alpha / 2) / n)
 
-# Check the full distributions, including points beyond the displayed axis range.
-cdf_difference = np.abs(experiment_cdf - background_cdf)
-ks_statistic = np.max(cdf_difference)
-crossing_indices = np.flatnonzero(cdf_difference > D_alpha)
-first_cross_index = int(crossing_indices[0]) if crossing_indices.size else None
-print(f"Two-sample KS distance: {ks_statistic:.6g}")
-print(f"Approximate critical distance (alpha={alpha}): {D_alpha:.6g}")
-print(f"Crosses the two-sample band: {first_cross_index is not None}")
+
+# Upper and lower bounds of the confidence band
+upper_bound = np.clip(background2_P_poisson + D_alpha, 0, 1)
+lower_bound = np.clip(background2_P_poisson - D_alpha, 0, 1)
 
 plt.figure(figsize=(8, 5))
-plt.step(ks_grid, background_cdf, where="post", label="Background 2")
-plt.step(ks_grid, experiment_cdf, where="post", label=f"Experiment (λ = {experiment_lam:.5f}/s)")
-plt.plot(background2_delta_sorted, background2_P_poisson, linestyle="--", color="red", label=f"Background exponential fit (λ = {background2_lam:.5f}/s)")
-plt.fill_between(ks_grid, lower_bound, upper_bound, step="post", color="gray", alpha=0.3,
-                 label="Approx. two-sample KS band (α = 0.003)", zorder=1)
+plt.plot(background2_delta_sorted, background2_P_exp, label="Background 2")
+plt.plot(experiment_delta_sorted, experiment_P_exp, label=f"Experiment (λ = {experiment_lam:.5f}/s)")
+plt.plot(background2_delta_sorted, background2_P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {background2_lam:.5f}/s)")
+plt.fill_between(background2_delta_sorted, lower_bound, upper_bound, color='gray', alpha=0.3, label="~3σ Confidence Band", zorder=1)
+
+# # Max deviation marker and vertical line
+# plt.plot(t_max_dev, cdf_with_synthetic_neutrons[max_index], 'ko', label="KS Statistic (D)")
+# plt.vlines(t_max_dev, P_theory_at_synth[max_index], cdf_with_synthetic_neutrons[max_index], color='k', linestyles='dotted')
+
+# # Annotate
+# plt.annotate(f"D = {ks_statistic:.4f}", xy=(t_max_dev, cdf_with_synthetic_neutrons[max_index]),
+#              xytext=(t_max_dev + 0.2, cdf_with_synthetic_neutrons[max_index] + 0.01),
+#              arrowprops=dict(arrowstyle="->", lw=1), fontsize=9)
+
+# Recompute bounds for synthetic burst dataset
+#n_synth = len(synthetic_deltas_sorted)
+#D_alpha_synth = np.sqrt(-0.5 * np.log(alpha / 2) / n_synth)
+#P_poisson_synth = 1 - np.exp(-lam * synthetic_deltas_sorted)
+#upper_bound_synth = np.clip(P_poisson_synth + D_alpha_synth, 0, 1)
+#lower_bound_synth = np.clip(P_poisson_synth - D_alpha_synth, 0, 1)
+
+#first_cross_index = np.argmax(
+#    (cdf_with_synthetic_neutrons > upper_bound_synth) |
+#    (cdf_with_synthetic_neutrons < lower_bound_synth)
+#)
+
+#plt.axvline(synthetic_deltas_sorted[first_cross_index], color='purple', linestyle=':', label="Statistical significance achieved")
+
 
 plt.xlabel("t (seconds)")
 plt.ylabel("P(Δt ≤ t)")
-plt.xlim([0, 3600])
+plt.xlim([0,3600])
+#plt.ylim([0,0.2])
 plt.title(f"Cumulative inter-pulse time probability. PSP > {psp}, Channel > {energy}")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
 plt.show()
-
 ```
 
 <!-- #region id="7DbJ2gPzFBli" -->
@@ -557,8 +577,9 @@ experiment_neutron_data["Begin soak"].head()
 ```
 
 <!-- #region id="MYUH_NvgJSZS" -->
-We examine the soaking and laser periods separately, plotting each measured inter-pulse distribution alongside its fitted exponential curve. The laser period was conducted in the basement, where the background rate could differ. We start with the soaking period.
+We have broken apart the neutron data for the soaking period and the laser period. Let's check whether they follow a poisson distribution, and whether the average interneutron time is different for the two periods. We might expect to see some variation because the laser period was conducted in the basement, where the background rate could be different.
 
+We will look at the soaking period first.
 <!-- #endregion -->
 
 ```python id="u34QbBmmeYLO"
@@ -619,12 +640,25 @@ soaking_P_exp = np.arange(1, len(soaking_delta_sorted) + 1) / len(soaking_delta_
 soaking_lam
 ```
 
-```python id="fIGk3cmgednl"
-# Measured phase distribution and its fitted exponential.
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="fIGk3cmgednl" outputId="0b1a229a-50cd-464b-8411-53faa4b679c9"
+# Number of samples (n)
+n = len(soaking_delta_sorted)
+
+# Desired confidence level (e.g. ~3σ = 99.7%)
+alpha = 0.003# Kolmogorov–Smirnov critical value for given alpha and n
+D_alpha = np.sqrt(-0.5 * np.log(alpha / 2) / n)
+
+
+# Upper and lower bounds of the confidence band
+upper_bound = np.clip(soaking_P_poisson + D_alpha, 0, 1)
+lower_bound = np.clip(soaking_P_poisson - D_alpha, 0, 1)
+
 plt.figure(figsize=(8, 5))
 plt.plot(soaking_delta_sorted, soaking_P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {soaking_lam:.5f}/s)")
-plt.step(soaking_delta_sorted, soaking_P_exp, where="post", label=f"Experiment (λ = {soaking_lam:.5f}/s)")
+plt.plot(soaking_delta_sorted, soaking_P_exp, label=f"Experiment (λ = {soaking_lam:.5f}/s)")
+plt.fill_between(soaking_delta_sorted, lower_bound, upper_bound, color='gray', alpha=0.3, label="~3σ Confidence Band", zorder=1)
 
+#plt.axvline(experiment_delta_sorted[first_cross_index], color='purple', linestyle=':', label="Statistical significance achieved")
 
 
 plt.xlabel("t (seconds)")
@@ -636,12 +670,10 @@ plt.legend()
 plt.grid(True)
 plt.tight_layout()
 plt.show()
-
 ```
 
 <!-- #region id="A3xOQ1pJe5cV" -->
-With the large gaps excluded, the measured soaking-period curve closely follows the fitted exponential curve.
-
+With the large gaps excluded, the inter-pulse time for the soaking period is well fit by a Poisson distribution.
 <!-- #endregion -->
 
 <!-- #region id="b4FHp65eg4Zf" -->
@@ -668,12 +700,25 @@ laser_P_exp = np.arange(1, len(laser_delta_sorted) + 1) / len(laser_delta_sorted
 laser_lam
 ```
 
-```python id="lmYfXnyhhUJu"
-# Measured phase distribution and its fitted exponential.
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="lmYfXnyhhUJu" outputId="1fd77d01-d9a5-468e-e674-2db3eff1078c"
+# Number of samples (n)
+n = len(laser_delta_sorted)
+
+# Desired confidence level (e.g. ~3σ = 99.7%)
+alpha = 0.003# Kolmogorov–Smirnov critical value for given alpha and n
+D_alpha = np.sqrt(-0.5 * np.log(alpha / 2) / n)
+
+
+# Upper and lower bounds of the confidence band
+upper_bound = np.clip(laser_P_poisson + D_alpha, 0, 1)
+lower_bound = np.clip(laser_P_poisson - D_alpha, 0, 1)
+
 plt.figure(figsize=(8, 5))
 plt.plot(laser_delta_sorted, laser_P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {laser_lam:.5f}/s)")
-plt.step(laser_delta_sorted, laser_P_exp, where="post", label=f"Experiment (λ = {laser_lam:.5f}/s)")
+plt.plot(laser_delta_sorted, laser_P_exp, label=f"Experiment (λ = {laser_lam:.5f}/s)")
+plt.fill_between(laser_delta_sorted, lower_bound, upper_bound, color='gray', alpha=0.3, label="~3σ Confidence Band", zorder=1)
 
+#plt.axvline(experiment_delta_sorted[first_cross_index], color='purple', linestyle=':', label="Statistical significance achieved")
 
 
 plt.xlabel("t (seconds)")
@@ -685,5 +730,4 @@ plt.legend()
 plt.grid(True)
 plt.tight_layout()
 plt.show()
-
 ```
