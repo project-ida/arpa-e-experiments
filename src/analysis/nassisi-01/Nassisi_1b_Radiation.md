@@ -74,7 +74,6 @@ import numpy as np
 import pandas as pd
 from scipy.signal import find_peaks
 from sqlalchemy import create_engine, text
-from scipy.stats import kstest
 
 
 #Plotting
@@ -410,7 +409,7 @@ plt.show()
 ```
 
 <!-- #region id="jt_FGND9ky3u" -->
-Visually, the level of agreement is superb. We can be more quantitative using a [Kolmogorov-Smirnov test](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test), but we'll save this analysis for later in the notebook when we look at how to test for anomalies.
+The measured background and fitted exponential can be compared in the plot above. Below, we compare the measured background and experiment inter-event distributions using a two-sample Kolmogorov-Smirnov band.
 <!-- #endregion -->
 
 <!-- #region id="eJ5bN8PjCQga" -->
@@ -462,49 +461,35 @@ plt.tight_layout()
 plt.show()
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="maIGEP5zKdY9" outputId="bbe532b5-fb1b-4427-e72c-63b59b22f08f"
-# Number of samples (n)
-n = len(experiment_delta_sorted)
+```python id="maIGEP5zKdY9"
+# Number of measured background (n) and experiment (m) inter-event times
+n = len(delta_sorted)
+m = len(experiment_delta_sorted)
+if n == 0 or m == 0:
+    raise ValueError("Both periods need inter-event times for the two-sample KS comparison.")
 
-# Desired confidence level (e.g. ~3σ = 99.7%)
+# Significance level and large-sample two-sample KS critical value
 alpha = 0.003
+D_alpha = np.sqrt(-0.5 * np.log(alpha / 2)) * np.sqrt((n + m) / (n * m))
 
-# Kolmogorov–Smirnov critical value for given alpha and n
-D_alpha = np.sqrt(-0.5 * np.log(alpha / 2) / n)
+# Evaluate both empirical CDFs at every observed inter-event time
+ks_times = np.unique(np.concatenate(([0.0], delta_sorted, experiment_delta_sorted)))
+background_cdf = np.searchsorted(delta_sorted, ks_times, side="right") / n
+experiment_cdf = np.searchsorted(experiment_delta_sorted, ks_times, side="right") / m
 
+# Centre the comparison band on the measured background
+upper_bound = np.clip(background_cdf + D_alpha, 0, 1)
+lower_bound = np.clip(background_cdf - D_alpha, 0, 1)
 
-# Upper and lower bounds of the confidence band
-upper_bound = np.clip(experiment_P_poisson + D_alpha, 0, 1)
-lower_bound = np.clip(experiment_P_poisson - D_alpha, 0, 1)
+# Locate crossings using the same two-sample comparison
+crossing_indices = np.flatnonzero(np.abs(experiment_cdf - background_cdf) > D_alpha)
+first_cross_index = int(crossing_indices[0]) if crossing_indices.size else None
 
 plt.figure(figsize=(8, 5))
-plt.plot(experiment_delta_sorted, experiment_P_exp, label="Empirical")
-plt.plot(experiment_delta_sorted, experiment_P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {experiment_lam:.4f}/s)")
-plt.fill_between(experiment_delta_sorted, lower_bound, upper_bound, color='gray', alpha=0.3, label="~3σ Confidence Band", zorder=1)
-
-# # Max deviation marker and vertical line
-# plt.plot(t_max_dev, cdf_with_synthetic_neutrons[max_index], 'ko', label="KS Statistic (D)")
-# plt.vlines(t_max_dev, P_theory_at_synth[max_index], cdf_with_synthetic_neutrons[max_index], color='k', linestyles='dotted')
-
-# # Annotate
-# plt.annotate(f"D = {ks_statistic:.4f}", xy=(t_max_dev, cdf_with_synthetic_neutrons[max_index]),
-#              xytext=(t_max_dev + 0.2, cdf_with_synthetic_neutrons[max_index] + 0.01),
-#              arrowprops=dict(arrowstyle="->", lw=1), fontsize=9)
-
-# Recompute bounds for synthetic burst dataset
-#n_synth = len(synthetic_deltas_sorted)
-#D_alpha_synth = np.sqrt(-0.5 * np.log(alpha / 2) / n_synth)
-#P_poisson_synth = 1 - np.exp(-lam * synthetic_deltas_sorted)
-#upper_bound_synth = np.clip(P_poisson_synth + D_alpha_synth, 0, 1)
-#lower_bound_synth = np.clip(P_poisson_synth - D_alpha_synth, 0, 1)
-
-#first_cross_index = np.argmax(
-#    (cdf_with_synthetic_neutrons > upper_bound_synth) |
-#    (cdf_with_synthetic_neutrons < lower_bound_synth)
-#)
-
-#plt.axvline(synthetic_deltas_sorted[first_cross_index], color='purple', linestyle=':', label="Statistical significance achieved")
-
+plt.step(ks_times, background_cdf, where="post", label="Background 2")
+plt.step(ks_times, experiment_cdf, where="post", label="Experiment")
+plt.plot(experiment_delta_sorted, experiment_P_poisson, linestyle="--", color="red", label=f"Experiment fit (λ = {experiment_lam:.4f}/s)")
+plt.fill_between(ks_times, lower_bound, upper_bound, step="post", color='gray', alpha=0.3, label="Two-sample KS band (α = 0.003)", zorder=1)
 
 plt.xlabel("t (seconds)")
 plt.ylabel("P(Δt ≤ t)")

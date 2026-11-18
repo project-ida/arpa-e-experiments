@@ -492,7 +492,7 @@ plt.show()
 ```
 
 <!-- #region id="jt_FGND9ky3u" -->
-Visually, the level of agreement is adequate. The experimental data is noisey due to a relatively small sample size. We can be more quantitative using a [Kolmogorov-Smirnov test](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test), but we'll save this analysis for later in the notebook when we look at how to test for anomalies.
+Visually, the level of agreement is adequate. The experimental data is noisey due to a relatively small sample size. Later in the notebook, a two-sample [Kolmogorov-Smirnov test](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test) compares the measured experiment and background inter-pulse distributions.
 <!-- #endregion -->
 
 <!-- #region id="eJ5bN8PjCQga" -->
@@ -590,39 +590,41 @@ plt.show()
 # fig.add_trace(go.Scattergl(name="Counts per min", x=experiment_cpm.index, y=experiment_cpm.counts))
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="pLSqG10Ol310" outputId="764e5591-aac3-4231-cb61-099826a52e25"
-# Number of samples (n)
+```python id="pLSqG10Ol310"
+# Two-sample KS comparison of measured background and experiment gaps
 n = len(delta_sorted)
+m = len(experiment_delta_sorted)
+if n == 0 or m == 0:
+    raise ValueError("Both background and experiment need inter-event times.")
 
-# Desired confidence level (e.g. ~3σ = 99.7%)
-alpha = 0.003 # Kolmogorov–Smirnov critical value for given alpha and n
-D_alpha = np.sqrt(-0.5 * np.log(alpha / 2) / n)
+# Significance level and large-sample two-sample critical distance
+alpha = 0.003
+D_alpha = np.sqrt(-0.5 * np.log(alpha / 2)) * np.sqrt((m + n) / (m * n))
 
+# Evaluate both empirical CDFs at every observed gap, including their steps
+ks_grid = np.unique(np.concatenate(([0.0], delta_sorted, experiment_delta_sorted)))
+background_cdf = np.searchsorted(delta_sorted, ks_grid, side="right") / n
+experiment_cdf = np.searchsorted(experiment_delta_sorted, ks_grid, side="right") / m
 
-# Upper and lower bounds of the confidence band
-upper_bound = np.clip(P_poisson + D_alpha, 0, 1)
-lower_bound = np.clip(P_poisson - D_alpha, 0, 1)
+upper_bound = np.clip(background_cdf + D_alpha, 0, 1)
+lower_bound = np.clip(background_cdf - D_alpha, 0, 1)
+
+# Check the complete distributions, including values outside the plotted range
+cdf_difference = np.abs(experiment_cdf - background_cdf)
+ks_statistic = np.max(cdf_difference)
+crossing_indices = np.flatnonzero(cdf_difference > D_alpha)
+first_cross_index = int(crossing_indices[0]) if crossing_indices.size else None
+
+print(f"KS distance: {ks_statistic:.5g}; approx. critical distance (α={alpha}): {D_alpha:.5g}")
+print("Experiment crosses the background band." if first_cross_index is not None
+      else "Experiment remains within the background band.")
 
 plt.figure(figsize=(8, 5))
-plt.plot(delta_sorted, P_exp, label="Background")
+plt.step(ks_grid, background_cdf, where="post", label="Background")
 plt.plot(delta_sorted, P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {lam:.5f}/s)")
-plt.plot(experiment_delta_sorted, experiment_P_exp, label=f"Experiment (λ = {experiment_lam:.5f}/s)")
-plt.fill_between(delta_sorted, lower_bound, upper_bound, color='gray', alpha=0.3, label="~3σ Confidence Band", zorder=1)
-
-# Recompute bounds for synthetic burst dataset
-n_synth = len(experiment_delta_sorted)
-D_alpha_synth = np.sqrt(-0.5 * np.log(alpha / 2) / n_synth)
-P_poisson_synth = 1 - np.exp(-lam * experiment_delta_sorted)
-upper_bound_synth = np.clip(P_poisson_synth + D_alpha_synth, 0, 1)
-lower_bound_synth = np.clip(P_poisson_synth - D_alpha_synth, 0, 1)
-
-first_cross_index = np.argmax(
-    (experiment_P_exp > upper_bound_synth) |
-    (experiment_P_exp < lower_bound_synth)
-)
-
-#plt.axvline(experiment_delta_sorted[first_cross_index], color='purple', linestyle=':', label="Statistical significance achieved")
-
+plt.step(ks_grid, experiment_cdf, where="post", label=f"Experiment (λ = {experiment_lam:.5f}/s)")
+plt.fill_between(ks_grid, lower_bound, upper_bound, step="post", color='gray', alpha=0.3,
+                 label="Approx. two-sample KS band (α = 0.003)", zorder=1)
 
 plt.xlabel("t (seconds)")
 plt.ylabel("P(Δt ≤ t)")
@@ -637,5 +639,6 @@ plt.show()
 
 <!-- #region id="dzjtIVg8XZZE" -->
 # Conclusion
-The observed neutron rate during the experiment was not significantly different from the background.
+The significance conclusion is pending a rerun of the two-sample KS comparison above.
+
 <!-- #endregion -->

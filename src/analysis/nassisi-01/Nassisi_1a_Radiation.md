@@ -73,7 +73,7 @@ import numpy as np
 import pandas as pd
 from scipy.signal import find_peaks
 from sqlalchemy import create_engine, text
-from scipy.stats import kstest
+from scipy.stats import ks_2samp
 
 
 #Plotting
@@ -452,59 +452,47 @@ The following timing analysis includes the electronic spikes. We then repeat the
 <!-- #endregion -->
 
 <!-- #region id="6McultY7klTK" -->
-We can run a 3-sigma significance test and see that the delta deviate from Poisson distributed at low times:
+We now compare the soaking-period inter-event times with the measured Background 1 sample. The two-sample KS band uses both sample sizes and is centred on the background cumulative distribution. Crossing the band corresponds to rejection at the approximate significance level of 0.003. Rerun the comparison cells to obtain the updated result.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="T57-XEeqCaeR" outputId="86c40a69-fdca-487f-bdfc-ea78e087ef2d"
-# Run KS test against an exponential distribution with estimated lambda
-ks_stat, p_value = kstest(experiment_delta_sorted, 'expon', args=(0, 1/experiment_lam))
+```python id="T57-XEeqCaeR"
+# Compare the measured background and experiment inter-event times
+ks_stat, p_value = ks_2samp(
+    delta_sorted, experiment_delta_sorted, alternative="two-sided", method="auto"
+)
 
 ks_stat, p_value
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="juDzyr-9Cz9r" outputId="765b0ba2-039d-48f2-fbaa-f263c5afab33"
-# Number of samples (n)
-n = len(experiment_delta_sorted)
+```python id="juDzyr-9Cz9r"
+# Number of measured background (n) and experiment (m) inter-event times
+n = len(delta_sorted)
+m = len(experiment_delta_sorted)
+if n == 0 or m == 0:
+    raise ValueError("Both periods need inter-event times for the two-sample KS comparison.")
 
-# Desired confidence level (e.g. ~3σ = 99.7%)
+# Significance level and large-sample two-sample KS critical value
 alpha = 0.003
+D_alpha = np.sqrt(-0.5 * np.log(alpha / 2)) * np.sqrt((n + m) / (n * m))
 
-# Kolmogorov–Smirnov critical value for given alpha and n
-D_alpha = np.sqrt(-0.5 * np.log(alpha / 2) / n)
+# Evaluate both empirical CDFs at every observed inter-event time
+ks_times = np.unique(np.concatenate(([0.0], delta_sorted, experiment_delta_sorted)))
+background_cdf = np.searchsorted(delta_sorted, ks_times, side="right") / n
+experiment_cdf = np.searchsorted(experiment_delta_sorted, ks_times, side="right") / m
 
+# Centre the comparison band on the measured background
+upper_bound = np.clip(background_cdf + D_alpha, 0, 1)
+lower_bound = np.clip(background_cdf - D_alpha, 0, 1)
 
-# Upper and lower bounds of the confidence band
-upper_bound = np.clip(experiment_P_poisson + D_alpha, 0, 1)
-lower_bound = np.clip(experiment_P_poisson - D_alpha, 0, 1)
+# Locate crossings using the same two-sample comparison
+crossing_indices = np.flatnonzero(np.abs(experiment_cdf - background_cdf) > D_alpha)
+first_cross_index = int(crossing_indices[0]) if crossing_indices.size else None
 
 plt.figure(figsize=(8, 5))
-plt.plot(experiment_delta_sorted, experiment_P_exp, label="Empirical")
-plt.plot(experiment_delta_sorted, experiment_P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {experiment_lam:.2f}/s)")
-plt.fill_between(experiment_delta_sorted, lower_bound, upper_bound, color='gray', alpha=0.3, label="~3σ Confidence Band", zorder=1)
-
-# # Max deviation marker and vertical line
-# plt.plot(t_max_dev, cdf_with_synthetic_neutrons[max_index], 'ko', label="KS Statistic (D)")
-# plt.vlines(t_max_dev, P_theory_at_synth[max_index], cdf_with_synthetic_neutrons[max_index], color='k', linestyles='dotted')
-
-# # Annotate
-# plt.annotate(f"D = {ks_statistic:.4f}", xy=(t_max_dev, cdf_with_synthetic_neutrons[max_index]),
-#              xytext=(t_max_dev + 0.2, cdf_with_synthetic_neutrons[max_index] + 0.01),
-#              arrowprops=dict(arrowstyle="->", lw=1), fontsize=9)
-
-# Recompute bounds for synthetic burst dataset
-#n_synth = len(synthetic_deltas_sorted)
-#D_alpha_synth = np.sqrt(-0.5 * np.log(alpha / 2) / n_synth)
-#P_poisson_synth = 1 - np.exp(-lam * synthetic_deltas_sorted)
-#upper_bound_synth = np.clip(P_poisson_synth + D_alpha_synth, 0, 1)
-#lower_bound_synth = np.clip(P_poisson_synth - D_alpha_synth, 0, 1)
-
-#first_cross_index = np.argmax(
-#    (cdf_with_synthetic_neutrons > upper_bound_synth) |
-#    (cdf_with_synthetic_neutrons < lower_bound_synth)
-#)
-
-#plt.axvline(synthetic_deltas_sorted[first_cross_index], color='purple', linestyle=':', label="Statistical significance achieved")
-
+plt.step(ks_times, background_cdf, where="post", label="Background 1")
+plt.step(ks_times, experiment_cdf, where="post", label="Experiment")
+plt.plot(experiment_delta_sorted, experiment_P_poisson, linestyle="--", color="red", label=f"Experiment fit (λ = {experiment_lam:.2f}/s)")
+plt.fill_between(ks_times, lower_bound, upper_bound, step="post", color='gray', alpha=0.3, label="Two-sample KS band (α = 0.003)", zorder=1)
 
 plt.xlabel("t (seconds)")
 plt.ylabel("P(Δt ≤ t)")
@@ -518,7 +506,7 @@ plt.show()
 ```
 
 <!-- #region id="Wk6mo9ask3cr" -->
-Again, this is due to the spikes: there are roughly 5000 data points included in these spikes with artificially low time separations. Let's drop the last day to exclude the spikes.
+The electronic spikes contain roughly 5000 data points with artificially low time separations. We next drop the final day to exclude these spikes and repeat the comparison with Background 1.
 <!-- #endregion -->
 
 ```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="k2m2Fws3OjOz" outputId="f64658ba-3865-4b8f-9969-74039f781898"
@@ -562,49 +550,35 @@ experiment_P_exp = np.arange(1, len(experiment_delta_sorted) + 1) / len(experime
 experiment_lam
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="1kWumQ9GPjUU" outputId="327d7941-b004-4b7d-904b-2b378330b406"
-# Number of samples (n)
-n = len(experiment_delta_sorted)
+```python id="1kWumQ9GPjUU"
+# Number of measured background (n) and experiment (m) inter-event times
+n = len(delta_sorted)
+m = len(experiment_delta_sorted)
+if n == 0 or m == 0:
+    raise ValueError("Both periods need inter-event times for the two-sample KS comparison.")
 
-# Desired confidence level (e.g. ~3σ = 99.7%)
+# Significance level and large-sample two-sample KS critical value
 alpha = 0.003
+D_alpha = np.sqrt(-0.5 * np.log(alpha / 2)) * np.sqrt((n + m) / (n * m))
 
-# Kolmogorov–Smirnov critical value for given alpha and n
-D_alpha = np.sqrt(-0.5 * np.log(alpha / 2) / n)
+# Evaluate both empirical CDFs at every observed inter-event time
+ks_times = np.unique(np.concatenate(([0.0], delta_sorted, experiment_delta_sorted)))
+background_cdf = np.searchsorted(delta_sorted, ks_times, side="right") / n
+experiment_cdf = np.searchsorted(experiment_delta_sorted, ks_times, side="right") / m
 
+# Centre the comparison band on the measured background
+upper_bound = np.clip(background_cdf + D_alpha, 0, 1)
+lower_bound = np.clip(background_cdf - D_alpha, 0, 1)
 
-# Upper and lower bounds of the confidence band
-upper_bound = np.clip(experiment_P_poisson + D_alpha, 0, 1)
-lower_bound = np.clip(experiment_P_poisson - D_alpha, 0, 1)
+# Locate crossings using the same two-sample comparison
+crossing_indices = np.flatnonzero(np.abs(experiment_cdf - background_cdf) > D_alpha)
+first_cross_index = int(crossing_indices[0]) if crossing_indices.size else None
 
 plt.figure(figsize=(8, 5))
-plt.plot(experiment_delta_sorted, experiment_P_exp, label="Empirical")
-plt.plot(experiment_delta_sorted, experiment_P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {experiment_lam:.4f}/s)")
-plt.fill_between(experiment_delta_sorted, lower_bound, upper_bound, color='gray', alpha=0.3, label="~3σ Confidence Band", zorder=1)
-
-# # Max deviation marker and vertical line
-# plt.plot(t_max_dev, cdf_with_synthetic_neutrons[max_index], 'ko', label="KS Statistic (D)")
-# plt.vlines(t_max_dev, P_theory_at_synth[max_index], cdf_with_synthetic_neutrons[max_index], color='k', linestyles='dotted')
-
-# # Annotate
-# plt.annotate(f"D = {ks_statistic:.4f}", xy=(t_max_dev, cdf_with_synthetic_neutrons[max_index]),
-#              xytext=(t_max_dev + 0.2, cdf_with_synthetic_neutrons[max_index] + 0.01),
-#              arrowprops=dict(arrowstyle="->", lw=1), fontsize=9)
-
-# Recompute bounds for synthetic burst dataset
-#n_synth = len(synthetic_deltas_sorted)
-#D_alpha_synth = np.sqrt(-0.5 * np.log(alpha / 2) / n_synth)
-#P_poisson_synth = 1 - np.exp(-lam * synthetic_deltas_sorted)
-#upper_bound_synth = np.clip(P_poisson_synth + D_alpha_synth, 0, 1)
-#lower_bound_synth = np.clip(P_poisson_synth - D_alpha_synth, 0, 1)
-
-#first_cross_index = np.argmax(
-#    (cdf_with_synthetic_neutrons > upper_bound_synth) |
-#    (cdf_with_synthetic_neutrons < lower_bound_synth)
-#)
-
-#plt.axvline(synthetic_deltas_sorted[first_cross_index], color='purple', linestyle=':', label="Statistical significance achieved")
-
+plt.step(ks_times, background_cdf, where="post", label="Background 1")
+plt.step(ks_times, experiment_cdf, where="post", label="Experiment")
+plt.plot(experiment_delta_sorted, experiment_P_poisson, linestyle="--", color="red", label=f"Experiment fit (λ = {experiment_lam:.4f}/s)")
+plt.fill_between(ks_times, lower_bound, upper_bound, step="post", color='gray', alpha=0.3, label="Two-sample KS band (α = 0.003)", zorder=1)
 
 plt.xlabel("t (seconds)")
 plt.ylabel("P(Δt ≤ t)")
