@@ -452,28 +452,70 @@ The following timing analysis includes the electronic spikes. We then repeat the
 <!-- #endregion -->
 
 <!-- #region id="6McultY7klTK" -->
-We now compare the soaking-period inter-event times with the measured Background 1 sample. The two-sample KS band uses both sample sizes and is centred on the background cumulative distribution. Crossing the band corresponds to rejection at the approximate significance level of 0.003. Rerun the comparison cells to obtain the updated result.
+We now compare the soaking-period inter-event times with the measured Background 1 sample. The two-sample KS band uses both sample sizes and is centred on the background cumulative distribution. Crossing the band corresponds to rejection by the exact finite-sample two-sample KS test at a significance level of 0.003. Rerun the comparison cells to obtain the updated result.
 <!-- #endregion -->
 
 ```python id="T57-XEeqCaeR"
 # Compare the measured background and experiment inter-event times
 ks_stat, p_value = ks_2samp(
-    delta_sorted, experiment_delta_sorted, alternative="two-sided", method="auto"
+    delta_sorted, experiment_delta_sorted, alternative="two-sided", method="exact"
 )
 
 ks_stat, p_value
 ```
 
 ```python id="juDzyr-9Cz9r"
+def exact_two_sample_ks_band(n, m, alpha=0.003):
+    """Return a band width matching the exact two-sided KS rejection rule."""
+    from fractions import Fraction
+    from math import comb, gcd
+
+    if n < 1 or m < 1:
+        raise ValueError("Both samples must contain inter-event intervals.")
+    if not 0 < alpha < 1:
+        raise ValueError("alpha must lie between 0 and 1.")
+
+    n, m = sorted((n, m))
+    g = gcd(n, m)
+    lattice_size = n * m // g
+    total_paths = comb(n + m, n)
+    level = Fraction(str(alpha))
+
+    def tail_count(k):
+        # Count pooled-rank paths with D < k / lattice_size.
+        paths = [0] * (n + 1)
+        paths[0] = 1
+        for j in range(m + 1):
+            for i in range(n + 1):
+                if abs(i * m - j * n) >= k * g:
+                    paths[i] = 0
+                elif i:
+                    paths[i] += paths[i - 1]
+        return total_paths - paths[n]
+
+    # Find the first distance with exact tail probability <= alpha.
+    lo, hi = 0, lattice_size + 1
+    while hi - lo > 1:
+        k = (lo + hi) // 2
+        if tail_count(k) * level.denominator <= total_paths * level.numerator:
+            hi = k
+        else:
+            lo = k
+
+    # A midpoint between attainable distances makes a strict band crossing
+    # equivalent to p <= alpha. If rejection is impossible, use the full range.
+    return min(1.0, (hi - 0.5) / lattice_size)
+
+
 # Number of measured background (n) and experiment (m) inter-event times
 n = len(delta_sorted)
 m = len(experiment_delta_sorted)
 if n == 0 or m == 0:
     raise ValueError("Both periods need inter-event times for the two-sample KS comparison.")
 
-# Significance level and large-sample two-sample KS critical value
+# Significance level and exact finite-sample two-sample KS band width
 alpha = 0.003
-D_alpha = np.sqrt(-0.5 * np.log(alpha / 2)) * np.sqrt((n + m) / (n * m))
+D_alpha = exact_two_sample_ks_band(n, m, alpha)
 
 # Evaluate both empirical CDFs at every observed inter-event time
 ks_times = np.unique(np.concatenate(([0.0], delta_sorted, experiment_delta_sorted)))
@@ -492,7 +534,7 @@ plt.figure(figsize=(8, 5))
 plt.step(ks_times, background_cdf, where="post", label="Background 1")
 plt.step(ks_times, experiment_cdf, where="post", label="Experiment")
 plt.plot(experiment_delta_sorted, experiment_P_poisson, linestyle="--", color="red", label=f"Experiment fit (λ = {experiment_lam:.2f}/s)")
-plt.fill_between(ks_times, lower_bound, upper_bound, step="post", color='gray', alpha=0.3, label="Two-sample KS band (α = 0.003)", zorder=1)
+plt.fill_between(ks_times, lower_bound, upper_bound, step="post", color='gray', alpha=0.3, label="Exact two-sample KS band (α = 0.003)", zorder=1)
 
 plt.xlabel("t (seconds)")
 plt.ylabel("P(Δt ≤ t)")
@@ -557,9 +599,9 @@ m = len(experiment_delta_sorted)
 if n == 0 or m == 0:
     raise ValueError("Both periods need inter-event times for the two-sample KS comparison.")
 
-# Significance level and large-sample two-sample KS critical value
+# Significance level and exact finite-sample two-sample KS band width
 alpha = 0.003
-D_alpha = np.sqrt(-0.5 * np.log(alpha / 2)) * np.sqrt((n + m) / (n * m))
+D_alpha = exact_two_sample_ks_band(n, m, alpha)
 
 # Evaluate both empirical CDFs at every observed inter-event time
 ks_times = np.unique(np.concatenate(([0.0], delta_sorted, experiment_delta_sorted)))
@@ -578,7 +620,7 @@ plt.figure(figsize=(8, 5))
 plt.step(ks_times, background_cdf, where="post", label="Background 1")
 plt.step(ks_times, experiment_cdf, where="post", label="Experiment")
 plt.plot(experiment_delta_sorted, experiment_P_poisson, linestyle="--", color="red", label=f"Experiment fit (λ = {experiment_lam:.4f}/s)")
-plt.fill_between(ks_times, lower_bound, upper_bound, step="post", color='gray', alpha=0.3, label="Two-sample KS band (α = 0.003)", zorder=1)
+plt.fill_between(ks_times, lower_bound, upper_bound, step="post", color='gray', alpha=0.3, label="Exact two-sample KS band (α = 0.003)", zorder=1)
 
 plt.xlabel("t (seconds)")
 plt.ylabel("P(Δt ≤ t)")
