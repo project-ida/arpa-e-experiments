@@ -72,7 +72,7 @@ import numpy as np
 import pandas as pd
 from scipy.signal import find_peaks
 from sqlalchemy import create_engine, text
-from scipy.stats import kstest
+from scipy.stats import kstest, ks_2samp
 
 
 #Plotting
@@ -487,9 +487,12 @@ plt.show()
 neutron_periods["Background 1"]
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="T57-XEeqCaeR" outputId="fd6639f7-905f-47f9-8f35-7fef9351d939"
-# Run KS test against an exponential distribution with estimated lambda
-ks_stat, p_value = kstest(experiment_delta_sorted, 'expon', args=(0, 1/experiment_lam))
+```python id="T57-XEeqCaeR"
+# Two-sample KS test of measured experiment and Background 2 inter-event times
+ks_stat, p_value = ks_2samp(
+    experiment_delta_sorted, background2_delta_sorted,
+    alternative="two-sided", method="auto",
+)
 
 ks_stat, p_value
 ```
