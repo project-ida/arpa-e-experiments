@@ -636,9 +636,3 @@ plt.grid(True)
 plt.tight_layout()
 plt.show()
 ```
-
-<!-- #region id="dzjtIVg8XZZE" -->
-# Conclusion
-The significance conclusion is pending a rerun of the two-sample KS comparison above.
-
-<!-- #endregion -->

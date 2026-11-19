@@ -452,7 +452,7 @@ The following timing analysis includes the electronic spikes. We then repeat the
 <!-- #endregion -->
 
 <!-- #region id="6McultY7klTK" -->
-We now compare the soaking-period inter-event times with the measured Background 1 sample. The two-sample KS band uses both sample sizes and is centred on the background cumulative distribution. Crossing the band corresponds to rejection by the exact finite-sample two-sample KS test at a significance level of 0.003. Rerun the comparison cells to obtain the updated result.
+We now compare the soaking-period inter-event times with the measured Background 1 sample. The two-sample KS band uses both sample sizes and is centred on the background cumulative distribution. Crossing the band corresponds to rejection by the exact finite-sample two-sample KS test at a significance level of 0.003.
 <!-- #endregion -->
 
 ```python id="T57-XEeqCaeR"
