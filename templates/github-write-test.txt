@@ -1,0 +1,2 @@
+GitHub write test.
+Created to verify that a small file can be committed to this repository.
