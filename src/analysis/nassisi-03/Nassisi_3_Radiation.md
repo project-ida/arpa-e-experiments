@@ -11,7 +11,9 @@ jupyter:
     name: python3
 ---
 
+<!-- #region id="4889e770-8998-40ec-b48f-a8dc984323c4" -->
 <a href="https://colab.research.google.com/github/project-ida/arpa-e-experiments/blob/main/analysis/nassisi-03/Nassisi_3_Radiation.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://nbviewer.org/github/project-ida/arpa-e-experiments/blob/main/analysis/nassisi-03/Nassisi_3_Radiation.ipynb" target="_parent"><img src="https://nbviewer.org/static/img/nav_logo.svg" alt="Open In nbviewer" width="100"/></a>
+<!-- #endregion -->
 
 <!-- #region id="msqsXp7mp85M" -->
 
@@ -40,7 +42,7 @@ This notebook analyzes the neutron emission during this time period as measured 
 experiment_id = 6
 ```
 
-```python id="a6e41008a89d"
+```python id="a6e41008a89d" colab={"base_uri": "https://localhost:8080/"} outputId="e06f5583-f482-4b83-979f-f65230c4af5a"
 # Makes Libs accessible and runs notebook from same location regardless of whether colab or local
 !pip install colocal -q
 import colocal
@@ -97,7 +99,7 @@ We need to do a few authentication steps:
 -  Authenticate Colab to pull the nuclear particle master sheet using the Drive API.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="XK6IM7v-hnag" outputId="ed74c418-5a13-43b8-c3ea-987a0acae0fc"
+```python colab={"base_uri": "https://localhost:8080/"} id="XK6IM7v-hnag" outputId="b5676de2-6a2b-4bfd-fb1f-bf57fc184f64"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -149,7 +151,7 @@ sheet = gc.open_by_key(sheet_id).sheet1
 df = pd.DataFrame(sheet.get_all_records())
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="RndMn9Zos-LC" outputId="9b2e1ad5-d4e7-4f12-b1c0-d66f9b480d3a"
+```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="RndMn9Zos-LC" outputId="e594d907-75e5-41d6-c581-0827e389ab12"
 # Find the row where Experiment ID matches
 row = df[df['Experiment ID'] == experiment_id]
 
@@ -232,7 +234,7 @@ We're going to look at the neutron events during the background phase of the exp
 We can extract only the neutron events by using the psp values stored in the master spreadsheet.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="XW3JZibgWexj" outputId="0bc7bea0-3691-4831-c1a9-7380f44ff879"
+```python colab={"base_uri": "https://localhost:8080/"} id="XW3JZibgWexj" outputId="fb1ac7bf-9a20-47f5-9928-84fc0b91f4ab"
 psp
 ```
 
@@ -253,7 +255,7 @@ neutron_data, neutron_periods = get_all_event_data(times, f">{psp}", f">{energy}
 Let's see what the pulse data looks like for the background.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 206} id="Q3hFn5Z5tXyv" outputId="96accbe0-779a-430d-f77b-7c06747b4ec6"
+```python colab={"base_uri": "https://localhost:8080/", "height": 206} id="Q3hFn5Z5tXyv" outputId="5fcae015-094e-4437-8f54-0da4d75ef091"
 neutron_data["Background 1"].head()
 ```
 
@@ -351,7 +353,7 @@ P_exp = np.arange(1, len(delta_sorted) + 1) / len(delta_sorted)
 Let's see how the Poisson distribution compares to the experimental one.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="qlhkMPk9s-F_" outputId="cc3948b4-81bd-4224-c8ad-821f2111917c"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="qlhkMPk9s-F_" outputId="1cdd382d-1dc1-44ed-8a72-7ea5fd0cedc2"
 plt.figure(figsize=(8, 5))
 plt.plot(delta_sorted, P_exp, label="Empirical")
 plt.plot(delta_sorted, P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {lam:.5f}/s)")
@@ -394,11 +396,11 @@ background2_P_poisson = 1 - np.exp(-background2_lam * background2_delta_sorted)
 background2_P_exp = np.arange(1, len(background2_delta_sorted) + 1) / len(background2_delta_sorted)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="ssCwTHVKiWEg" outputId="1053d0d0-5107-4b1d-eaad-42f512fb5cb2"
+```python colab={"base_uri": "https://localhost:8080/"} id="ssCwTHVKiWEg" outputId="090e0465-3cb2-412e-d0b9-e92e705305f5"
 background2_lam
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="OEVPdqQEibrg" outputId="7208657c-3f1d-439f-ba60-c84bfb4a5f1b"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="OEVPdqQEibrg" outputId="a1fa36d1-71cc-4b8c-f3df-1d7792c28cb2"
 plt.figure(figsize=(8, 5))
 plt.plot(background2_delta_sorted, background2_P_exp, label="Empirical")
 plt.plot(background2_delta_sorted, background2_P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {background2_lam:.5f}/s)")
@@ -432,7 +434,7 @@ ks_stat, p_value
 It's instructive to look at the cumulative pulses alongside the counts per minute.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="iPSuT_3dJ5kp" outputId="0a8fe806-5410-4219-ea4c-d833c49eb65a"
+```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="iPSuT_3dJ5kp" outputId="353a1a57-a13a-4f74-c073-8fde8430d072"
 background_cpm = background.resample("60s").size().rename("counts").to_frame()
 fig = go.Figure(layout=dict(yaxis_title="Counts per min", showlegend=False, height=600, width=800))
 fig.add_trace(go.Scattergl(name="Counts per min", x=background_cpm.index, y=background_cpm.counts))
@@ -444,7 +446,7 @@ fig.add_trace(go.Scattergl(name="Counts per min", x=background_cpm.index, y=back
 We can use the inter-pulse cumulative probability to detect deviations from normal background, aka anomalies.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="PdHlw300IfEy" outputId="ff18aaf0-8e0c-49a2-afc8-26c8e0d68760"
+```python colab={"base_uri": "https://localhost:8080/"} id="PdHlw300IfEy" outputId="db4d718c-0aa0-4ba0-c689-4af934e23d1f"
 neutron_periods["Experiment"]
 ```
 
@@ -464,11 +466,11 @@ experiment_P_poisson = 1 - np.exp(-experiment_lam * experiment_delta_sorted)
 experiment_P_exp = np.arange(1, len(experiment_delta_sorted) + 1) / len(experiment_delta_sorted)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="R5l7VjXUAJCx" outputId="3a1d4fb9-45ee-4e8e-a456-c04403e2f84b"
+```python colab={"base_uri": "https://localhost:8080/"} id="R5l7VjXUAJCx" outputId="70a46525-5cfc-46ec-fa24-fc39df91fc3c"
 experiment_lam
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="hXgGNo7aIHsn" outputId="5acf387f-1f26-458b-81e3-248eb116ec39"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="hXgGNo7aIHsn" outputId="a6ff829c-dd08-468e-e6e0-cb7e9af25b81"
 plt.figure(figsize=(8, 5))
 plt.plot(experiment_delta_sorted, experiment_P_exp, label="Empirical")
 plt.plot(experiment_delta_sorted, experiment_P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {experiment_lam:.5f}/s)")
@@ -483,11 +485,11 @@ plt.tight_layout()
 plt.show()
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="M1BAZ4z5pPeL" outputId="6ba62292-0835-47db-dffe-7ae44039e475"
+```python colab={"base_uri": "https://localhost:8080/"} id="M1BAZ4z5pPeL" outputId="b496e86a-7674-43d3-afcd-7f61c5596e3c"
 neutron_periods["Background 1"]
 ```
 
-```python id="T57-XEeqCaeR"
+```python id="T57-XEeqCaeR" colab={"base_uri": "https://localhost:8080/"} outputId="e3e16a08-804c-4df3-e74d-ecf0d7a3bf9a"
 # Two-sample KS test of measured experiment and Background 2 inter-event times
 ks_stat, p_value = ks_2samp(
     experiment_delta_sorted, background2_delta_sorted,
@@ -497,7 +499,7 @@ ks_stat, p_value = ks_2samp(
 ks_stat, p_value
 ```
 
-```python id="juDzyr-9Cz9r"
+```python id="juDzyr-9Cz9r" colab={"base_uri": "https://localhost:8080/", "height": 507} outputId="30adc238-ccb4-4ae8-cb6a-2167e2ffdea4"
 # Two-sample KS comparison of measured background and experiment gaps
 n = len(background2_delta_sorted)
 m = len(experiment_delta_sorted)
@@ -562,7 +564,7 @@ plt.show()
 Let's compare the soaking period and the laser period.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 89} id="I_MqJuY4FSc6" outputId="9fece09d-0dd3-4ffd-e136-2435326634bc"
+```python colab={"base_uri": "https://localhost:8080/", "height": 89} id="I_MqJuY4FSc6" outputId="1d0c078b-252f-45df-8b3d-68aeae0cb46a"
 experiment_times = {'Begin soak': ['2025-04-04 17:37:00'],
         'End soak': ['2025-05-06 19:01:00'],
         'Begin laser': ['2025-05-08 11:00:00'],
@@ -580,7 +582,7 @@ display(experiment_time_periods_df)
 experiment_neutron_data, experiment_neutron_periods = get_all_event_data(experiment_time_periods_df, f">{psp}", f">{energy}")
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 238} id="yMqZq4teJZHy" outputId="0ea4500a-d3ad-427b-b571-d3b9b892e61b"
+```python colab={"base_uri": "https://localhost:8080/", "height": 238} id="yMqZq4teJZHy" outputId="f6f9eaee-379f-4fad-e84e-ad550a31515d"
 experiment_neutron_data["Begin soak"].head()
 ```
 
@@ -606,11 +608,11 @@ soaking_P_poisson = 1 - np.exp(-soaking_lam * soaking_delta_sorted)
 soaking_P_exp = np.arange(1, len(soaking_delta_sorted) + 1) / len(soaking_delta_sorted)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="6poBOt52gZ4u" outputId="35c98493-68c1-4609-9bd1-d6e0281709ed"
+```python colab={"base_uri": "https://localhost:8080/"} id="6poBOt52gZ4u" outputId="c41698fe-7d63-4f91-fbfe-10ca64193534"
 soaking_lam
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="_fEIfuDDgcRu" outputId="900f45f5-c08b-4dca-833d-ed4ecc7a763c"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="_fEIfuDDgcRu" outputId="bc7e5388-781e-4072-d729-c1acedcbc142"
 plt.figure(figsize=(8, 5))
 plt.plot(soaking_delta_sorted, soaking_P_exp, label="Empirical")
 plt.plot(soaking_delta_sorted, soaking_P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {soaking_lam:.5f}/s)")
@@ -644,11 +646,11 @@ soaking_P_poisson = 1 - np.exp(-soaking_lam * soaking_delta_sorted)
 soaking_P_exp = np.arange(1, len(soaking_delta_sorted) + 1) / len(soaking_delta_sorted)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="7T0dRrofebst" outputId="12a4dfc9-9095-4b4c-f5f9-a8440f2c75a5"
+```python colab={"base_uri": "https://localhost:8080/"} id="7T0dRrofebst" outputId="580ac37f-a818-47f5-bb41-06838a251b7c"
 soaking_lam
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="fIGk3cmgednl" outputId="0b1a229a-50cd-464b-8411-53faa4b679c9"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="fIGk3cmgednl" outputId="e66492b4-ef5e-43f7-bdea-5685fbdfaaaa"
 # Number of samples (n)
 n = len(soaking_delta_sorted)
 
@@ -704,11 +706,11 @@ laser_P_poisson = 1 - np.exp(-laser_lam * laser_delta_sorted)
 laser_P_exp = np.arange(1, len(laser_delta_sorted) + 1) / len(laser_delta_sorted)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="idBBHwTohRyH" outputId="ee777fe3-d53e-4721-f604-0b02ceb141d1"
+```python colab={"base_uri": "https://localhost:8080/"} id="idBBHwTohRyH" outputId="ae8c7015-4282-49f8-954c-9ae847de62b5"
 laser_lam
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="lmYfXnyhhUJu" outputId="1fd77d01-d9a5-468e-e674-2db3eff1078c"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="lmYfXnyhhUJu" outputId="5ceb249f-35da-4b0d-8808-26416b944d08"
 # Number of samples (n)
 n = len(laser_delta_sorted)
 
