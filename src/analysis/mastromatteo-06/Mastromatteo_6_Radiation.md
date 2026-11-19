@@ -44,7 +44,7 @@ experiment_id = 31
 channel_number = 3
 ```
 
-```python id="b57a121db215"
+```python id="b57a121db215" colab={"base_uri": "https://localhost:8080/"} outputId="565433a3-7834-4440-9ae5-f4353d21d155"
 # Makes Libs accessible and runs notebook from same location regardless of whether colab or local
 !pip install colocal -q
 import colocal
@@ -102,7 +102,7 @@ We need to do a few authentication steps:
 -  Authenticate Colab to pull the nuclear particle master sheet using the Drive API.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="XK6IM7v-hnag" outputId="a5d955f5-9273-4ec9-88db-e8c8afe3f276"
+```python colab={"base_uri": "https://localhost:8080/"} id="XK6IM7v-hnag" outputId="cac990d0-63e5-4b50-a4f2-e0111495ea4a"
 # Mount Drive
 drive.mount('/content/drive')
 
@@ -174,7 +174,7 @@ df = pd.DataFrame(sheet.get_all_records())
 df = fill_experiment_id(df)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="3Umn0vQM0nzf" outputId="e3082d5e-6008-499a-ef78-e8c0c84aa2e6"
+```python colab={"base_uri": "https://localhost:8080/", "height": 81} id="3Umn0vQM0nzf" outputId="5be8c8e7-577d-46b3-f4b5-2ab0482f221c"
 # Find the rows where Experiment ID matches
 rows = df[df['Experiment ID'] == experiment_id]
 
@@ -262,7 +262,7 @@ We're going to look at the neutron events during the background phase of the exp
 We can extract only the neutron events by using the psp values stored in the master spreadsheet.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="XW3JZibgWexj" outputId="8c6373ab-82ec-4073-c0d7-64353c1f1b5b"
+```python colab={"base_uri": "https://localhost:8080/"} id="XW3JZibgWexj" outputId="3a649c34-63c2-4dee-c759-a1e5c8697ea1"
 psp
 ```
 
@@ -336,7 +336,7 @@ neutron_data, neutron_periods = get_all_event_data(times, f">{psp}", f">{energy}
 Let's see what the pulse data looks like for the background.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 238} id="Q3hFn5Z5tXyv" outputId="1f31a523-ed33-49ab-93a9-695523fefdcd"
+```python colab={"base_uri": "https://localhost:8080/", "height": 238} id="Q3hFn5Z5tXyv" outputId="e0b972a4-15c7-4b28-f136-d7468afd1a96"
 neutron_data["Background 1"].head()
 ```
 
@@ -376,7 +376,7 @@ def reconstruct_ns_pulses(df):
 We'll now reconstruct the nanosecond pulses for all the following experimental periods:
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="k_MsVojSGcot" outputId="2aa6f462-8500-4e73-9e44-61a34b14f30c"
+```python colab={"base_uri": "https://localhost:8080/"} id="k_MsVojSGcot" outputId="c1330fdc-f97f-4f10-e5eb-400c7d21069d"
 neutron_data.keys()
 ```
 
@@ -424,7 +424,7 @@ P_poisson = 1 - np.exp(-lam * delta_sorted)
 The background rate is
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="MCON7zausVRZ" outputId="f2701f79-eab6-4015-b086-28ec674258b4"
+```python colab={"base_uri": "https://localhost:8080/"} id="MCON7zausVRZ" outputId="32010079-0c30-4adf-b60f-b0da7ee3c101"
 lam
 ```
 
@@ -450,7 +450,7 @@ P_exp = np.arange(1, len(delta_sorted) + 1) / len(delta_sorted)
 Let's see how the Poisson distribution compares to the experimental one.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="qlhkMPk9s-F_" outputId="985e164f-de0c-401c-8154-747ee50dab41"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="qlhkMPk9s-F_" outputId="d66ba4dd-5b1a-404c-907d-c21313480998"
 plt.figure(figsize=(8, 5))
 plt.plot(delta_sorted, P_exp, label="Empirical")
 plt.plot(delta_sorted, P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {lam:.5f}/s)")
@@ -473,13 +473,13 @@ Visually, the level of agreement is adequate. The experimental data is noisey du
 It's instructive to look at the cumulative pulses alongside the counts per minute.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="iPSuT_3dJ5kp" outputId="8457f688-b484-49c9-a530-ed03a2871cd4"
+```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="iPSuT_3dJ5kp" outputId="7e545aea-1be3-4f4e-e9a3-c3316a55a9da"
 background_cpm = background.resample("60s").size().rename("counts").to_frame()
 fig = go.Figure(layout=dict(yaxis_title="Counts per min", showlegend=False, height=600, width=800))
 fig.add_trace(go.Scattergl(name="Counts per min", x=background_cpm.index, y=background_cpm.counts))
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="fI1Px1R9hYag" outputId="f52899eb-16bf-42bd-b806-2b20c4b2ab5e"
+```python colab={"base_uri": "https://localhost:8080/"} id="fI1Px1R9hYag" outputId="1a5da137-2729-4f27-c47c-5adc111b5d94"
 neutron_periods["Experiment"]
 ```
 
@@ -503,7 +503,7 @@ experiment_P_exp = np.arange(1, len(experiment_delta_sorted) + 1) / len(experime
 The rate during the experiment is
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="GOmOopG4he-4" outputId="86261513-fbd2-4666-d4cd-029a7442d10a"
+```python colab={"base_uri": "https://localhost:8080/"} id="GOmOopG4he-4" outputId="f739e3a1-ee0b-48bb-cedd-17f0dab99bc1"
 experiment_lam
 ```
 
@@ -511,7 +511,7 @@ experiment_lam
 counts per second.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="9-uSx8z5hgt4" outputId="843f440e-ae9a-4b30-bf1f-894bf3b489dd"
+```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="9-uSx8z5hgt4" outputId="b78e76e4-fd50-4611-b8fb-37062c83d489"
 plt.figure(figsize=(8, 5))
 plt.plot(experiment_delta_sorted, experiment_P_exp, label="Empirical")
 plt.plot(experiment_delta_sorted, experiment_P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {experiment_lam:.5f}/s)")
@@ -526,13 +526,13 @@ plt.tight_layout()
 plt.show()
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="_dpYHvPdhkb4" outputId="ce70daa7-f404-45fc-ae5b-ef933257584a"
+```python colab={"base_uri": "https://localhost:8080/", "height": 617} id="_dpYHvPdhkb4" outputId="4896853e-a010-4df6-e25c-c87e6f9aff20"
 experiment_cpm = experiment.resample("60s").size().rename("counts").to_frame()
 fig = go.Figure(layout=dict(yaxis_title="Counts per min", showlegend=False, height=600, width=1200))
 fig.add_trace(go.Scattergl(name="Counts per min", x=experiment_cpm.index, y=experiment_cpm.counts))
 ```
 
-```python id="pLSqG10Ol310"
+```python id="pLSqG10Ol310" colab={"base_uri": "https://localhost:8080/", "height": 543} outputId="b505c8c2-7576-4ed9-fc7f-579d6060a5f4"
 # Two-sample KS comparison of measured background and experiment gaps
 n = len(delta_sorted)
 m = len(experiment_delta_sorted)
