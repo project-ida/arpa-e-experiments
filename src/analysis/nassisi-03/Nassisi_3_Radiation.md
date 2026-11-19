@@ -494,26 +494,31 @@ ks_stat, p_value = kstest(experiment_delta_sorted, 'expon', args=(0, 1/experimen
 ks_stat, p_value
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="juDzyr-9Cz9r" outputId="31b5d7ec-1aa6-40d4-de07-f2fd98f1e75c"
-# Number of samples (n)
-n = len(experiment_delta_sorted)
+```python id="juDzyr-9Cz9r"
+# Two-sample KS comparison of measured background and experiment gaps
+n = len(background2_delta_sorted)
+m = len(experiment_delta_sorted)
+if n == 0 or m == 0:
+    raise ValueError("Both background and experiment need inter-event times.")
 
-# Desired confidence level (e.g. ~3σ = 99.7%)
+# Significance level and large-sample two-sample critical distance
 alpha = 0.003
+D_alpha = np.sqrt(-0.5 * np.log(alpha / 2)) * np.sqrt((m + n) / (m * n))
 
-# Kolmogorov–Smirnov critical value for given alpha and n
-D_alpha = np.sqrt(-0.5 * np.log(alpha / 2) / n)
+# Evaluate both empirical CDFs at every observed gap, including their steps
+ks_grid = np.unique(np.concatenate(([0.0], background2_delta_sorted, experiment_delta_sorted)))
+background_cdf = np.searchsorted(background2_delta_sorted, ks_grid, side="right") / n
+experiment_cdf = np.searchsorted(experiment_delta_sorted, ks_grid, side="right") / m
 
-
-# Upper and lower bounds of the confidence band
-upper_bound = np.clip(background2_P_poisson + D_alpha, 0, 1)
-lower_bound = np.clip(background2_P_poisson - D_alpha, 0, 1)
+upper_bound = np.clip(background_cdf + D_alpha, 0, 1)
+lower_bound = np.clip(background_cdf - D_alpha, 0, 1)
 
 plt.figure(figsize=(8, 5))
-plt.plot(background2_delta_sorted, background2_P_exp, label="Background 2")
-plt.plot(experiment_delta_sorted, experiment_P_exp, label=f"Experiment (λ = {experiment_lam:.5f}/s)")
+plt.step(ks_grid, background_cdf, where="post", label="Background 2")
+plt.step(ks_grid, experiment_cdf, where="post", label=f"Experiment (λ = {experiment_lam:.5f}/s)")
 plt.plot(background2_delta_sorted, background2_P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {background2_lam:.5f}/s)")
-plt.fill_between(background2_delta_sorted, lower_bound, upper_bound, color='gray', alpha=0.3, label="~3σ Confidence Band", zorder=1)
+plt.fill_between(ks_grid, lower_bound, upper_bound, step="post", color='gray', alpha=0.3,
+                 label="Approx. two-sample KS band (α = 0.003)", zorder=1)
 
 # # Max deviation marker and vertical line
 # plt.plot(t_max_dev, cdf_with_synthetic_neutrons[max_index], 'ko', label="KS Statistic (D)")
