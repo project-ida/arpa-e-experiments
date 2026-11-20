@@ -18,9 +18,9 @@ jupyter:
 <!-- #region id="ydG__I6QBDGM" -->
 ‼️ **Prerequisites** ‼️:
 - Access to the `Nucleonics` Google Drive shortcut and its `.env` folder for SQL credentials
-- Access to the Nucleonics waveform server at `http://nucleonics.mit.edu:8080`, with the ROOT download route installed
+- Access to Nucleonics data
 
-ROOT files are downloaded through Nucleonics from the Synology mount. Google Drive is used only for SQL credentials.
+ROOT files are downloaded from Nucleonics and saved locally for analysis. Google Drive is used only for SQL credentials.
 <!-- #endregion -->
 
 <!-- #region id="oG6NQb5BBF0p" -->
@@ -64,7 +64,7 @@ from libs.root_files_api import download_root_file
 <!-- #endregion -->
 
 ```python id="FhhgoaA3A0-Z"
-# Mount Drive only to load SQL credentials; ROOT files now live on Synology.
+# Mount Drive to load SQL credentials.
 drive.mount('/content/drive')
 shutil.copy(
     "/content/drive/MyDrive/Nucleonics/.env/psql_credentials_readonly.py",
@@ -143,9 +143,7 @@ closest_root_file = df_root.iloc[0].to_dict()
 ```
 
 <!-- #region id="capsaKe7JnX-" -->
-Now download the original ROOT file through the Nucleonics waveform server. It looks up the same database row and serves the file from its Synology mount.
-
-The download is saved under `downloads/root_files` in this runtime. No waveform-server password is required. If the server returns 404, confirm that its ROOT download route has been deployed and that the file is available on Synology.
+Download the selected ROOT file from Nucleonics. It will be saved under `downloads/root_files` for the analysis below.
 <!-- #endregion -->
 
 ```python id="nqUBfVWiJTg4"

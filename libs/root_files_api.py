@@ -46,7 +46,8 @@ def download_root_file(
     """Download a root_files row and return its local pathlib.Path.
 
     root_file must provide computer, dir, and file, as a dictionary or pandas
-    Series. progress, when supplied, is called with (bytes_received,
+    Series. Both .root and .root2 filenames are accepted.
+    progress, when supplied, is called with (bytes_received,
     total_bytes); total_bytes is None if the server does not supply a length.
     timeout is the requests connect/read timeout in seconds.
 
@@ -66,8 +67,8 @@ def download_root_file(
         params[key] = value
 
     filename = params["file"]
-    if "/" in filename or "\\" in filename or not filename.lower().endswith(".root"):
-        raise ValueError("root_file['file'] must be a filename ending in .root.")
+    if "/" in filename or "\\" in filename or not filename.lower().endswith((".root", ".root2")):
+        raise ValueError("root_file['file'] must be a filename ending in .root or .root2.")
 
     url = urlsplit(base_url)
     if (
@@ -91,11 +92,8 @@ def download_root_file(
             headers={"Accept-Encoding": "identity"},
         ) as response:
             if response.status_code != 200:
-                hint = ""
-                if response.status_code == 404:
-                    hint = " Check that the waveform server has the download route and the indexed ROOT file is available."
                 raise ROOTFileAPIError(
-                    f"ROOT download failed (HTTP {response.status_code}).{hint}",
+                    f"ROOT download failed (HTTP {response.status_code}).",
                     status_code=response.status_code,
                 )
 

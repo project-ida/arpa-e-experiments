@@ -47,6 +47,16 @@ class RootFilesAPITests(unittest.TestCase):
         self.assertEqual(filename.read_bytes(), b"root-data")
         self.assertEqual(get.call_args.args[0], "https://example.org/api/root-files/download")
 
+    def test_downloads_root2_files_without_changing_filename(self):
+        for extension in (".root2", ".ROOT2"):
+            row = dict(self.row, file="CH4@test" + extension)
+            with self.subTest(extension=extension):
+                with patch("libs.root_files_api.requests.get", return_value=self.response([b"root-data"])) as get:
+                    filename = download_root_file(row, self.download_dir)
+                self.assertEqual(filename.name, row["file"])
+                self.assertEqual(filename.read_bytes(), b"root-data")
+                self.assertEqual(get.call_args.kwargs["params"], row)
+
     def test_replaces_existing_file_only_after_success(self):
         destination = self.download_dir / self.row["file"]
         destination.write_bytes(b"old ROOT download")
@@ -61,7 +71,7 @@ class RootFilesAPITests(unittest.TestCase):
             with self.assertRaises(ROOTFileAPIError) as error:
                 download_root_file(self.row, self.download_dir)
         self.assertEqual(error.exception.status_code, 404)
-        self.assertIn("download route", str(error.exception))
+        self.assertEqual(str(error.exception), "ROOT download failed (HTTP 404).")
         self.assertEqual(destination.read_bytes(), b"existing")
 
     def test_html_and_empty_responses_are_rejected(self):
@@ -94,8 +104,17 @@ class RootFilesAPITests(unittest.TestCase):
         self.assertEqual(list(self.download_dir.iterdir()), [])
 
     def test_invalid_arguments_are_rejected_before_request(self):
+        invalid_rows = (
+            {},
+            dict(self.row, computer=None),
+            dict(self.row, file="../escape.root"),
+            dict(self.row, file="../escape.root2"),
+            dict(self.row, file="text.txt"),
+            dict(self.row, file="test.root3"),
+            dict(self.row, file="test.root2.txt"),
+        )
         with patch("libs.root_files_api.requests.get") as get:
-            for row in ({}, dict(self.row, computer=None), dict(self.row, file="../escape.root"), dict(self.row, file="text.txt")):
+            for row in invalid_rows:
                 with self.subTest(row=row), self.assertRaises(ValueError):
                     download_root_file(row, self.download_dir)
             for url in ("ftp://example.org", "https://example.org?query=1", "https://user:password@example.org"):
