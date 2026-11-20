@@ -26,7 +26,7 @@ ROOT files are downloaded from Nucleonics and saved locally for analysis. Google
 <!-- #region id="oG6NQb5BBF0p" -->
 # Waveform extraction
 
-This notebook contains starter code that extracts and visualises event waveforms from a ROOT file.
+Choose a detector channel and time interval, then load its pulses into a pandas DataFrame for filtering and plotting. The waveform library handles finding, downloading, and combining the relevant ROOT files.
 <!-- #endregion -->
 
 ```python id="iRx5OjNEHaKe"
@@ -41,26 +41,21 @@ root, branch, cwd = colocal.setup()
 <!-- #endregion -->
 
 ```python id="IAyoM46dBFqg"
-# Install the ROOT reader and HTTP download client
 %pip install -q uproot requests
 
-# SQL credentials are still loaded from Google Drive
 import shutil
 from google.colab import drive
-
-# Data analysis and plotting
-import numpy as np
 import pandas as pd
-import uproot
 import matplotlib.pyplot as plt
 
-# Our HTTP clients
-from libs.sql_api import SQLConnection, SQLAPIError, read_sql
-from libs.root_files_api import download_root_file
+from libs.sql_api import SQLConnection
+from libs.waveforms import load_waveforms, read_waveforms
 ```
 
 <!-- #region id="C99IMdA1BSWv" -->
-## Authentication
+## SQL connection
+
+The ROOT files table (`root_files`) is queried through our SQL API. Load the SQL credentials and create a connection here; `load_waveforms()` receives that connection and uses it to find the files for the requested detector and interval.
 <!-- #endregion -->
 
 ```python id="FhhgoaA3A0-Z"
@@ -73,13 +68,10 @@ shutil.copy(
 ```
 
 ```python id="R5pArHA9BUJV"
-# Import SQL credentials
-from psql_credentials import PGHOST, PGUSER, PGPASSWORD, PGPORT, PGDATABASE
+from psql_credentials import PGHOST, PGUSER, PGPASSWORD, PGDATABASE
 
-# Create the database connection string
-connection_uri = f'https://{PGHOST}/sql-api/query.php'
-engine = SQLConnection(
-    connection_uri,
+connection = SQLConnection(
+    f"https://{PGHOST}/sql-api/query.php",
     PGUSER,
     PGPASSWORD,
     database=PGDATABASE,
@@ -88,252 +80,142 @@ engine = SQLConnection(
 ```
 
 <!-- #region id="uNJuPTnlBf3C" -->
-## Fetch the ROOT file corresponding to the a time period
-<!-- #endregion -->
+## Choose the detector and time interval
 
-<!-- #region id="BXAl9Bq4BMNs" -->
-For this notebook we must specify a:
-- channel number
-- time of interest
-- duration around the time of interest
+Specify the device (for example, `caen8ch`), channel, time of interest, and duration around it. You can also assign `start` and `end` directly. The interval includes `start` and excludes `end`.
 <!-- #endregion -->
 
 ```python id="9oSGSyO0A_QD"
+device = "caen8ch"
 channel_number = 6
-time = '2025-09-03 12:00:00'
-duration = 600
+time_of_interest = pd.Timestamp("2025-09-03 12:00:00")
+duration = pd.Timedelta(minutes=10)
+
+start = time_of_interest - duration / 2
+end = time_of_interest + duration / 2
+print(f"Selected interval: {start} to {end}")
 ```
 
 <!-- #region id="PX5eyO2WJg8T" -->
-We now look in the database for the closest ROOT file to the `time`. Since our ROOT files are organised by their end time (time of the last event), we need to look for the closest ROOT file after our specified `time`.
-<!-- #endregion -->
+## Load the pulses
 
-```python id="hXNM2rAOBYlH"
-def find_root_file(event_time, channel_number):
-    query = """
-    SELECT *
-    FROM root_files
-    WHERE time > %(event_time)s
-      AND file LIKE %(file_pattern)s
-    ORDER BY ABS(EXTRACT(EPOCH FROM (%(event_time)s - time)))
-    LIMIT 1;
-    """
-    file_pattern = f"%_CH{channel_number}@%"
-    df = read_sql(query, con=engine, params={
-        "event_time": event_time,
-        "file_pattern": file_pattern
-    })
-    if df.empty:
-        raise FileNotFoundError(f"No indexed ROOT file found after {event_time} for channel {channel_number}.")
-    df.set_index('time', inplace=True)
-    return df
-```
+ROOT is a binary data format that can store compressed measurement data. In these files, the `Data_R` tree contains one entry per pulse:
+
+| Field | Meaning |
+|---|---|
+| `Timestamp` | Integer picoseconds elapsed since acquisition start |
+| `Energy` | Long-gate integrated pulse value, used as an energy measure |
+| `EnergyShort` | Short-gate integrated value, when recorded |
+| `Samples` | Waveform amplitudes for the pulse |
+
+`Timestamp` alone does not give calendar time: it measures time relative to acquisition start. The ROOT files table stores the absolute time of each file's last pulse in its `time` column. `load_waveforms()` uses this value and the relative ROOT timestamps to calculate the absolute time of every pulse.
+
+The function finds and downloads the relevant ROOT files, combines their pulses, and returns a DataFrame containing only the requested interval. The original `Timestamp` values are retained.
+
+The times in the ROOT files table omit fractional seconds, so reconstructed absolute times can differ from the original pulse-table times by a fraction of a second.
+<!-- #endregion -->
 
 ```python id="MULgCJIACxWN"
-df_root = find_root_file(time, channel_number)
-df_root
-```
-
-<!-- #region id="2QLmFKCFN7UM" -->
-Let's create a dictionary for easy access to the file info:
-<!-- #endregion -->
-
-```python id="nqjenrX_PLns"
-closest_root_file = df_root.iloc[0].to_dict()
-```
-
-<!-- #region id="capsaKe7JnX-" -->
-Download the selected ROOT file from Nucleonics. It will be saved under `downloads/root_files` for the analysis below.
-<!-- #endregion -->
-
-```python id="nqUBfVWiJTg4"
-ROOT_FILES_BASE_URL = "http://nucleonics.mit.edu:8080"
-DOWNLOAD_DIR = "downloads/root_files"
-
-
-def show_download_progress(received, total):
-    downloaded_mb = received / 1024**2
-    if total:
-        print(f"Download {100 * received / total:.1f}% ({downloaded_mb:.1f} MB)", end="\r")
-    else:
-        print(f"Downloaded {downloaded_mb:.1f} MB", end="\r")
-```
-
-```python id="7kMHw24YMlGq"
-print(f"Downloading {closest_root_file['file']} from Nucleonics...")
-```
-
-```python id="EgO6zwoTMlzN"
-filename = download_root_file(
-    closest_root_file,
-    download_dir=DOWNLOAD_DIR,
-    base_url=ROOT_FILES_BASE_URL,
-    progress=show_download_progress,
+df_pulses = load_waveforms(
+    connection,
+    device=device,
+    channel=channel_number,
+    start=start,
+    end=end,
 )
-print(f"\nSaved to {filename}")
-```
 
-<!-- #region id="iAyWI3QRlSIM" -->
-## Analysing waveform data
-
-### Pulses with absolute time
-
-Each radiation pulse is stored in the ROOT files with a `Timestamp`, `Energy`, `EnergyShort` and `Samples`. The waveform of the pulse is stored in the `Samples` part of the ROOT tree.
-
-`Timestamp` information measures the number of picoseconds from the start of the experiment. In order for us to conveniently extract pulses using absolute time, we will need to create a dataframe with the appropriate time index.
-<!-- #endregion -->
-
-```python id="1zfkD_z3Fhmw"
-# Opens up the ROOT file and extracts the information
-with uproot.open(filename) as f:
-    tree = f['Data_R']
-    branches = tree.keys()
-    ts = tree['Timestamp'].array(library='np')
-    e = tree['Energy'].array(library='np')
-    wf = tree['Samples'].array(library='np')
-
-    # Conditionally load EnergyShort if it exists
-    if 'EnergyShort' in branches:
-        es = tree['EnergyShort'].array(library='np')
-    else:
-        es = None
-
-# Creates dataframe with absolute time index
-end_time = df_root.index[0]
-start_time = end_time - pd.to_timedelta((ts[-1]-ts[0])/1e12, unit='s')
-time_abs = start_time + pd.to_timedelta((ts - ts[0])/1e12, unit='s')
-
-data = {'Energy': e, 'Waveform': wf}
-if es is not None:
-    data['EnergyShort'] = es
-df_pulses = pd.DataFrame(data, index=pd.to_datetime(time_abs))
-```
-
-```python id="k-Q12sRwptwP"
+print(f"Loaded {len(df_pulses)} pulses from {len(df_pulses.attrs['root_files'])} files.")
 df_pulses.head()
 ```
 
+<!-- #region id="b2c36603c32e43bca08a4b5aa84f7beb" -->
+The DataFrame is indexed by reconstructed absolute pulse time. `Waveform` contains the sample arrays, and `SourceFile` identifies where each pulse came from. `EnergyShort` and the calculated `PSP` column are included when available.
+
+### Reuse files already downloaded
+
+The downloaded files remain available for further analysis. To read them again, use their paths and per-file end times saved in `df_pulses.attrs["root_files"]`:
+
+```python
+saved_files = pd.DataFrame(df_pulses.attrs["root_files"])
+df_pulses = read_waveforms(saved_files, start=start, end=end)
+```
+
+`read_waveforms()` can also take a list of local file paths, deriving their end times from the processed filenames. Omitting `start` and `end` reads all pulses in those files. See `libs/README.md` for saving the file list for a later session.
+<!-- #endregion -->
+
 <!-- #region id="WbmLZnb7p2LP" -->
-### Filtering pulses
+## Analyse the pulses
 
-We don't necessarily want to see all pulses. We might wish to only see high energy pulses, or filter out neutrons from gammas (if using an Eljen detector) using the PSP value (More discussion about neutron/gamma discrimination can be found in the [PSD Analysis notebook](https://github.com/project-ida/arpa-e-experiments/blob/main/tutorials/PSD-analysis.ipynb)).
+### Filter by energy and PSP
 
-PSP is calculated by:
+We can select pulses by energy and, when `EnergyShort` is available, by the pulse-shape parameter PSP. This is useful for neutron/gamma discrimination with Eljen detectors; see the [PSD Analysis notebook](https://github.com/project-ida/arpa-e-experiments/blob/main/tutorials/PSD-analysis.ipynb).
+
+The library calculates:
 
 $$
 \rm PSP = \frac{\rm Energy - EnergyShort}{\rm Energy}
 $$
 
-
+Set either range to `None` to disable that selection. The bounds below are exclusive. PSP is `NaN` when the required short-gate value is missing or energy is zero; applying a PSP range excludes those pulses.
 <!-- #endregion -->
 
-```python id="XqqcpWDg3d0g"
-if "EnergyShort" in df_pulses.columns:
-  df_pulses['PSP'] = 1 - (df_pulses['EnergyShort'] / df_pulses['Energy'])
-```
-
-```python id="bTRM1Zt3CbKz"
-psp_range = [0,1] # All PSP values
-
-energy_range = [0,70] # low energy
-# energy_range = [71,600] # high energy
-# energy_range = [901,3100] # very high energy
-```
-
 ```python id="pYmh_1b3lYmQ"
-filtered = df_pulses[(df_pulses['Energy'] > energy_range[0]) & (df_pulses['Energy'] < energy_range[1])]
+energy_range = (0, 70)  # Low energy; try (71, 600) or (901, 3100)
+psp_range = None         # For example, (0.237, 1.0) for a PSP selection
 
-if "PSP" in df_pulses.columns:
-  filtered = filtered[(filtered['PSP'] > psp_range[0]) & (filtered['PSP'] < psp_range[1])]
+filtered = df_pulses
+if energy_range is not None:
+    filtered = filtered[
+        (filtered["Energy"] > energy_range[0]) &
+        (filtered["Energy"] < energy_range[1])
+    ]
+if psp_range is not None:
+    if "PSP" not in filtered.columns:
+        raise ValueError("PSP selection requires EnergyShort data.")
+    filtered = filtered[
+        (filtered["PSP"] > psp_range[0]) &
+        (filtered["PSP"] < psp_range[1])
+    ]
+print(f"Selected {len(filtered)} of {len(df_pulses)} pulses.")
 ```
 
 <!-- #region id="KlFWvHRFrxS7" -->
-### Visualising the counts
+### Counts during the requested interval
 
-Let's now do a sanity check and visualise the counts per second over the entire ROOT file. The plot below should look identical to what we see in our data panels.
-
-We'll also mark the burst time:
+Plot the selected pulses in one-second bins, including bins with no pulses. The red line marks the time of interest. Bins at the edges may cover only part of a second.
 <!-- #endregion -->
-
-```python id="_erVbBxS9Bje"
-time = pd.to_datetime(time)
-print(time)
-```
 
 ```python id="HEQExazK5W_U"
-cps = filtered["Energy"].resample('1s').count()
+bins = pd.date_range(start.floor("s"), end.ceil("s"), freq="1s", inclusive="left")
+cps = filtered["Energy"].resample("1s").count().reindex(bins, fill_value=0)
+
 plt.figure(figsize=(12, 4))
-plt.plot(cps, drawstyle='steps-mid')
-plt.axvline(time, color='r', linestyle='--', label="Time of interest")
-plt.title('Full ROOT file')
-plt.xlabel('Time')
-plt.ylabel('Counts per second')
-plt.legend()
-plt.grid(True)
-plt.show()
-```
-
-<!-- #region id="NbZfwRbD5oBS" -->
-Let's now zoom in on the time period of interest which is around:
-<!-- #endregion -->
-
-```python id="MmL3bAZs4jTz"
-print(time)
-```
-
-<!-- #region id="F9RaTGIW4nXA" -->
-with a duration of:
-<!-- #endregion -->
-
-```python id="U6Yl3U8K4sDE"
-duration = pd.to_timedelta(duration, unit='s')
-print(duration)
-```
-
-<!-- #region id="WAdMOtV85BqZ" -->
-Once we determine the `start` and `end` times, we can easily pull out cps and waveforms for the burst.
-<!-- #endregion -->
-
-```python id="8xyr7GiE3bV9"
-start = time - duration/2
-end = time + duration/2
-```
-
-```python id="3XbaW-nClas1"
-plt.figure(figsize=(12, 4))
-plt.plot(cps[start:end], drawstyle='steps-mid', color='orange')
-plt.axvline(time, color='r', linestyle='--', label="Time of interest")
-plt.title('Period of interest')
-plt.xlabel('Time')
-plt.ylabel('Counts per second')
+plt.plot(cps, drawstyle="steps-mid")
+plt.axvline(time_of_interest, color="r", linestyle="--", label="Time of interest")
+plt.xlim(start, end)
+plt.title("Selected pulses during the requested interval")
+plt.xlabel("Time")
+plt.ylabel("Counts per one-second bin")
 plt.legend()
 plt.grid(True)
 plt.show()
 ```
 
 <!-- #region id="Sy9aHwBy24Co" -->
-### Visualising the waveforms
+### Waveforms during the requested interval
 
-We can now easily extract and visualise the waveforms using the `start` and `end` times.
+Overlay the waveforms for the selected pulses. Each sample array is plotted against its sample number; the DataFrame's time index identifies when that pulse occurred.
 <!-- #endregion -->
 
 ```python id="uSxZYs4blcjF"
-df_period = filtered[start:end]
-
 plt.figure(figsize=(10, 6))
-for wf in df_period['Waveform']:
-    plt.plot(wf, alpha=0.5)
+for waveform in filtered["Waveform"]:
+    plt.plot(waveform, alpha=0.5)
 
-if "EnergyShort" in df_pulses.columns:
-  plt.title(f'Waveforms for pulses between {start} and {end} \n with PSP in range {psp_range}\n and energy in range {energy_range}')
-else:
-  plt.title(f'Waveforms for pulses between {start} and {end} \n with energy in range {energy_range}')
-plt.xlabel('Sample number')
-plt.ylabel('Amplitude')
+selection = f"Energy range: {energy_range}; PSP range: {psp_range}"
+plt.title(f"{len(filtered)} waveforms from {start} to {end}\n{selection}")
+plt.xlabel("Sample number")
+plt.ylabel("Amplitude")
 plt.grid(True)
 plt.show()
-```
-
-```python id="h7F_gl3C_7Ee"
-
 ```
