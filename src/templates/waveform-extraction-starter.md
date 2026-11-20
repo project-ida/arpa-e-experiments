@@ -16,10 +16,11 @@ jupyter:
 <!-- #endregion -->
 
 <!-- #region id="ydG__I6QBDGM" -->
-
 ‼️ **Prerequisites** ‼️:
-- Access to the `Nucleonics` Google drive folder (it must also be added as a shortcut called "Nucleonics" in your own drive)
-- Access to the nucleonics `.env` folder (where sensitive info lives)
+- Access to the `Nucleonics` Google Drive shortcut and its `.env` folder for SQL credentials
+- Access to the Nucleonics waveform server at `http://nucleonics.mit.edu:8080`, with the ROOT download route installed
+
+ROOT files are downloaded through Nucleonics from the Synology mount. Google Drive is used only for SQL credentials.
 <!-- #endregion -->
 
 <!-- #region id="oG6NQb5BBF0p" -->
@@ -28,7 +29,7 @@ jupyter:
 This notebook contains starter code that extracts and visualises event waveforms from a ROOT file.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="iRx5OjNEHaKe" outputId="20c6846a-81f2-4e3f-f250-821d584acbcd"
+```python id="iRx5OjNEHaKe"
 # Makes Libs accessible and runs notebook from same location regardless of whether colab or local
 !pip install colocal -q
 import colocal
@@ -39,56 +40,36 @@ root, branch, cwd = colocal.setup()
 ## Libraries
 <!-- #endregion -->
 
-```python id="IAyoM46dBFqg" colab={"base_uri": "https://localhost:8080/"} outputId="e99ac556-af52-4c8c-c856-457c740c94cb"
-# Auth
-import sys, os
+```python id="IAyoM46dBFqg"
+# Install the ROOT reader and HTTP download client
+%pip install -q uproot requests
+
+# SQL credentials are still loaded from Google Drive
 import shutil
 from google.colab import drive
-from google.colab import auth
-from google.auth import default
 
-# Files
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
-import io
-import os
-import gspread
-
-# Data analysis
+# Data analysis and plotting
 import numpy as np
 import pandas as pd
-from scipy.signal import find_peaks
-from sqlalchemy import create_engine, text
-from scipy.stats import kstest
-! pip install uproot -q
 import uproot
-
-#Plotting
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
-import plotly.graph_objects as go
 
-
-# Use our custom helper functions
+# Our HTTP clients
 from libs.sql_api import SQLConnection, SQLAPIError, read_sql
+from libs.root_files_api import download_root_file
 ```
 
 <!-- #region id="C99IMdA1BSWv" -->
 ## Authentication
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 53} id="FhhgoaA3A0-Z" outputId="9e5cac46-a748-4f72-fc4b-8f4d9746005c"
-# Mount Drive
+```python id="FhhgoaA3A0-Z"
+# Mount Drive only to load SQL credentials; ROOT files now live on Synology.
 drive.mount('/content/drive')
-
-# Authenticate and create the Drive API client
-auth.authenticate_user()
-drive_service = build('drive', 'v3')
-creds, _ = default()
-gc = gspread.authorize(creds)
-
-# Copy SQL credentials from Google drive
-shutil.copy("/content/drive/MyDrive/Nucleonics/.env/psql_credentials_readonly.py", "psql_credentials.py")
+shutil.copy(
+    "/content/drive/MyDrive/Nucleonics/.env/psql_credentials_readonly.py",
+    "psql_credentials.py",
+)
 ```
 
 ```python id="R5pArHA9BUJV"
@@ -142,12 +123,13 @@ def find_root_file(event_time, channel_number):
         "event_time": event_time,
         "file_pattern": file_pattern
     })
+    if df.empty:
+        raise FileNotFoundError(f"No indexed ROOT file found after {event_time} for channel {channel_number}.")
     df.set_index('time', inplace=True)
     return df
-
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 129} id="MULgCJIACxWN" outputId="24d903df-1691-4aa1-9bb6-40f0e0b104ab"
+```python id="MULgCJIACxWN"
 df_root = find_root_file(time, channel_number)
 df_root
 ```
@@ -161,41 +143,36 @@ closest_root_file = df_root.iloc[0].to_dict()
 ```
 
 <!-- #region id="capsaKe7JnX-" -->
-Now we need to construct the Google Drive path for this ROOT file to get its ID so that we can download it for use with uproot.
+Now download the original ROOT file through the Nucleonics waveform server. It looks up the same database row and serves the file from its Synology mount.
+
+The download is saved under `downloads/root_files` in this runtime. No waveform-server password is required. If the server returns 404, confirm that its ROOT download route has been deployed and that the file is available on Synology.
 <!-- #endregion -->
 
 ```python id="nqUBfVWiJTg4"
-def construct_file_path(root_file):
-  return f"/content/drive/MyDrive/Computers/{root_file['computer']}/{root_file['dir']}/{root_file['file']}"
+ROOT_FILES_BASE_URL = "http://nucleonics.mit.edu:8080"
+DOWNLOAD_DIR = "downloads/root_files"
 
-# Function to get file ID from file path
-def get_file_id(file_path):
-    query = f"name = '{file_path.split('/')[-1]}' and trashed = false"
-    results = drive_service.files().list(q=query, fields="files(id, name)").execute()
-    items = results.get('files', [])
-    if items:
-        return items[0]['id']
-    return None
 
-def download_file_from_drive(file_id, filename):
-    request = drive_service.files().get_media(fileId=file_id)
-    fh = io.FileIO(filename, 'wb')
-    downloader = MediaIoBaseDownload(fh, request)
-    done = False
-    while not done:
-        status, done = downloader.next_chunk()
-        print(f"Download {int(status.progress() * 100)}%.")
-
+def show_download_progress(received, total):
+    downloaded_mb = received / 1024**2
+    if total:
+        print(f"Download {100 * received / total:.1f}% ({downloaded_mb:.1f} MB)", end="\r")
+    else:
+        print(f"Downloaded {downloaded_mb:.1f} MB", end="\r")
 ```
 
 ```python id="7kMHw24YMlGq"
-file_path = construct_file_path(closest_root_file)
-file_id = get_file_id(file_path)
+print(f"Downloading {closest_root_file['file']} from Nucleonics...")
 ```
 
-```python colab={"base_uri": "https://localhost:8080/"} id="EgO6zwoTMlzN" outputId="5b9329a5-9f07-4010-b952-8c06897fd23a"
-filename = closest_root_file["file"]
-download_file_from_drive(file_id, filename)
+```python id="EgO6zwoTMlzN"
+filename = download_root_file(
+    closest_root_file,
+    download_dir=DOWNLOAD_DIR,
+    base_url=ROOT_FILES_BASE_URL,
+    progress=show_download_progress,
+)
+print(f"\nSaved to {filename}")
 ```
 
 <!-- #region id="iAyWI3QRlSIM" -->
@@ -234,7 +211,7 @@ if es is not None:
 df_pulses = pd.DataFrame(data, index=pd.to_datetime(time_abs))
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 206} id="k-Q12sRwptwP" outputId="2d8e8a16-6e34-4be1-9a5a-810eabcb6190"
+```python id="k-Q12sRwptwP"
 df_pulses.head()
 ```
 
@@ -280,12 +257,12 @@ Let's now do a sanity check and visualise the counts per second over the entire 
 We'll also mark the burst time:
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="_erVbBxS9Bje" outputId="cfea3281-da75-4ee6-c723-9f23a02ed483"
+```python id="_erVbBxS9Bje"
 time = pd.to_datetime(time)
 print(time)
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 410} id="HEQExazK5W_U" outputId="908bd92e-418c-4973-9a80-d19a4a54548e"
+```python id="HEQExazK5W_U"
 cps = filtered["Energy"].resample('1s').count()
 plt.figure(figsize=(12, 4))
 plt.plot(cps, drawstyle='steps-mid')
@@ -302,7 +279,7 @@ plt.show()
 Let's now zoom in on the time period of interest which is around:
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="MmL3bAZs4jTz" outputId="cc8ff7b2-eab3-4393-a444-142e82767215"
+```python id="MmL3bAZs4jTz"
 print(time)
 ```
 
@@ -310,7 +287,7 @@ print(time)
 with a duration of:
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/"} id="U6Yl3U8K4sDE" outputId="a3072ea5-0d3e-4da7-80c2-3275c52d2509"
+```python id="U6Yl3U8K4sDE"
 duration = pd.to_timedelta(duration, unit='s')
 print(duration)
 ```
@@ -324,7 +301,7 @@ start = time - duration/2
 end = time + duration/2
 ```
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 410} id="3XbaW-nClas1" outputId="aae10569-f911-4af1-d612-32447f0a4392"
+```python id="3XbaW-nClas1"
 plt.figure(figsize=(12, 4))
 plt.plot(cps[start:end], drawstyle='steps-mid', color='orange')
 plt.axvline(time, color='r', linestyle='--', label="Time of interest")
@@ -342,7 +319,7 @@ plt.show()
 We can now easily extract and visualise the waveforms using the `start` and `end` times.
 <!-- #endregion -->
 
-```python colab={"base_uri": "https://localhost:8080/", "height": 606} id="uSxZYs4blcjF" outputId="eb074715-2abe-4b18-d570-ebc5c0c7cb3a"
+```python id="uSxZYs4blcjF"
 df_period = filtered[start:end]
 
 plt.figure(figsize=(10, 6))
