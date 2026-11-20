@@ -29,7 +29,7 @@ ROOT files are downloaded from Nucleonics and saved locally for analysis. Google
 Choose a detector channel and time interval, then load its pulses into a pandas DataFrame for filtering and plotting. The waveform library handles finding, downloading, and combining the relevant ROOT files.
 <!-- #endregion -->
 
-```python id="iRx5OjNEHaKe"
+```python id="iRx5OjNEHaKe" colab={"base_uri": "https://localhost:8080/"} outputId="8fe0c587-a44d-4815-b632-7b0763c45a70"
 # Makes Libs accessible and runs notebook from same location regardless of whether colab or local
 !pip install colocal -q
 import colocal
@@ -58,7 +58,7 @@ from libs.waveforms import load_waveforms, read_waveforms
 The ROOT files table (`root_files`) is queried through our SQL API. Load the SQL credentials and create a connection here; `load_waveforms()` receives that connection and uses it to find the files for the requested detector and interval.
 <!-- #endregion -->
 
-```python id="FhhgoaA3A0-Z"
+```python id="FhhgoaA3A0-Z" colab={"base_uri": "https://localhost:8080/", "height": 53} outputId="e434fbd3-5564-47a5-f81f-56b422da1468"
 # Mount Drive to load SQL credentials.
 drive.mount('/content/drive')
 shutil.copy(
@@ -85,7 +85,7 @@ connection = SQLConnection(
 Specify the device (for example, `caen8ch`), channel, time of interest, and duration around it. You can also assign `start` and `end` directly. The interval includes `start` and excludes `end`.
 <!-- #endregion -->
 
-```python id="9oSGSyO0A_QD"
+```python id="9oSGSyO0A_QD" colab={"base_uri": "https://localhost:8080/"} outputId="a7de1d78-fb7f-40b9-8605-3c6973b9e472"
 device = "caen8ch"
 channel_number = 6
 time_of_interest = pd.Timestamp("2025-09-03 12:00:00")
@@ -115,7 +115,7 @@ The function finds and downloads the relevant ROOT files, combines their pulses,
 The times in the ROOT files table omit fractional seconds, so reconstructed absolute times can differ from the original pulse-table times by a fraction of a second.
 <!-- #endregion -->
 
-```python id="MULgCJIACxWN"
+```python id="MULgCJIACxWN" colab={"base_uri": "https://localhost:8080/", "height": 485} outputId="556a78fb-7724-4aaa-930b-ee370d91f902"
 df_pulses = load_waveforms(
     connection,
     device=device,
@@ -159,7 +159,7 @@ $$
 Set either range to `None` to disable that selection. The bounds below are exclusive. PSP is `NaN` when the required short-gate value is missing or energy is zero; applying a PSP range excludes those pulses.
 <!-- #endregion -->
 
-```python id="pYmh_1b3lYmQ"
+```python id="pYmh_1b3lYmQ" colab={"base_uri": "https://localhost:8080/"} outputId="ecff4273-9438-4245-c068-54411a28b8a9"
 energy_range = (0, 70)  # Low energy; try (71, 600) or (901, 3100)
 psp_range = None         # For example, (0.237, 1.0) for a PSP selection
 
@@ -185,7 +185,7 @@ print(f"Selected {len(filtered)} of {len(df_pulses)} pulses.")
 Plot the selected pulses in one-second bins, including bins with no pulses. The red line marks the time of interest. Bins at the edges may cover only part of a second.
 <!-- #endregion -->
 
-```python id="HEQExazK5W_U"
+```python id="HEQExazK5W_U" colab={"base_uri": "https://localhost:8080/", "height": 410} outputId="9d4d9916-d852-42a3-94ec-ff5e719e896e"
 bins = pd.date_range(start.floor("s"), end.ceil("s"), freq="1s", inclusive="left")
 cps = filtered["Energy"].resample("1s").count().reindex(bins, fill_value=0)
 
@@ -207,7 +207,7 @@ plt.show()
 Overlay the waveforms for the selected pulses. Each sample array is plotted against its sample number; the DataFrame's time index identifies when that pulse occurred.
 <!-- #endregion -->
 
-```python id="uSxZYs4blcjF"
+```python id="uSxZYs4blcjF" colab={"base_uri": "https://localhost:8080/", "height": 585} outputId="513b2937-52b1-442c-c9ae-241f07d71681"
 plt.figure(figsize=(10, 6))
 for waveform in filtered["Waveform"]:
     plt.plot(waveform, alpha=0.5)
