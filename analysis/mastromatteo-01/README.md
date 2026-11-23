@@ -4,14 +4,14 @@
 A Pd thin film on a silicon chip was loaded as received from Mastromatteo into a chamber pressurized with deuterium gas at 1.50 bar above atmospheric pressure. We then illuminated the chip with 1.3 mW of 633 nm light from a HeNe laser, with the spot expanded to 9.6 mm diameter to cover the whole sample. The laser illumination ran continuously for two weeks. 
 
 ## Results
-No thermal or radioactive anomalies were detected. [RESULTS OF SURFACE VIEWER/CR-39 ANALYSIS]
+No thermal or radioactive anomalies were detected. Surface-viewer and CR-39 analysis results are not yet included here.
 
 ## Links
 - [Data panels](https://nucleonics.mit.edu/data/load-panel.php?filename=completed%20arpa-e%20runs/Mastromatteo1)
-- [SEM prescan]()
-- [Optical postscan]
+- SEM prescan
+- Optical postscan
 - [PSD Analysis](https://github.com/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-01/Mastromatteo_1_PSD.ipynb)
-- [Radiation Analysis](https://github.com/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-01/Mastromatteo_1_Radiation_pulse_analysis_updated.ipynb)
+- [Radiation Analysis](https://github.com/project-ida/arpa-e-experiments/blob/main/analysis/mastromatteo-01/Mastromatteo_1_Radiation.ipynb)
 - [Lab Notebook](https://docs.google.com/document/d/1M0-0rl_QPKIZ0oZNs8WNMiCvkWDgZa9TXCzasR5Jp1c/edit?usp=sharing)
 
 <img width="789" height="490" alt="mastromatteo1" src="https://github.com/user-attachments/assets/7473d9f6-5280-4ca7-87f7-e0e7d1fd73b5" />

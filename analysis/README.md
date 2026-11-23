@@ -1,6 +1,9 @@
 # Analysis
 
-# List of Experiments
+**The analysis in this repository is work in progress.** Notebooks and supporting documentation are still being developed and reviewed. Results and interpretations are provisional and may be revised.
+
+## List of Experiments
+
 - [Mastromatteo 01](https://project-ida.github.io/arpa-e-experiments/analysis/mastromatteo-01/)
 - [Mastromatteo 02](https://project-ida.github.io/arpa-e-experiments/analysis/mastromatteo-02/)
 - [Mastromatteo 03](https://project-ida.github.io/arpa-e-experiments/analysis/mastromatteo-03/)
