@@ -266,59 +266,6 @@ We can extract only the neutron events by using the psp values stored in the mas
 psp
 ```
 
-```python id="Ot-AVwj3vxxP"
-def plot_psd(data, period=None, title="PSD", psp_threshold=None, ax=None):
-    # Initialise histogram
-    hist = np.zeros((512, 128), dtype=int)
-
-    if period is not None:
-        days = period.days
-        hours = period.components.hours
-        days_str = f"{days} day" if days == 1 else f"{days} days" if days > 0 else ""
-        hours_str = f"{hours} hour" if hours == 1 else f"{hours} hours"
-        period_string = f"{days_str}, {hours_str}" if days > 0 else hours_str
-        period_string = period_string.strip(", ")
-    else:
-        period_string = None
-
-    # Accumulate counts
-    for row in data.itertuples(index=False):
-        psp_bin, energy_bin, count = row
-        if 0 <= energy_bin < 512 and 0 <= psp_bin < 128:
-            hist[energy_bin, psp_bin] += int(count)
-
-    # Define bin edges
-    energy_edges = np.linspace(0, 4000, 513)  # 512 bins → 513 edges
-    psp_edges = np.linspace(0, 1, 129)        # 128 bins → 129 edges
-
-    # Plot with pcolormesh and log colour scale
-    if ax is None:
-        fig = plt.figure(figsize=(10, 6))
-        ax = fig.add_subplot(111)
-
-    im = ax.pcolormesh(energy_edges, psp_edges, hist.T,
-                      norm=mcolors.LogNorm(vmin=1, vmax=hist.max()),
-                      cmap='viridis', shading='auto')
-    ax.set_xlabel('Energy')
-    ax.set_ylabel('PSP')
-    if period_string is not None:
-        ax.set_title(f"{title} ({period_string})")
-    else:
-        ax.set_title(title)
-
-    # Draw horizontal red line at psp_threshold if provided
-    if psp_threshold is not None:
-        if 0 <= psp_threshold <= 1:  # Ensure threshold is within PSP range [0, 1]
-            ax.axhline(y=psp_threshold, color='red', linestyle='-', label=f'PSP Threshold: {psp_threshold:.3f}')
-            ax.legend()
-
-    # Add colorbar
-    plt.colorbar(im, ax=ax, label='Count (log scale)')
-
-    if ax is None:
-        plt.show()
-```
-
 ```python id="wPlxppe6YKWZ"
 #Set energy cutoff in channels
 energy = 500

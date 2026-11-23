@@ -309,8 +309,8 @@ def plot_psd(data, period=None, title="PSD", psp_threshold=None, ax=None):
     # Accumulate counts
     for row in data.itertuples(index=False):
         psp_bin, energy_bin, count = row
-        if 0 <= energy_bin < 512 and 0 <= psp_bin < 128:
-            hist[energy_bin, psp_bin] += int(count)
+        if 1 <= energy_bin <= 512 and 1 <= psp_bin <= 128:
+            hist[energy_bin - 1, psp_bin - 1] += int(count)
 
     # Define bin edges
     energy_edges = np.linspace(0, 4000, 513)  # 512 bins → 513 edges
