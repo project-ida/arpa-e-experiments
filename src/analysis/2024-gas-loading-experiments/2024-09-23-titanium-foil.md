@@ -283,7 +283,7 @@ fig, axes = plot_panels(combined_df, ['Temperature (C)', 'Pressure (Bar)', 'D/Ti
 <!-- #region id="612a1eb0-4e71-4303-b099-dd3c9dc0dbe2" -->
 Let's also take a look at a pressure/temperature phase space plot, for ideal gas behaviour, we'd expect
 
-$$10^{5}P(atm) = \frac{N_{D_2}k_BT(C)}{V} + \frac{273.15N_{D_2}k_B}{V}$$
+$$10^{5}P(bar) = \frac{N_{D_2}k_BT(C)}{V} + \frac{273.15N_{D_2}k_B}{V}$$
 
 Because the number of gas molecules $N_{D_2}$ appears in both the gradient term and offset term, the motion around phase space can look quite complicated. Let's see.
 <!-- #endregion -->
