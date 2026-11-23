@@ -133,14 +133,26 @@ The DataFrame is indexed by reconstructed absolute pulse time. `Waveform` contai
 
 ### Reuse files already downloaded
 
-The downloaded files remain available for further analysis. To read them again, use their paths and per-file end times saved in `df_pulses.attrs["root_files"]`:
+The downloaded files remain available for further analysis. This example passes a DataFrame containing their local paths and per-file end times, saved in `df_pulses.attrs["root_files"]`:
 
 ```python
 saved_files = pd.DataFrame(df_pulses.attrs["root_files"])
 df_pulses = read_waveforms(saved_files, start=start, end=end)
 ```
 
-`read_waveforms()` can also take a list of local file paths, deriving their end times from the processed filenames. Omitting `start` and `end` reads all pulses in those files. See `libs/README.md` for saving the file list for a later session.
+Alternatively, pass a list of local file paths, for example:
+
+```python
+file_paths = [
+    "data/20250903_115839-20250903_120201_DataR_CH6@run_1.root2",
+    "data/20250903_120201-20250903_120500_DataR_CH6@run_2.root2",
+]
+df_pulses = read_waveforms(file_paths, start=start, end=end)
+```
+
+The reader gets each file's end time from its filename.
+
+Omitting `start` and `end` reads all pulses in the supplied files. See `libs/README.md` for saving the file information for a later session.
 <!-- #endregion -->
 
 <!-- #region id="WbmLZnb7p2LP" -->
@@ -203,8 +215,6 @@ plt.show()
 
 <!-- #region id="Sy9aHwBy24Co" -->
 ### Waveforms during the requested interval
-
-Overlay the waveforms for the selected pulses. Each sample array is plotted against its sample number; the DataFrame's time index identifies when that pulse occurred.
 <!-- #endregion -->
 
 ```python id="uSxZYs4blcjF" colab={"base_uri": "https://localhost:8080/", "height": 585} outputId="513b2937-52b1-442c-c9ae-241f07d71681"
