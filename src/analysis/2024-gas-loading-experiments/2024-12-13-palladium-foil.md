@@ -235,7 +235,7 @@ and associating any changes $\Delta N_{D_2}$ with deuteium entering the lattice.
 
 $$N_{lattice} = \frac{m_{sample}}{m_{Pd}}$$
 
-$$N_{lattice} = \frac{120\times 10^{-6}}{1.77\times 10^{-25}}$$
+$$N_{lattice} = \frac{136\times 10^{-6}}{1.77\times 10^{-25}}$$
 
 The loading is then:
 

@@ -358,12 +358,12 @@ Let's see how the Poisson distribution compares to the experimental one.
 ```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="qlhkMPk9s-F_" outputId="5b1ecd44-215e-42ab-f811-d4e6aad77190"
 plt.figure(figsize=(8, 5))
 plt.plot(delta_sorted, P_exp, label="Empirical")
-plt.plot(delta_sorted, P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {lam:.2f}/s)")
+plt.plot(delta_sorted, P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {lam:.4f}/s)")
 
 plt.xlabel("t (seconds)")
 plt.ylabel("P(Δt ≤ t )")
 plt.title("Background 1 cumulative inter-pulse time probability")
-plt.xlim([0,30])
+plt.xlim(left=0)
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
@@ -427,7 +427,7 @@ experiment_lam
 ```python colab={"base_uri": "https://localhost:8080/", "height": 507} id="hXgGNo7aIHsn" outputId="9b21076d-885f-4f65-b13f-72734cd38b1e"
 plt.figure(figsize=(8, 5))
 plt.plot(experiment_delta_sorted, experiment_P_exp, label="Empirical")
-plt.plot(experiment_delta_sorted, experiment_P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {experiment_lam:.2f}/s)")
+plt.plot(experiment_delta_sorted, experiment_P_poisson, linestyle="--", color="red", label=f"Poisson (λ = {experiment_lam:.4f}/s)")
 
 plt.xlabel("t (seconds)")
 plt.ylabel("P(Δt ≤ t )")
@@ -535,7 +535,7 @@ first_cross_index = int(crossing_indices[0]) if crossing_indices.size else None
 plt.figure(figsize=(8, 5))
 plt.step(ks_times, background_cdf, where="post", label="Background 1")
 plt.step(ks_times, experiment_cdf, where="post", label="Experiment")
-plt.plot(experiment_delta_sorted, experiment_P_poisson, linestyle="--", color="red", label=f"Experiment fit (λ = {experiment_lam:.2f}/s)")
+plt.plot(experiment_delta_sorted, experiment_P_poisson, linestyle="--", color="red", label=f"Experiment fit (λ = {experiment_lam:.4f}/s)")
 plt.fill_between(ks_times, lower_bound, upper_bound, step="post", color='gray', alpha=0.3, label="Exact two-sample KS band (α = 0.003)", zorder=1)
 
 plt.xlabel("t (seconds)")
