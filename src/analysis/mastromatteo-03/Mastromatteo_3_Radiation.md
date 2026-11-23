@@ -185,23 +185,29 @@ df = fill_experiment_id(df)
 rows = df[df['Experiment ID'] == experiment_id]
 
 if len(rows) == 0:
-  raise ValueError(f"No master sheet entry for 'Experiment ID' = {experiment_id}")
-
-# Exract digitizer for SQL table identification
-digitizer = rows.iloc[0]["Digitizer"]
+    raise ValueError(f"No master sheet entry for 'Experiment ID' = {experiment_id}")
 
 # Extract the row corresponding to the specified channel number
 row = rows[rows["Digitizer channel number"] == channel_number]
 
-# Extract times
-times = row.iloc[[0]][['Setup', 'Background 1', 'Experiment', 'Background 2', 'End']]
-times = times.apply(pd.to_datetime)
-
 if len(row) == 0:
-  raise ValueError(f"No master sheet entry for 'Experiment ID' = {experiment_id}, 'Digitizer channel number' = {channel_number}")
+    raise ValueError(f"No master sheet entry for 'Experiment ID' = {experiment_id}, 'Digitizer channel number' = {channel_number}")
+
+# Extract digitizer for SQL table identification
+digitizer = row.iloc[0]["Digitizer"]
+
+# Try to extract times from the channel-specific row
+times = row[['Setup', 'Background 1', 'Experiment', 'Background 2', 'End']]
+
+# If all values are missing/empty, fall back to the first row of the experiment block
+if (times.isna() | times.eq('')).all().all():
+    times = rows.iloc[[0]][['Setup', 'Background 1', 'Experiment', 'Background 2', 'End']]
 
 # Extract the psp neutron/gamma discriminator
 psp = row["psp threshold"].iloc[0]
+
+# Convert to datetime
+times = times.apply(pd.to_datetime)
 
 # Display the extracted times
 times.head()

@@ -194,7 +194,7 @@ digitizer = row.iloc[0]["Digitizer"]
 times = row[['Setup', 'Calibration', 'Background 1', 'Experiment', 'Background 2', 'End']]
 
 # If all values are missing/empty, fall back to the first row of the experiment block
-if times.isnull().all(axis=None) or (times == '').all(axis=None):
+if (times.isna() | times.eq('')).all().all():
     times = rows.iloc[[0]][['Setup', 'Calibration', 'Background 1', 'Experiment', 'Background 2', 'End']]
 
 # Extract the psp neutron/gamma discriminator
